@@ -1,6 +1,8 @@
 
 # Binaron.Serializer  
-A fast serializer for modern programming languages with an open source binary object notation format. With the benchmark project included in this repository (Binaron.Serializer.Benchmark), Binaron.Serializer is 3x faster compared to Newtonsoft.JSON.
+**A fast serializer for modern programming languages with an open source binary object notation format.**
+
+With the roundtrip serialization-deserialization benchmark project included in this repository (Binaron.Serializer.Benchmark), **Binaron.Serializer is *faster* than Newtonsoft.JSON by *over 300%*!**
 
 |  Method |     Mean |     Error |    StdDev |  
 |--------:|---------:|----------:|----------:|  
@@ -8,6 +10,55 @@ A fast serializer for modern programming languages with an open source binary ob
 | Binaron | 110.9 ms | 0.8884 ms | 0.8310 ms |  
 
 ![Binaron.Serializer vs Newtonsoft.JSON](https://imgur.com/download/ELn1jtg)
+
+## Usage
+```C#
+var input = new Book();
+
+using var stream = new MemoryStream(); // C# 8.0 syntax
+BinaronConvert.Serialize(input, stream);
+
+stream.Position = 0;
+var book = BinaronConvert.Deserialize<Book>(stream);
+
+// or
+
+stream.Position = 0;
+var dynamicBook = BinaronConvert.Deserialize(stream);
+
+// ...
+```
+
+## Limitations
+This is the first cut of Binary.Serializer. It currently does not support ignore attributes or options. It also does not support deserialization of interfaces / abstract classes. These features will be implemented in the future.
+
+Binary.Serializer also uses and relies heavily on the newly released features of `.net standard 2.1` for maximum performance and thus is only compatible with `.net core app 3.0` and above.
+
+## High unit test coverage
+Writing a serializer is easy. Writing a deserializer that deserializes to `ExpandoObject`  (dynamic type) is just as easy. A deserializer however is a PITA simply because the need to make Binaron.Serializer fit its serialized data as best it could (to sensible limits set in the Binary Object Notation documentation) to the destination object. For example, an `int32` type should fit `int64` and the deserializer shoud be smart enough to do that transparently. Likewise, an object with properties / fields that's been serialized should be deserializable to a dictionary.
+
+To make sure all these permutations are covered and tested, the unit tests in this repository has a **96% coverage**. Not perfect but most would agree it is high enough.
+
+## Why another serializer?
+### Big payloads
+In the world of microservices, data payloads tend to be pretty big these days with how the data is now consumed. As network bandwidth becomes cheaper, bigger data becomes the norm as it opens up UI/UX that would otherwise have been impossible (e.g. responsive web apps and mobi/mobile apps). Converting from text to object and vice versa is a very slow process. The bigger the payload, the slower it is, naturally.
+
+JSON was created for consumption of the old web days where Javascript had limited support for binary. Unfortunately for everyone else on first class languages, they've had to dumb down to the common lowest denominator.
+
+### But... JSON is human readable
+JSON does have its merits such as human readability. But, does machine really care about human readability? At what cost are we sacrificing performance - thus infra cost, latencies and ultimately user experience? If we really care about human readability, we could simply have the endpoint support two different types of accept-headers - one for JSON, the other Binary. In a normal day to day operation, you would go binary. For debugging purposes, give it a JSON only accept-header and you would get JSON sent back to you. How many microservices are doing this though?
+
+### What about protobuf?
+Granted there are myriad of libraries that have tried to do binary serialization. The most popular is arguably protobuf. All of these libraries are fast but they lack the one key feature that JSON serializers offer - the ability to serialize from / de-serialize to any unstructured object.
+
+For example, protobuf requires a schema to be defined for the structure of the object - i.e. a .proto file. This itself is a massive burden on the developers to learn, create, debug and maintain. What do you do if you're storing data in a NoSQL manner where data is simply unstructured?
+
+Unfortunately, all the binary serializers for .NET have one fundamental flaw - they assume your data is structured, including [ZeroFormatter](https://github.com/neuecc/ZeroFormatter).
+
+### TL;DR
+In other words, I wanted a drop-in replacement for [Json.NET](https://www.newtonsoft.com/json) with near zero learning curve that promises vastly superior performance but couldn't find one.
+
+## Detailed benchmark results
 
 ```  
 // * Detailed results *  
