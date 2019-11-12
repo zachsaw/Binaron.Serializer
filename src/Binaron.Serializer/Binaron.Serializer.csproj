@@ -5,8 +5,10 @@
     <FileVersion>1.0.0.0</FileVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Version>1.0.0</Version>
+    <Title>Binaron.Serializer</Title>
+    <PackageDescription>High Performance Binary Object Notation Serializer</PackageDescription>
     <Authors>Zach Saw</Authors>
-    <PackageTags>Binary Object Notation Serializer</PackageTags>
+    <PackageTags>Performance,Binary,Object,Notation,Serializer,Deserializer</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageId>Binaron.Serializer</PackageId>

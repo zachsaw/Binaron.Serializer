@@ -1,4 +1,7 @@
 # Binaron.Serializer
+
+[Binaron.Serializer NuGet package](https://www.nuget.org/packages/Binaron.Serializer)
+
 **A fast serializer for modern programming languages with an open source [binary object notation format](BinaryObjectNotation.md).**
 
 With the roundtrip serialization-deserialization benchmark project included in this repository (Binaron.Serializer.Benchmark), **Binaron.Serializer is *faster* than Newtonsoft.JSON by *over 300%*!**

@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.0-bionic
 
+RUN mkdir /artifacts/
 WORKDIR /opt
 COPY . .
 RUN ls -ls
@@ -10,4 +11,4 @@ RUN dotnet test -c Release -v n
 RUN dotnet publish -c Release
 
 WORKDIR /opt/src/Binaron.Serializer/bin/Release
-RUN cp *.nupkg /
+RUN cp *.nupkg /artifacts/
