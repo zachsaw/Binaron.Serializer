@@ -39,63 +39,103 @@ HasItem = 1
 ## Object Field Formats
 ### Null
 Indicates a null object, hence no [Object] field.
+
 ### Object
 `[EnumerableType.HasItem (Byte)] [String] [Object] ... [EnumerableType.End (Byte)]`
+
 e.g. `[HasItem] [PropertyFoo] [Value Object of PropertyFoo] [PropertyBar] [Value Object of PropertyBar] [End]` - 2 items
+
 e.g. `[End]` - no items
+
 ### Dictionary
 `[Length (Int)] [Key Object] [Value Object] ...`
+
 e.g. `[2] [Key Object1] [Value Object1] [Key Object2] [Value Object2]` - 2 items
+
 e.g. `[0]` - no items
+
 ### List
 `[Length (Int)] [Object] ...`
+
 e.g. `[2] [Object1] [Object2]` - 2 items
+
 e.g. `[0]` - no items
+
 ### Enumerable
 `[EnumerableType.HasItem (Byte)] [Object] ... [EnumerableType.End (Byte)]`
+
 e.g. `[HasItem] [Object] [HasItem] [Object] [End]` - 2 items
+
 e.g. `[End]` - no items
+
 ### String
 `[String Length (Int)] [UTF16 encoded string]`
+
 e.g. `[5] [HELLO]`
+
 ### Char
 `[UTF encoded char]`
+
 ### Byte
 `[Byte]`
+
 Unsigned 8-bit integer value
+
 ### SByte
 `[Signed Byte]`
+
 Signed 8-bit integer value
+
 ### UShort
 `[Unsigned Short]`
+
 Unsigned 16-bit integer value
+
 ### Short
 `[Short]`
+
 Signed 16-bit integer value
+
 ### UInt
 `[Unsigned Integer]`
+
 Unsigned 32-bit integer value
+
 ### Int
 `[Integer]`
+
 Signed 32-bit integer value
+
 ### ULong
 `[Unsigned Long]`
+
 Unsigned 64-bit integer value
+
 ### Long
 `[Long]`
+
 Signed 64-bit integer value
+
 ### Float
 `[Single Precision Float]`
+
 32-bit floating point value
+
 ### Double
 `[Double Precision Float]`
+
 64-bit floating point value
+
 ### Decimal
 `[Decimal 128]`
+
 128-bit decimal floating point value - [IEEE 754-2008](https://en.wikipedia.org/wiki/Decimal128_floating-point_format)
+
 ### Bool
 `[Boolean]`
+
 8-bit boolean value: 0 (false) - 1 (true)
+
 ### DateTime
 `[DateTime]`
 
