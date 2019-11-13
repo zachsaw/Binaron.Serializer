@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
+using Binaron.Serializer.Infrastructure;
 using BinaryReader = Binaron.Serializer.Infrastructure.BinaryReader;
-using BinaryWriter = Binaron.Serializer.Infrastructure.BinaryWriter;
 
 namespace Binaron.Serializer
 {
@@ -29,7 +29,13 @@ namespace Binaron.Serializer
 
         public static void Serialize(object obj, Stream stream)
         {
-            using var writer = new BinaryWriter(stream);
+            using var writer = new WriterState(stream, new SerializerOptions());
+            Serializer.WriteValue(writer, obj);
+        }
+        
+        public static void Serialize(object obj, Stream stream, SerializerOptions options)
+        {
+            using var writer = new WriterState(stream, options);
             Serializer.WriteValue(writer, obj);
         }
     }

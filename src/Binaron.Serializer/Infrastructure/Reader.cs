@@ -18,10 +18,9 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe char ReadChar(BinaryReader reader)
+        public static char ReadChar(BinaryReader reader)
         {
-            var tmpBuffer = reader.Read<short>();
-            return *(char*) &tmpBuffer;
+            return reader.Read<char>();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

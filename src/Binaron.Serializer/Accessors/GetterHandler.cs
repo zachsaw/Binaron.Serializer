@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Binaron.Serializer.Enums;
 using Binaron.Serializer.Extensions;
 using Binaron.Serializer.Infrastructure;
-using BinaryWriter = Binaron.Serializer.Infrastructure.BinaryWriter;
 
 namespace Binaron.Serializer.Accessors
 {
@@ -15,18 +14,18 @@ namespace Binaron.Serializer.Accessors
     {
         private const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.Instance;
 
-        private static readonly ConcurrentDictionary<Type, IEnumerable<IMemberGetterHandler<BinaryWriter>>> MemberGetters = new ConcurrentDictionary<Type, IEnumerable<IMemberGetterHandler<BinaryWriter>>>();
+        private static readonly ConcurrentDictionary<Type, IEnumerable<IMemberGetterHandler<WriterState>>> MemberGetters = new ConcurrentDictionary<Type, IEnumerable<IMemberGetterHandler<WriterState>>>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<IMemberGetterHandler<BinaryWriter>> GetGetterHandlers(Type type) => MemberGetters.GetOrAdd(type, _ => CreateGetters(type));
+        public static IEnumerable<IMemberGetterHandler<WriterState>> GetGetterHandlers(Type type) => MemberGetters.GetOrAdd(type, _ => CreateGetters(type));
         
-        private static IEnumerable<IMemberGetterHandler<BinaryWriter>> CreateGetters(Type type) =>
+        private static IEnumerable<IMemberGetterHandler<WriterState>> CreateGetters(Type type) =>
             type.GetProperties(BindingAttr).Cast<MemberInfo>().Concat(type.GetFields(BindingAttr))
                 .Select(member => CreateGetterHandler(type, member))
                 .Where(handler => handler != null)
                 .ToList(); // Enumerate _now_ so we can cache MemberGetters
 
-        private static IMemberGetterHandler<BinaryWriter> CreateGetterHandler(Type type, MemberInfo member)
+        private static IMemberGetterHandler<WriterState> CreateGetterHandler(Type type, MemberInfo member)
         {
             var memberType = member.GetMemberType();
 
@@ -67,247 +66,259 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForBool(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForBool(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<bool>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, bool>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, bool>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForByte(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForByte(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<byte>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, byte>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, byte>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForChar(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForChar(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<char>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, char>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, char>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForDateTime(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForDateTime(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<DateTime>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, DateTime>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, DateTime>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForDecimal(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForDecimal(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<decimal>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, decimal>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, decimal>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForDouble(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForDouble(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<double>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, double>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, double>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForShort(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForShort(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<short>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, short>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, short>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForInt(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForInt(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<int>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, int>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, int>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForLong(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForLong(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<long>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, long>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, long>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForSByte(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForSByte(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<sbyte>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, sbyte>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, sbyte>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
         
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForFloat(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForFloat(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<float>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, float>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, float>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForUShort(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForUShort(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<ushort>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, ushort>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, ushort>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForUInt(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForUInt(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<uint>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, uint>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, uint>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForULong(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForULong(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<ulong>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, ulong>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, ulong>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
+                WriteMemberName(writer, memberName);
                 Writer.Write(writer, val);
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForString(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForString(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<string>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, string>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, string>(getter, (writer, val) =>
             {
                 if (val == null)
-                    return;
-
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
-                Writer.Write(writer, val);
+                {
+                    WriteNull(writer, memberName);
+                }
+                else
+                {
+                    WriteMemberName(writer, memberName);
+                    Writer.Write(writer, val);
+                }
             });
         }
 
-        private static IMemberGetterHandler<BinaryWriter> CreateHandlerForObject(Type type, MemberInfo prop)
+        private static IMemberGetterHandler<WriterState> CreateHandlerForObject(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<object>(type, prop.Name);
             if (!getter.IsValid)
                 return null;
 
             var memberName = getter.MemberName;
-            return new MemberGetterHandler<BinaryWriter, object>(getter, (writer, val) =>
+            return new MemberGetterHandler<WriterState, object>(getter, (writer, val) =>
             {
-                writer.Write((byte) EnumerableType.HasItem);
-                writer.WriteString(memberName);
-                Serializer.WriteValue(writer, val);
+                if (val == null)
+                {
+                    WriteNull(writer, memberName);
+                }
+                else
+                {
+                    WriteMemberName(writer, memberName);
+                    Serializer.WriteNonNullValue(writer, val);
+                }
             });
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteNull(WriterState writer, string memberName)
+        {
+            if (writer.SkipNullValues)
+                return;
+
+            WriteMemberName(writer, memberName);
+            writer.Write((byte) SerializedType.Null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteMemberName(WriterState writer, string memberName)
+        {
+            writer.Write((byte) EnumerableType.HasItem);
+            writer.WriteString(memberName);
         }
     }
 }

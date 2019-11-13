@@ -28,10 +28,7 @@ namespace Binaron.Serializer.Tests
         public void IntToNullableIntTest()
         {
             const int val = int.MinValue;
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new Dictionary<int, int>{{val, val}}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<IDictionary<int?, int?>>(stream);
+            var dest = Tester.TestRoundTrip<IDictionary<int?, int?>>(new Dictionary<int, int>{{val, val}});
             Assert.AreEqual((val, val), (dest.Single().Key, dest.Single().Value));
         }
 
@@ -39,10 +36,7 @@ namespace Binaron.Serializer.Tests
         public void EnumToNullableEnumTest()
         {
             const TestByteEnum val = TestByteEnum.Max;
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new Dictionary<TestByteEnum, TestByteEnum>{{val, val}}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<IDictionary<TestByteEnum?, TestByteEnum?>>(stream);
+            var dest = Tester.TestRoundTrip<IDictionary<TestByteEnum?, TestByteEnum?>>(new Dictionary<TestByteEnum, TestByteEnum>{{val, val}});
             Assert.AreEqual((val, val), (dest.Single().Key, dest.Single().Value));
         }
         
@@ -50,10 +44,7 @@ namespace Binaron.Serializer.Tests
         public void NullableStructTest()
         {
             var val = new TestStruct {Value = 1, NullableValue = 2};
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new Dictionary<TestStruct, TestStruct>{{val, val}}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<IDictionary<TestStruct?, TestStruct?>>(stream);
+            var dest = Tester.TestRoundTrip<IDictionary<TestStruct?, TestStruct?>>(new Dictionary<TestStruct, TestStruct>{{val, val}});
             Assert.AreEqual(val.Value, dest.Single().Key?.Value);
             Assert.AreEqual(val.NullableValue, dest.Single().Key?.NullableValue);
             Assert.AreEqual(val.Value, dest.Single().Value?.Value);

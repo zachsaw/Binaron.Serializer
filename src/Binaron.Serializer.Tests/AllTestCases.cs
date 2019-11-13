@@ -109,7 +109,7 @@ namespace Binaron.Serializer.Tests
 
         public static IEnumerable<TestCaseData> AllListCases()
         {
-            var elements = TestCases().Concat(new TestCaseData(new TestClass {Value = 1}, new TestClass {Value = 1}))
+            var elements = TestCases().Concat(new TestCaseData(new Tester.TestClass {Value = 1}, new Tester.TestClass {Value = 1}))
                 .Select(c => (Source: c.Arguments[0], Dest: c.Arguments[1])).ToList();
 
             foreach (var sourceType in ListTypes)
@@ -129,11 +129,11 @@ namespace Binaron.Serializer.Tests
             object CreateInstance(Type type, Type elementType)
             {
                 if (type == typeof(IEnumerable))
-                    return GetEnumerable();
+                    return Tester.GetEnumerable();
 
                 if (type == typeof(IEnumerable<>).MakeGenericType(elementType))
                 {
-                    var method = new Method(typeof(AllTestCases), nameof(GetEnumerable), elementType);
+                    var method = new Method(typeof(Tester), nameof(Tester.GetEnumerable), elementType);
                     var result = method.Func(null, Array.CreateInstance(elementType, 0));
                     if (!type.IsInstanceOfType(result))
                         throw new InvalidProgramException("Method call has gone wrong");
@@ -160,8 +160,8 @@ namespace Binaron.Serializer.Tests
 
         public static IEnumerable<TestCaseData> TestClassAndTestStruct()
         {
-            yield return new TestCaseData(new List<TestClass>());
-            yield return new TestCaseData(new List<TestStruct>());
+            yield return new TestCaseData(new List<Tester.TestClass>());
+            yield return new TestCaseData(new List<Tester.TestStruct>());
         }
 
         private static IEnumerable<TestCaseData> GetTestCases(object[] values)
@@ -175,36 +175,6 @@ namespace Binaron.Serializer.Tests
                 
                 yield return new TestCaseData(source, val);
             }
-        }
-
-        public static IEnumerable GetEnumerable(params object[] items)
-        {
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var item in items)
-                yield return item;
-        }
-
-        public static IEnumerable<T> GetEnumerable<T>(params T[] items)
-        {
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var item in items)
-                yield return item;
-        }
-
-        public interface ITestBase
-        {
-            int Value { get; set; }
-        }
-
-        public class TestClass : ITestBase
-        {
-            public int Value { get; set; }
-        }
-
-        public struct TestStruct : ITestBase
-        {
-            public int Value { get; set; }
-            public int? NullableValue { get; set; }
         }
     }
 }

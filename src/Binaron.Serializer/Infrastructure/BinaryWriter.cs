@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Binaron.Serializer.Infrastructure
 {
-    public class BinaryWriter : IDisposable
+    internal class BinaryWriter : IDisposable
     {
         private const int BufferSize = 1 * 1024 * 1024; // 1MB
         private readonly UnmanagedMemory<byte> buffer = new UnmanagedMemory<byte>(BufferSize);
@@ -24,6 +24,7 @@ namespace Binaron.Serializer.Infrastructure
             Dispose();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             if (bufferOffset < 0)
@@ -35,6 +36,7 @@ namespace Binaron.Serializer.Infrastructure
             GC.SuppressFinalize(this);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void Flush()
         {
             stream.Write(new ReadOnlySpan<byte>(buffer.Data, bufferOffset));

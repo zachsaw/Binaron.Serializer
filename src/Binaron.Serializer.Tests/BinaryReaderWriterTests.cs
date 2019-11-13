@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using BinaryWriter = Binaron.Serializer.Infrastructure.BinaryWriter;
 
 namespace Binaron.Serializer.Tests
 {
@@ -10,7 +11,7 @@ namespace Binaron.Serializer.Tests
         public void UnmanagedTest()
         {
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(1);
                 writer.Dispose(); // double dispose is OK
@@ -29,7 +30,7 @@ namespace Binaron.Serializer.Tests
         {
             const string str = "Test";
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 writer.WriteString(str);
             }
@@ -46,7 +47,7 @@ namespace Binaron.Serializer.Tests
         {
             var str = string.Empty;
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 writer.WriteString(str);
             }
@@ -63,7 +64,7 @@ namespace Binaron.Serializer.Tests
         public void ManyUnmanagedBoundaryTests(int bufferSize)
         {
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < bufferSize / sizeof(int); i++)
                     writer.Write(i);
@@ -83,7 +84,7 @@ namespace Binaron.Serializer.Tests
         {
             const string str = "Test";
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < bufferSize / (sizeof(int) + sizeof(char) * str.Length); i++)
                     writer.WriteString(str);
@@ -102,7 +103,7 @@ namespace Binaron.Serializer.Tests
         public void ManyUnmanagedTests(int bufferSize)
         {
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < 1 + bufferSize / sizeof(int); i++)
                     writer.Write(i);
@@ -122,7 +123,7 @@ namespace Binaron.Serializer.Tests
         {
             const string str = "Test";
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < 1 + bufferSize / (sizeof(int) + sizeof(char) * str.Length); i++)
                     writer.WriteString(str);
@@ -142,7 +143,7 @@ namespace Binaron.Serializer.Tests
         {
             var str = CreateString(bufferSize / sizeof(char));
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 writer.WriteString(str);
             }
@@ -158,7 +159,7 @@ namespace Binaron.Serializer.Tests
         {
             var str = CreateString(bufferSize / sizeof(char));
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 writer.WriteString(str);
             }
@@ -176,7 +177,7 @@ namespace Binaron.Serializer.Tests
         {
             var str = CreateString((bufferSize + sizeof(char)) / sizeof(char));
             using var stream = new MemoryStream();
-            using (var writer = new Infrastructure.BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 writer.WriteString(str);
             }

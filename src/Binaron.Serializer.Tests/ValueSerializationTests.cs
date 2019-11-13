@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using Binaron.Serializer.Tests.Extensions;
 using NUnit.Framework;
 
@@ -10,12 +9,7 @@ namespace Binaron.Serializer.Tests
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
         public void RootLevelValueTests<TDestination>(object source, TDestination expectation)
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(source, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<TDestination>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest2 = BinaronConvert.Deserialize(stream);
+            var (dest, dest2) = Tester.TestRoundTrip2<TDestination>(source);
 
             Assert.AreEqual(expectation, dest);
             Assert.AreEqual(GetExpectation(source), dest2);
@@ -26,13 +20,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<TSource> {RootValue = now, Value = source};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceClass, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destClass = BinaronConvert.Deserialize<TestClass<TDestination>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<TDestination>>(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(expectation, destClass.Value);
@@ -45,13 +33,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<TSource> {RootValue = now, Value = source};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceStruct, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destStruct = BinaronConvert.Deserialize<TestStruct<TDestination>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<TDestination>>(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(expectation, destStruct.Value);
@@ -62,12 +44,7 @@ namespace Binaron.Serializer.Tests
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
         public void RootLevelValueTests(object source, object _)
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(source, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<object>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest2 = BinaronConvert.Deserialize(stream);
+            var (dest, dest2) = Tester.TestRoundTrip2<object>(source);
 
             Assert.AreEqual(GetExpectation(source), dest);
             Assert.AreEqual(GetExpectation(source), dest2);
@@ -78,13 +55,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<TSource> {RootValue = now, Value = source};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceClass, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destClass = BinaronConvert.Deserialize<TestClass<object>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<object>>(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(GetExpectation(source), destClass.Value);
@@ -97,13 +68,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<TSource> {RootValue = now, Value = source};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceStruct, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destStruct = BinaronConvert.Deserialize<TestStruct<object>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<object>>(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(GetExpectation(source), destStruct.Value);
@@ -114,12 +79,7 @@ namespace Binaron.Serializer.Tests
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
         public void RootLevelNullToValueTests<TDestination>(object _, TDestination __)
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(null, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<TDestination>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest2 = BinaronConvert.Deserialize(stream);
+            var (dest, dest2) = Tester.TestRoundTrip2<TDestination>(null);
 
             Assert.AreEqual(default(TDestination), dest);
             Assert.AreEqual(null, dest2);
@@ -130,13 +90,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<object> {RootValue = now, Value = null};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceClass, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destClass = BinaronConvert.Deserialize<TestClass<TDestination>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<TDestination>>(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(default(TDestination), destClass.Value);
@@ -149,13 +103,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<object> {RootValue = now, Value = null};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceStruct, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destStruct = BinaronConvert.Deserialize<TestStruct<TDestination>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<TDestination>>(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(default(TDestination), destStruct.Value);
@@ -166,12 +114,7 @@ namespace Binaron.Serializer.Tests
         [Test]
         public void RootLevelNullToObjectTest()
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(null, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<object>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest2 = BinaronConvert.Deserialize(stream);
+            var (dest, dest2) = Tester.TestRoundTrip2<object>(null);
 
             Assert.AreEqual(null, dest);
             Assert.AreEqual(null, dest2);
@@ -182,13 +125,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<object> {RootValue = now, Value = null};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceClass, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destClass = BinaronConvert.Deserialize<TestClass<object>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<object>>(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(null, destClass.Value);
@@ -201,13 +138,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<object> {RootValue = now, Value = null};
-
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(sourceStruct, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var destStruct = BinaronConvert.Deserialize<TestStruct<object>>(stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            dynamic dest = BinaronConvert.Deserialize(stream);
+            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<object>>(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(null, destStruct.Value);
@@ -218,30 +149,23 @@ namespace Binaron.Serializer.Tests
         [Test]
         public void ClassToStructTest()
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new TestClass<int> {Value = 1}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<TestStruct<int>>(stream);
+            var val = new TestClass<int> {Value = 1};
+            var dest = Tester.TestRoundTrip<TestStruct<int>>(val);
             Assert.AreEqual(1, dest.Value);
         }
 
         [Test]
         public void StructToClassTest()
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new TestStruct<int> {Value = 1}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<TestClass<int>>(stream);
+            var val = new TestStruct<int> {Value = 1};
+            var dest = Tester.TestRoundTrip<TestClass<int>>(val);
             Assert.AreEqual(1, dest.Value);
         }
         
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCasesOfValueTypes))]
         public void ToNullableTest<TDestination>(object source, TDestination expectation) where TDestination : struct
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(source, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<TDestination?>(stream);
+            var dest = Tester.TestRoundTrip<TDestination?>(source);
             TDestination? expected;
             if (source.GetType() != typeof(TDestination))
             {
@@ -258,10 +182,7 @@ namespace Binaron.Serializer.Tests
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfEnums))]
         public void EnumToNullableEnumTest<T>(T val) where T : struct
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(val, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<T?>(stream);
+            var dest = Tester.TestRoundTrip<T?>(val);
             Assert.AreEqual(val, dest);
         }
         
@@ -269,10 +190,7 @@ namespace Binaron.Serializer.Tests
         public void NullableStructTest()
         {
             var val = new TestStruct<int?> {Value = 1};
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(val, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<TestStruct<int?>?>(stream);
+            var dest = Tester.TestRoundTrip<TestStruct<int?>?>(val);
             Assert.AreEqual(val.Value, dest?.Value);
         }
         
@@ -280,10 +198,7 @@ namespace Binaron.Serializer.Tests
         public void NullableStructNullValueTest()
         {
             var val = new TestStruct<int?>();
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(val, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<TestStruct<int?>?>(stream);
+            var dest = Tester.TestRoundTrip<TestStruct<int?>?>(val);
             Assert.AreEqual(null, dest?.Value);
         }
 
