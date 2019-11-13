@@ -56,7 +56,7 @@ namespace Binaron.Serializer.Tests
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestClassAndTestStruct))]
-        public void ClassesAndStructsInListTest<TType>(IList<TType> _) where TType : AllTestCases.ITestBase, new()
+        public void ClassesAndStructsInListTest<TType>(IList<TType> _) where TType : Tester.ITestBase, new()
         {
             // Empty
             {
@@ -109,10 +109,7 @@ namespace Binaron.Serializer.Tests
         public void IntToNullableIntTest()
         {
             const int val = int.MinValue;
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new []{val}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<IList<int?>>(stream);
+            var dest = Tester.TestRoundTrip<IList<int?>>(new []{val});
             Assert.AreEqual(val, dest.Single());
         }
         
@@ -120,21 +117,15 @@ namespace Binaron.Serializer.Tests
         public void EnumToNullableEnumTest()
         {
             const TestByteEnum val = TestByteEnum.Min;
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new []{val}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<IList<TestByteEnum?>>(stream);
+            var dest = Tester.TestRoundTrip<IList<TestByteEnum?>>(new []{val});
             Assert.AreEqual(val, dest.Single());
         }
         
         [Test]
         public void NullableStructTest()
         {
-            var val = new AllTestCases.TestStruct {Value = 1, NullableValue = 2};
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new []{val}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<IList<AllTestCases.TestStruct?>>(stream);
+            var val = new Tester.TestStruct {Value = 1, NullableValue = 2};
+            var dest = Tester.TestRoundTrip<IList<Tester.TestStruct?>>(new []{val});
             Assert.AreEqual(val.Value, dest.SingleOrDefault()?.Value);
             Assert.AreEqual(val.NullableValue, dest.SingleOrDefault()?.NullableValue);
         }
@@ -159,10 +150,8 @@ namespace Binaron.Serializer.Tests
 
         private static void TestFromObject<T>() where T : IEnumerable
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(new AllTestCases.TestClass {Value = 1}, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            var dest = BinaronConvert.Deserialize<T>(stream);
+            var val = new Tester.TestClass {Value = 1};
+            var dest = Tester.TestRoundTrip<T>(val);
             Assert.AreEqual(1, dest.Count());
         }
 
@@ -219,7 +208,7 @@ namespace Binaron.Serializer.Tests
         private static TList AddItem<TList, TItem>(TList source, TItem item) where TList : class
         {
             if (source.GetType().IsArray)
-                return AllTestCases.GetEnumerable(((IEnumerable) source).Concat(item).ToArray()).Cast<TItem>().ToArray() as TList;
+                return Tester.GetEnumerable(((IEnumerable) source).Concat(item).ToArray()).Cast<TItem>().ToArray() as TList;
 
             switch (source)
             {
@@ -230,9 +219,9 @@ namespace Binaron.Serializer.Tests
                     list.Add(item);
                     return source;
                 case IEnumerable<TItem> enumerable:
-                    return AllTestCases.GetEnumerable(enumerable.Concat(item).ToArray()) as TList;
+                    return Tester.GetEnumerable(enumerable.Concat(item).ToArray()) as TList;
                 case IEnumerable enumerable:
-                    return AllTestCases.GetEnumerable(enumerable.Concat(item).ToArray()) as TList;
+                    return Tester.GetEnumerable(enumerable.Concat(item).ToArray()) as TList;
                 default:
                     throw new NotSupportedException();
             }

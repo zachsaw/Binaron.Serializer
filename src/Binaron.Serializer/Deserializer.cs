@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Runtime.CompilerServices;
 using Binaron.Serializer.Enums;
 using Binaron.Serializer.Extensions;
 using Binaron.Serializer.Infrastructure;
@@ -10,6 +11,7 @@ namespace Binaron.Serializer
 {
     internal static class Deserializer
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IDictionary<string, object> ReadObject(BinaryReader reader)
         {
             var expandoObject = (IDictionary<string, object>) new ExpandoObject();
@@ -22,6 +24,7 @@ namespace Binaron.Serializer
             return expandoObject;
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IDictionary ReadDictionary(BinaryReader reader)
         {
             var count = reader.Read<int>();
@@ -35,6 +38,7 @@ namespace Binaron.Serializer
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object[] ReadList(BinaryReader reader)
         {
             var count = reader.Read<int>();
@@ -45,6 +49,7 @@ namespace Binaron.Serializer
             return result.Length == list.Count ? result : list.ToArray();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ICollection<object> ReadEnumerable(BinaryReader reader)
         {
             var result = new List<object>();
