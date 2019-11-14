@@ -13,6 +13,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, bool val)
             {
                 WriteMemberName(writer, MemberName);
@@ -26,6 +27,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, byte val)
             {
                 WriteMemberName(writer, MemberName);
@@ -39,6 +41,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, char val)
             {
                 WriteMemberName(writer, MemberName);
@@ -52,6 +55,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, DateTime val)
             {
                 WriteMemberName(writer, MemberName);
@@ -65,6 +69,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, decimal val)
             {
                 WriteMemberName(writer, MemberName);
@@ -78,6 +83,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, double val)
             {
                 WriteMemberName(writer, MemberName);
@@ -91,6 +97,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, short val)
             {
                 WriteMemberName(writer, MemberName);
@@ -104,6 +111,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, int val)
             {
                 WriteMemberName(writer, MemberName);
@@ -117,6 +125,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, long val)
             {
                 WriteMemberName(writer, MemberName);
@@ -130,6 +139,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, sbyte val)
             {
                 WriteMemberName(writer, MemberName);
@@ -143,6 +153,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, float val)
             {
                 WriteMemberName(writer, MemberName);
@@ -156,6 +167,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, ushort val)
             {
                 WriteMemberName(writer, MemberName);
@@ -169,6 +181,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, uint val)
             {
                 WriteMemberName(writer, MemberName);
@@ -182,6 +195,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, ulong val)
             {
                 WriteMemberName(writer, MemberName);
@@ -195,6 +209,7 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, string val)
             {
                 if (val == null)
@@ -215,6 +230,28 @@ namespace Binaron.Serializer.Accessors
             {
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            protected override void HandleInternal(WriterState writer, object val)
+            {
+                if (val == null)
+                {
+                    WriteNull(writer, MemberName);
+                }
+                else
+                {
+                    WriteMemberName(writer, MemberName);
+                    Serializer.WriteNonNullValue(writer, (T) val);
+                }
+            }
+        }
+
+        internal class TypedObjectHandler<T> : MemberGetterHandlerBase<WriterState, object>
+        {
+            public TypedObjectHandler(MemberGetter<object> getter) : base(getter)
+            {
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void HandleInternal(WriterState writer, object val)
             {
                 if (val == null)

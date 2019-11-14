@@ -189,10 +189,14 @@ namespace Binaron.Serializer.Accessors
         private static IMemberGetterHandler<WriterState> CreateHandlerForObject(Type type, MemberInfo prop)
         {
             var getter = new MemberGetter<object>(type, prop.Name);
-            return (IMemberGetterHandler<WriterState>)
-                (!getter.IsValid
-                    ? null
-                    : Activator.CreateInstance(typeof(MemberGetterHandlers.ObjectHandler<>).MakeGenericType(getter.MemberInfo.GetMemberType()), getter));
+            if (!getter.IsValid)
+                return null;
+
+            var memberType = getter.MemberInfo.GetMemberType();
+            if (memberType == typeof(object) || Nullable.GetUnderlyingType(memberType) != null)
+                return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.ObjectHandler<>).MakeGenericType(memberType), getter);
+
+            return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.TypedObjectHandler<>).MakeGenericType(memberType), getter);
         }
     }
 }
