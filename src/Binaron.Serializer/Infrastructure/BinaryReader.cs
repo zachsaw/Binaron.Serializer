@@ -8,7 +8,7 @@ namespace Binaron.Serializer.Infrastructure
 {
     internal class BinaryReader : IDisposable
     {
-        private const int BufferSize = 64 * 1024; // 64KB
+        private const int BufferSize = 256 * 1024; // 256KB
         private readonly UnmanagedMemory<byte> buffer = new UnmanagedMemory<byte>(BufferSize);
         private readonly Stream stream;
         private int bufferOffset;

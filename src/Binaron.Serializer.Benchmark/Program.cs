@@ -18,30 +18,30 @@ namespace BinSerializerTest
             public void Setup()
             {
                 // warm-up
-                for (var i = 0; i < 5; i++)
+                for (var i = 0; i < 50; i++)
                 {
                     NewtonsoftJsonTest_Validate(book);
                     BinaronTest_Validate(book);
                 }
             }
 
-//            [Benchmark]
-//            public void Json_Serialize()
-//            {
-//                NewtonsoftJsonTest_Serialize(book);
-//            }
-//
-//            [Benchmark]
-//            public void Binaron_Serialize()
-//            {
-//                BinaronTest_Serialize(book);
-//            }
-//
-//            [Benchmark]
-//            public void Json_Deserialize()
-//            {
-//                NewtonsoftJsonTest_Deserialize(book);
-//            }
+            [Benchmark]
+            public void Json_Serialize()
+            {
+                NewtonsoftJsonTest_Serialize(book);
+            }
+
+            [Benchmark]
+            public void Binaron_Serialize()
+            {
+                BinaronTest_Serialize(book);
+            }
+
+            [Benchmark]
+            public void Json_Deserialize()
+            {
+                NewtonsoftJsonTest_Deserialize(book);
+            }
 
             [Benchmark]
             public void Binaron_Deserialize()
