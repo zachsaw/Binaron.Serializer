@@ -15,21 +15,21 @@ namespace Binaron.Serializer.Accessors
     {
         private const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.Instance;
 
-        private static readonly ConcurrentDictionary<Type, (Func<object> Activate, IDictionary<string, IMemberSetterHandler<BinaryReader>> Setters, Type IDictionaryValueType)> ActivatorsAndSetters = 
-            new ConcurrentDictionary<Type, (Func<object>, IDictionary<string, IMemberSetterHandler<BinaryReader>>, Type IDictionaryValueType)>();
+        private static readonly ConcurrentDictionary<Type, (Func<object> Activate, IDictionary<string, IMemberSetterHandler<BinaryReader>> Setters, Type IDictionaryValueType, Type ActualType)> ActivatorsAndSetters = 
+            new ConcurrentDictionary<Type, (Func<object>, IDictionary<string, IMemberSetterHandler<BinaryReader>>, Type IDictionaryValueType, Type ActualType)>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (Func<object> Activate, IDictionary<string, IMemberSetterHandler<BinaryReader>> Setters, Type IDictionaryValueType) GetActivatorAndSetterHandlers(Type type) => 
+        public static (Func<object> Activate, IDictionary<string, IMemberSetterHandler<BinaryReader>> Setters, Type IDictionaryValueType, Type ActualType) GetActivatorAndSetterHandlers(Type type) => 
             ActivatorsAndSetters.GetOrAdd(type, _ => CreateActivatorsAndSetters(type));
 
-        private static (Func<object>, IDictionary<string, IMemberSetterHandler<BinaryReader>>, Type IDictionaryValueType) CreateActivatorsAndSetters(Type type)
+        private static (Func<object>, IDictionary<string, IMemberSetterHandler<BinaryReader>>, Type IDictionaryValueType, Type ActualType) CreateActivatorsAndSetters(Type type)
         {
             var (keyType, valueType) = GenericType.GetIDictionaryReader(type);
             if (keyType == typeof(string))
-                return (null, null, valueType);
+                return (null, null, valueType, type);
 
             var actualType = GetActualType(type);
-            return (CreateActivator(actualType), CreateSetters(actualType), null);
+            return (CreateActivator(actualType), CreateSetters(actualType), null, actualType);
         }
 
         private static Func<object> CreateActivator(Type type) => Activator.Get(type);

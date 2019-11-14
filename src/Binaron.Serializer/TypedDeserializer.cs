@@ -551,9 +551,9 @@ namespace Binaron.Serializer
                 var typeInfo = SetterHandler.GetActivatorAndSetterHandlers(type);
                 var valueType = typeInfo.IDictionaryValueType;
                 if (valueType != null)
-                    return new GenericDictionaryReader<T>(valueType);
+                    return new GenericDictionaryReader(type, valueType);
 
-                if (typeof(IDictionary).IsAssignableFrom(type))
+                if (typeof(IDictionary).IsAssignableFrom(typeInfo.ActualType))
                     return new DictionaryReader(typeInfo.Activate);
 
                 return new ObjectReader(typeInfo.Activate, typeInfo.Setters);
@@ -612,17 +612,19 @@ namespace Binaron.Serializer
                 }
             }
 
-            private class GenericDictionaryReader<T> : IObjectReader
+            private class GenericDictionaryReader : IObjectReader
             {
-                private readonly Type valueType;
+                private readonly Type type;
+                private readonly Type elementType;
 
-                public GenericDictionaryReader(Type valueType)
+                public GenericDictionaryReader(Type type, Type elementType)
                 {
-                    this.valueType = valueType;
+                    this.type = type;
+                    this.elementType = elementType;
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public object Read(BinaryReader reader) => GenericReader.ReadObjectAsDictionary(reader, typeof(T), valueType);
+                public object Read(BinaryReader reader) => GenericReader.ReadObjectAsDictionary(reader, type, elementType);
             }
 
             private class DynamicObjectReader : IObjectReader
