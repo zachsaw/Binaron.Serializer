@@ -11,12 +11,57 @@ namespace Binaron.Serializer.Infrastructure
     {
         private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>>();
 
+        private interface IGenericEnumerableWriter
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void Write(WriterState writer, IEnumerable list);
+        }
+
+        private static class GetGenericEnumerableWriter<T>
+        {
+            public static readonly IGenericEnumerableWriter Writer = GenericEnumerableWriters.CreateWriter<T>();
+        }
+
+        private static class GenericEnumerableWriters
+        {
+            public static IGenericEnumerableWriter CreateWriter<T>()
+            {
+                var elementType = GenericType.GetICollectionGenericType<T>.Type;
+                return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType));
+            }
+
+            private class GenericEnumerableWriter<T> : IGenericEnumerableWriter
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, IEnumerable list)
+                {
+                    foreach (var item in (IEnumerable<T>) list)
+                        Serializer.WriteNonPrimitive(writer, item);
+                }
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WriteEnumerable<T>(WriterState writer, IEnumerable enumerable)
         {
             var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
-            if (elementType?.IsEnum != true)
-                return WriteEnumerableNonEnums(writer, enumerable, elementType);
+            if (elementType == null)
+                return false;
+
+            if (elementType.IsEnum != true)
+            {
+                // ReSharper disable once PossibleMultipleEnumeration
+                if (WriteEnumerable(writer, enumerable, elementType))
+                    return true;
+
+                var genericWriter = GetGenericEnumerableWriter<T>.Writer;
+                if (genericWriter == null)
+                    return false;
+
+                // ReSharper disable once PossibleMultipleEnumeration
+                genericWriter.Write(writer, enumerable);
+                return true;
+            }
 
             WriteEnums(writer, enumerable, elementType);
             return true;
@@ -26,15 +71,18 @@ namespace Binaron.Serializer.Infrastructure
         public static bool WriteEnumerable(WriterState writer, IEnumerable enumerable)
         {
             var elementType = GenericType.GetIEnumerable(enumerable.GetType());
-            if (elementType?.IsEnum != true)
-                return WriteEnumerableNonEnums(writer, enumerable, elementType);
+            if (elementType == null)
+                return false;
+
+            if (elementType.IsEnum != true)
+                return WriteEnumerable(writer, enumerable, elementType);
 
             WriteEnums(writer, enumerable, elementType);
             return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool WriteEnumerableNonEnums(WriterState writer, IEnumerable enumerable, Type elementType)
+        private static bool WriteEnumerable(WriterState writer, IEnumerable enumerable, Type elementType)
         {
             switch (Type.GetTypeCode(elementType))
             {
@@ -181,13 +229,68 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
+        private interface IGenericListWriter
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void Write(WriterState writer, ICollection list);
+        }
+
+        private static class GetGenericListWriter<T>
+        {
+            public static readonly IGenericListWriter Writer = GenericListWriters.CreateWriter<T>();
+        }
+
+        private static class GenericListWriters
+        {
+            public static IGenericListWriter CreateWriter<T>()
+            {
+                var elementType = GenericType.GetICollectionGenericType<T>.Type;
+                return (IGenericListWriter) (typeof(T).IsArray 
+                    ? Activator.CreateInstance(typeof(GenericArrayWriter<>).MakeGenericType(elementType)) 
+                    : Activator.CreateInstance(typeof(GenericListWriter<>).MakeGenericType(elementType)));
+            }
+
+            private class GenericArrayWriter<T> : IGenericListWriter
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, ICollection list)
+                {
+                    foreach (var item in (T[]) list)
+                        Serializer.WriteNonPrimitive(writer, item);
+                }
+            }
+
+            private class GenericListWriter<T> : IGenericListWriter
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, ICollection list)
+                {
+                    foreach (var item in (ICollection<T>) list)
+                        Serializer.WriteNonPrimitive(writer, item);
+                }
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WriteList<T>(WriterState writer, ICollection list)
         {
             var listType = typeof(T);
             var elementType = GenericType.GetICollectionGenericType<T>.Type;
-            if (elementType?.IsEnum != true)
-                return listType.IsArray ? WriteArrayNonEnums(writer, list, elementType) : WriteListNonEnums(writer, list, elementType);
+            if (elementType == null)
+                return false;
+
+            if (elementType.IsEnum != true)
+            {
+                if (listType.IsArray ? WriteArray(writer, list, elementType) : WriteList(writer, list, elementType))
+                    return true;
+
+                var genericWriter = GetGenericListWriter<T>.Writer;
+                if (genericWriter == null)
+                    return false;
+
+                genericWriter.Write(writer, list);
+                return true;
+            }
 
             WriteEnums(writer, list, elementType);
             return true;
@@ -198,15 +301,18 @@ namespace Binaron.Serializer.Infrastructure
         {
             var listType = list.GetType();
             var elementType = GenericType.GetICollection(listType);
-            if (elementType?.IsEnum != true)
-                return listType.IsArray ? WriteArrayNonEnums(writer, list, elementType) : WriteListNonEnums(writer, list, elementType);
+            if (elementType == null)
+                return false;
+
+            if (elementType.IsEnum != true)
+                return listType.IsArray ? WriteArray(writer, list, elementType) : WriteList(writer, list, elementType);
 
             WriteEnums(writer, list, elementType);
             return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool WriteArrayNonEnums(WriterState writer, ICollection list, Type elementType)
+        private static bool WriteArray(WriterState writer, ICollection list, Type elementType)
         {
             switch (Type.GetTypeCode(elementType))
             {
@@ -281,7 +387,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool WriteListNonEnums(WriterState writer, ICollection list, Type elementType)
+        private static bool WriteList(WriterState writer, ICollection list, Type elementType)
         {
             switch (Type.GetTypeCode(elementType))
             {

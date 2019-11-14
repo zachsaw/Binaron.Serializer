@@ -57,27 +57,9 @@ namespace Binaron.Serializer
             void Write(WriterState writer, T val);
         }
 
-        private static INonPrimitiveWriter<T> CreateWriter<T>()
-        {
-            var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
-            if (types.KeyType != null)
-                return new NonPrimitiveWriters.GenericDictionaryWriter<T>();
-
-            if (typeof(IDictionary).IsAssignableFrom(typeof(T)))
-                return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.DictionaryWriter<>).MakeGenericType(typeof(T)));
-
-            if (typeof(ICollection).IsAssignableFrom(typeof(T)))
-                return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.ListWriter<>).MakeGenericType(typeof(T)));
-
-            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
-                return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.EnumerableWriter<>).MakeGenericType(typeof(T)));
-
-            return new NonPrimitiveWriters.ObjectWriter<T>();
-        }
-
         private static class GetNonPrimitiveWriterGeneric<T>
         {
-            public static readonly INonPrimitiveWriter<T> Writer = CreateWriter<T>();
+            public static readonly INonPrimitiveWriter<T> Writer = NonPrimitiveWriters.CreateWriter<T>();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -273,31 +255,49 @@ namespace Binaron.Serializer
 
         private static class NonPrimitiveWriters
         {
-            public class GenericDictionaryWriter<T> : INonPrimitiveWriter<T>
+            public static INonPrimitiveWriter<T> CreateWriter<T>()
+            {
+                var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
+                if (types.KeyType != null)
+                    return new NonPrimitiveWriters.GenericDictionaryWriter<T>();
+
+                if (typeof(IDictionary).IsAssignableFrom(typeof(T)))
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.DictionaryWriter<>).MakeGenericType(typeof(T)));
+
+                if (typeof(ICollection).IsAssignableFrom(typeof(T)))
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.ListWriter<>).MakeGenericType(typeof(T)));
+
+                if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.EnumerableWriter<>).MakeGenericType(typeof(T)));
+
+                return new ObjectWriter<T>();
+            }
+
+            private class GenericDictionaryWriter<T> : INonPrimitiveWriter<T>
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => GenericWriter.WriteDictionary(writer, val);
             }
 
-            public class DictionaryWriter<T> : INonPrimitiveWriter<T> where T : IDictionary
+            private class DictionaryWriter<T> : INonPrimitiveWriter<T> where T : IDictionary
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteDictionary(writer, val);
             }
 
-            public class ListWriter<T> : INonPrimitiveWriter<T> where T : ICollection
+            private class ListWriter<T> : INonPrimitiveWriter<T> where T : ICollection
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteList<T>(writer, val);
             }
 
-            public class EnumerableWriter<T> : INonPrimitiveWriter<T> where T : IEnumerable
+            private class EnumerableWriter<T> : INonPrimitiveWriter<T> where T : IEnumerable
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteEnumerable<T>(writer, val);
             }
 
-            public class ObjectWriter<T> : INonPrimitiveWriter<T>
+            private class ObjectWriter<T> : INonPrimitiveWriter<T>
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteObject(writer, val);
