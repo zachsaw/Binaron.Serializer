@@ -1,38 +1,31 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using Binaron.Serializer.Extensions;
 
 namespace Binaron.Serializer.Accessors
 {
     internal readonly struct MemberGetter<T>
     {
-        private const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.Instance;
-
         private readonly Func<object, T> getDelegate;
         
-        public Type MemberType { get; }
-
+        public MemberInfo MemberInfo { get; }
         public string MemberName { get; }
         public bool IsValid { get; }
     
         public MemberGetter(Type targetType, string memberName)
         {
             MemberName = memberName;
-            var memberInfo = targetType.GetProperties(BindingAttr).Cast<MemberInfo>().Concat(targetType.GetFields(BindingAttr)).FirstOrDefault(x => x.Name == memberName);
+            var memberInfo = MemberInfo = targetType.GetMemberInfo(memberName);
 
-            if (memberInfo == null)
-                throw new ArgumentException($"Property '{memberName}' does not exist for type '${targetType}'.");
-
-            MemberType = memberInfo.GetMemberType();
-            
             var canRead = memberInfo is FieldInfo || ((PropertyInfo) memberInfo).CanRead;
             if (canRead)
             {
-                getDelegate = GetGetDelegate(targetType, MemberType, memberInfo);
+                memberInfo = targetType.TryGetBackingField(memberName) ?? memberInfo;
+                getDelegate = GetGetDelegate(targetType, memberInfo.GetMemberType(), memberInfo);
                 IsValid = true;
             }
             else
@@ -43,6 +36,7 @@ namespace Binaron.Serializer.Accessors
         }
 
         [Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get(object target) => getDelegate(target);
 
         // ReSharper disable once StaticMemberInGenericType

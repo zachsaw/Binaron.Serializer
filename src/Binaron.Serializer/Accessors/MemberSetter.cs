@@ -1,36 +1,30 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using Binaron.Serializer.Extensions;
 
 namespace Binaron.Serializer.Accessors
 {
     internal readonly struct MemberSetter<T>
     {
-        private const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.Instance;
-
         private readonly Action<object, T> setDelegate;
 
-        public Type MemberType { get; }
+        public MemberInfo MemberInfo { get; }
         public string MemberName { get; }
         public bool IsValid { get; }
 
         public MemberSetter(Type targetType, string memberName)
         {
             MemberName = memberName;
-            var memberInfo = targetType.GetProperties(BindingAttr).Cast<MemberInfo>().Concat(targetType.GetFields(BindingAttr)).FirstOrDefault(x => x.Name == memberName);
-
-            if (memberInfo == null)
-                throw new ArgumentException($"Property '{memberName}' does not exist for type '${targetType}'.");
-
-            MemberType = memberInfo.GetMemberType();
+            var memberInfo = MemberInfo = targetType.GetMemberInfo(memberName);
             
             var canWrite = memberInfo is FieldInfo || ((PropertyInfo) memberInfo).CanWrite;
             if (canWrite)
             {
-                setDelegate = GetSetDelegate(targetType, MemberType, memberInfo);
+                memberInfo = targetType.TryGetBackingField(memberName) ?? memberInfo;
+                setDelegate = GetSetDelegate(targetType, memberInfo.GetMemberType(), memberInfo);
                 IsValid = true;
             }
             else
@@ -40,6 +34,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(object target, T value) => setDelegate(target, value);
 
         private static readonly Type[] SetParamTypes = {typeof(object), typeof(T)};

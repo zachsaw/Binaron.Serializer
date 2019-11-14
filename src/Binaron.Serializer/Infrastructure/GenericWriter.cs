@@ -12,237 +12,378 @@ namespace Binaron.Serializer.Infrastructure
         private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool WriteEnumerable(WriterState writer, IEnumerable enumerable)
+        public static bool WriteEnumerable<T>(WriterState writer, IEnumerable enumerable)
         {
-            var elementType = GenericType.GetIEnumerable(enumerable.GetType());
+            var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
             if (elementType?.IsEnum != true)
-            {
-                switch (Type.GetTypeCode(elementType))
-                {
-                    case TypeCode.Boolean:
-                        foreach (var item in (IEnumerable<bool>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Byte:
-                        foreach (var item in (IEnumerable<byte>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Char:
-                        foreach (var item in (IEnumerable<char>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.DateTime:
-                        foreach (var item in (IEnumerable<DateTime>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Decimal:
-                        foreach (var item in (IEnumerable<decimal>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Double:
-                        foreach (var item in (IEnumerable<double>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Int16:
-                        foreach (var item in (IEnumerable<short>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Int32:
-                        foreach (var item in (IEnumerable<int>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Int64:
-                        foreach (var item in (IEnumerable<long>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.SByte:
-                        foreach (var item in (IEnumerable<sbyte>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.Single:
-                        foreach (var item in (IEnumerable<float>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.UInt16:
-                        foreach (var item in (IEnumerable<ushort>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.UInt32:
-                        foreach (var item in (IEnumerable<uint>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    case TypeCode.UInt64:
-                        foreach (var item in (IEnumerable<ulong>) enumerable)
-                        {
-                            writer.Write((byte) EnumerableType.HasItem);
-                            Writer.Write(writer, item);
-                        }
-
-                        writer.Write((byte) EnumerableType.End);
-                        return true;
-                    default:
-                        return false;
-                }
-            }
+                return WriteEnumerableNonEnums(writer, enumerable, elementType);
 
             WriteEnums(writer, enumerable, elementType);
             return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool WriteList(WriterState writer, ICollection list)
+        public static bool WriteEnumerable(WriterState writer, IEnumerable enumerable)
         {
-            var elementType = GenericType.GetICollection(list.GetType());
+            var elementType = GenericType.GetIEnumerable(enumerable.GetType());
             if (elementType?.IsEnum != true)
+                return WriteEnumerableNonEnums(writer, enumerable, elementType);
+
+            WriteEnums(writer, enumerable, elementType);
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool WriteEnumerableNonEnums(WriterState writer, IEnumerable enumerable, Type elementType)
+        {
+            switch (Type.GetTypeCode(elementType))
             {
-                switch (Type.GetTypeCode(elementType))
-                {
-                    case TypeCode.Boolean:
-                        foreach (var item in (ICollection<bool>) list)
+                case TypeCode.String:
+                    foreach (var item in (IEnumerable<string>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        if (item != null)
                             Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Byte:
-                        foreach (var item in (ICollection<byte>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Char:
-                        foreach (var item in (ICollection<char>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.DateTime:
-                        foreach (var item in (ICollection<DateTime>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Decimal:
-                        foreach (var item in (ICollection<decimal>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Double:
-                        foreach (var item in (ICollection<double>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Int16:
-                        foreach (var item in (ICollection<short>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Int32:
-                        foreach (var item in (ICollection<int>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Int64:
-                        foreach (var item in (ICollection<long>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.SByte:
-                        foreach (var item in (ICollection<sbyte>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.Single:
-                        foreach (var item in (ICollection<float>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.UInt16:
-                        foreach (var item in (ICollection<ushort>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.UInt32:
-                        foreach (var item in (ICollection<uint>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    case TypeCode.UInt64:
-                        foreach (var item in (ICollection<ulong>) list)
-                            Writer.Write(writer, item);
-                        return true;
-                    default:
-                        return false;
-                }
+                        else
+                            writer.Write((byte) SerializedType.Null);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Boolean:
+                    foreach (var item in (IEnumerable<bool>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Byte:
+                    foreach (var item in (IEnumerable<byte>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Char:
+                    foreach (var item in (IEnumerable<char>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.DateTime:
+                    foreach (var item in (IEnumerable<DateTime>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Decimal:
+                    foreach (var item in (IEnumerable<decimal>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Double:
+                    foreach (var item in (IEnumerable<double>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Int16:
+                    foreach (var item in (IEnumerable<short>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Int32:
+                    foreach (var item in (IEnumerable<int>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Int64:
+                    foreach (var item in (IEnumerable<long>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.SByte:
+                    foreach (var item in (IEnumerable<sbyte>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Single:
+                    foreach (var item in (IEnumerable<float>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.UInt16:
+                    foreach (var item in (IEnumerable<ushort>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.UInt32:
+                    foreach (var item in (IEnumerable<uint>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.UInt64:
+                    foreach (var item in (IEnumerable<ulong>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                default:
+                    return false;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool WriteList<T>(WriterState writer, ICollection list)
+        {
+            var listType = typeof(T);
+            var elementType = GenericType.GetICollectionGenericType<T>.Type;
+            if (elementType?.IsEnum != true)
+                return listType.IsArray ? WriteArrayNonEnums(writer, list, elementType) : WriteListNonEnums(writer, list, elementType);
 
             WriteEnums(writer, list, elementType);
             return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool WriteDictionary(WriterState writer, object dictionary)
+        public static bool WriteList(WriterState writer, ICollection list)
         {
-            var type = GenericType.GetIDictionaryWriter(dictionary.GetType());
-            if (type.KeyType != null)
+            var listType = list.GetType();
+            var elementType = GenericType.GetICollection(listType);
+            if (elementType?.IsEnum != true)
+                return listType.IsArray ? WriteArrayNonEnums(writer, list, elementType) : WriteListNonEnums(writer, list, elementType);
+
+            WriteEnums(writer, list, elementType);
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool WriteArrayNonEnums(WriterState writer, ICollection list, Type elementType)
+        {
+            switch (Type.GetTypeCode(elementType))
             {
-                var writeAll = GetDictionaryWriter(type);
+                case TypeCode.String:
+                    foreach (var item in (string[]) list)
+                    {
+                        if (item != null)
+                            Writer.Write(writer, item);
+                        else
+                            writer.Write((byte) SerializedType.Null);
+                    }
+                    return true;
+                case TypeCode.Boolean:
+                    foreach (var item in (bool[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Byte:
+                    foreach (var item in (byte[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Char:
+                    foreach (var item in (char[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.DateTime:
+                    foreach (var item in (DateTime[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Decimal:
+                    foreach (var item in (decimal[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Double:
+                    foreach (var item in (double[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Int16:
+                    foreach (var item in (short[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Int32:
+                    foreach (var item in (int[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Int64:
+                    foreach (var item in (long[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.SByte:
+                    foreach (var item in (sbyte[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Single:
+                    foreach (var item in (float[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.UInt16:
+                    foreach (var item in (ushort[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.UInt32:
+                    foreach (var item in (uint[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.UInt64:
+                    foreach (var item in (ulong[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool WriteListNonEnums(WriterState writer, ICollection list, Type elementType)
+        {
+            switch (Type.GetTypeCode(elementType))
+            {
+                case TypeCode.String:
+                    foreach (var item in (ICollection<string>) list)
+                    {
+                        if (item != null)
+                            Writer.Write(writer, item);
+                        else
+                            writer.Write((byte) SerializedType.Null);
+                    }
+                    return true;
+                case TypeCode.Boolean:
+                    foreach (var item in (ICollection<bool>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Byte:
+                    foreach (var item in (ICollection<byte>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Char:
+                    foreach (var item in (ICollection<char>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.DateTime:
+                    foreach (var item in (ICollection<DateTime>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Decimal:
+                    foreach (var item in (ICollection<decimal>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Double:
+                    foreach (var item in (ICollection<double>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Int16:
+                    foreach (var item in (ICollection<short>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Int32:
+                    foreach (var item in (ICollection<int>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Int64:
+                    foreach (var item in (ICollection<long>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.SByte:
+                    foreach (var item in (ICollection<sbyte>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Single:
+                    foreach (var item in (ICollection<float>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.UInt16:
+                    foreach (var item in (ICollection<ushort>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.UInt32:
+                    foreach (var item in (ICollection<uint>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.UInt64:
+                    foreach (var item in (ICollection<ulong>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool WriteDictionary<T>(WriterState writer, T dictionary)
+        {
+            var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
+            if (types.KeyType != null)
+            {
+                var writeAll = GetDictionaryWriter(types);
                 writeAll(writer, dictionary);
                 return true;
             }
             return false;
         }
 
-        private static Action<WriterState, object> GetDictionaryWriter((Type KeyType, Type ValueType) type) => DictionaryAdders.GetOrAdd(type, _ =>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool WriteDictionary(WriterState writer, object dictionary)
         {
-            var method = typeof(DictionaryWriter).GetMethod(nameof(DictionaryWriter.WriteAll))?.MakeGenericMethod(type.KeyType, type.ValueType) ?? throw new MissingMethodException();
+            var types = GenericType.GetIDictionaryWriter(dictionary.GetType());
+            if (types.KeyType != null)
+            {
+                var writeAll = GetDictionaryWriter(types);
+                writeAll(writer, dictionary);
+                return true;
+            }
+            return false;
+        }
+
+        private static Action<WriterState, object> GetDictionaryWriter((Type KeyType, Type ValueType) types) => DictionaryAdders.GetOrAdd(types, _ =>
+        {
+            var method = typeof(DictionaryWriter).GetMethod(nameof(DictionaryWriter.WriteAll))?.MakeGenericMethod(types.KeyType, types.ValueType) ?? throw new MissingMethodException();
             return (Action<WriterState, object>) Delegate.CreateDelegate(typeof(Action<WriterState, object>), null, method);
         });
 

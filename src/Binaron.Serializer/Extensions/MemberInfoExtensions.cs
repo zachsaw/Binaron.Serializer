@@ -7,6 +7,9 @@ namespace Binaron.Serializer.Extensions
     {
         public static Type GetMemberType(this MemberInfo memberInfo)
         {
+            if (memberInfo == null)
+                throw new ArgumentNullException(nameof(memberInfo));
+
             switch (memberInfo)
             {
                 case FieldInfo info:

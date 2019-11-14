@@ -45,17 +45,13 @@ namespace Binaron.Serializer.Infrastructure
 
         private static void Free(void* mem)
         {
-            var bytesAllocated = sizeof(int) + sizeof(T) * (long) GetLength(mem);
-            GC.RemoveMemoryPressure(bytesAllocated);
             Marshal.FreeHGlobal(new IntPtr(mem));
         }
 
         private static void* Allocate(int length)
         {
             var bytes = sizeof(int) + sizeof(T) * (long) length;
-            var result = Marshal.AllocHGlobal(new IntPtr(bytes)).ToPointer();
-            GC.AddMemoryPressure(bytes);
-            return result;
+            return Marshal.AllocHGlobal(new IntPtr(bytes)).ToPointer();
         }
     }
 }

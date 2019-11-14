@@ -34,12 +34,12 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void MemberSetterNoReadTest()
+        public void MemberGetterNoReadTest()
         {
             var getter = new MemberGetter<int>(typeof(TestClass), nameof(TestClass.NoRead));
             Assert.AreEqual(false, getter.IsValid);
         }
-
+        
         private class TestClass
         {
             public int Value { get; }
