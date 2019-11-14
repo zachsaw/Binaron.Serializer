@@ -259,16 +259,16 @@ namespace Binaron.Serializer
             {
                 var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
                 if (types.KeyType != null)
-                    return new NonPrimitiveWriters.GenericDictionaryWriter<T>();
+                    return new GenericDictionaryWriter<T>();
 
                 if (typeof(IDictionary).IsAssignableFrom(typeof(T)))
-                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.DictionaryWriter<>).MakeGenericType(typeof(T)));
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(DictionaryWriter<>).MakeGenericType(typeof(T)));
 
                 if (typeof(ICollection).IsAssignableFrom(typeof(T)))
-                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.ListWriter<>).MakeGenericType(typeof(T)));
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(ListWriter<>).MakeGenericType(typeof(T)));
 
                 if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
-                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(NonPrimitiveWriters.EnumerableWriter<>).MakeGenericType(typeof(T)));
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(EnumerableWriter<>).MakeGenericType(typeof(T)));
 
                 return new ObjectWriter<T>();
             }

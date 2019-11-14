@@ -25,23 +25,23 @@ namespace BinSerializerTest
                 }
             }
 
-            [Benchmark]
-            public void Json_Serialize()
-            {
-                NewtonsoftJsonTest_Serialize(book);
-            }
-
-            [Benchmark]
-            public void Binaron_Serialize()
-            {
-                BinaronTest_Serialize(book);
-            }
-
-            [Benchmark]
-            public void Json_Deserialize()
-            {
-                NewtonsoftJsonTest_Deserialize(book);
-            }
+//            [Benchmark]
+//            public void Json_Serialize()
+//            {
+//                NewtonsoftJsonTest_Serialize(book);
+//            }
+//
+//            [Benchmark]
+//            public void Binaron_Serialize()
+//            {
+//                BinaronTest_Serialize(book);
+//            }
+//
+//            [Benchmark]
+//            public void Json_Deserialize()
+//            {
+//                NewtonsoftJsonTest_Deserialize(book);
+//            }
 
             [Benchmark]
             public void Binaron_Deserialize()

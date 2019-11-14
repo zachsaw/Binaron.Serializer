@@ -6,7 +6,7 @@ namespace Binaron.Serializer.Infrastructure
 {
     internal class BinaryWriter : IDisposable
     {
-        private const int BufferSize = 32 * 1024; // 32KB
+        private const int BufferSize = 64 * 1024; // 64KB
         private readonly UnmanagedMemory<byte> buffer = new UnmanagedMemory<byte>(BufferSize);
         private readonly Stream stream;
         private int bufferOffset;
