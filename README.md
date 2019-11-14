@@ -6,12 +6,14 @@
 
 With the roundtrip serialization-deserialization benchmark project included in this repository (Binaron.Serializer.Benchmark), **Binaron.Serializer is *faster* than Newtonsoft.JSON by *over 300%*!**
 
-|Method | Mean | Error |StdDev |
-|--------:|---------:|----------:|----------:|
-|Json | 335.3 ms | 0.8092 ms | 0.7569 ms |
-| Binaron | 110.9 ms | 0.8884 ms | 0.8310 ms |
+|              Method |     Mean |     Error |    StdDev |
+|-------------------: |---------:|----------:|----------:|
+|      Json_Serialize | 353.3 ms | 0.9824 ms | 0.9190 ms |
+|   Binaron_Serialize | 115.5 ms | 0.3651 ms | 0.3415 ms |
+|    Json_Deserialize | 600.7 ms | 1.2501 ms | 1.1081 ms |
+| Binaron_Deserialize | 173.8 ms | 0.6994 ms | 0.5841 ms |
 
-![Binaron.Serializer vs Newtonsoft.JSON](https://imgur.com/download/ELn1jtg)
+![Binaron.Serializer vs Newtonsoft.JSON](https://imgur.com/download/5n6OZa0)
 
 ## Usage
 ```C#
@@ -64,26 +66,48 @@ In other words, I wanted a drop-in replacement for [Json.NET](https://www.newton
 
 ```
 // * Detailed results *
-BinaronVsJson.Json: DefaultJob
+BinaronVsJson.Json_Serialize: DefaultJob
 Runtime = .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT; GC = Concurrent Workstation
-Mean = 335.3007 ms, StdErr = 0.1954 ms (0.06%); N = 15, StdDev = 0.7569 ms
-Min = 334.1482 ms, Q1 = 334.7016 ms, Median = 335.3867 ms, Q3 = 335.7157 ms, Max = 336.8240 ms
-IQR = 1.0141 ms, LowerFence = 333.1804 ms, UpperFence = 337.2369 ms
-ConfidenceInterval = [334.4915 ms; 336.1099 ms] (CI 99.9%), Margin = 0.8092 ms (0.24% of Mean)
-Skewness = 0.02, Kurtosis = 2.19, MValue = 2
+Mean = 353.2906 ms, StdErr = 0.2373 ms (0.07%); N = 15, StdDev = 0.9190 ms
+Min = 351.8990 ms, Q1 = 352.4945 ms, Median = 353.1237 ms, Q3 = 353.7853 ms, Max = 355.1822 ms
+IQR = 1.2908 ms, LowerFence = 350.5584 ms, UpperFence = 355.7214 ms
+ConfidenceInterval = [352.3082 ms; 354.2731 ms] (CI 99.9%), Margin = 0.9824 ms (0.28% of Mean)
+Skewness = 0.57, Kurtosis = 2.5, MValue = 2
 -------------------- Histogram --------------------
-[333.880 ms ; 337.093 ms) | @@@@@@@@@@@@@@@
+[351.573 ms ; 355.508 ms) | @@@@@@@@@@@@@@@
 ---------------------------------------------------
 
-BinaronVsJson.Binaron: DefaultJob
+BinaronVsJson.Binaron_Serialize: DefaultJob
 Runtime = .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT; GC = Concurrent Workstation
-Mean = 110.8839 ms, StdErr = 0.2146 ms (0.19%); N = 15, StdDev = 0.8310 ms
-Min = 109.7809 ms, Q1 = 109.8832 ms, Median = 111.0556 ms, Q3 = 111.4201 ms, Max = 112.1343 ms
-IQR = 1.5369 ms, LowerFence = 107.5779 ms, UpperFence = 113.7254 ms
-ConfidenceInterval = [109.9955 ms; 111.7723 ms] (CI 99.9%), Margin = 0.8884 ms (0.80% of Mean)
-Skewness = -0.01, Kurtosis = 1.51, MValue = 2
+Mean = 115.4851 ms, StdErr = 0.0882 ms (0.08%); N = 15, StdDev = 0.3415 ms
+Min = 114.6920 ms, Q1 = 115.2784 ms, Median = 115.4497 ms, Q3 = 115.6688 ms, Max = 116.0873 ms
+IQR = 0.3904 ms, LowerFence = 114.6927 ms, UpperFence = 116.2544 ms
+ConfidenceInterval = [115.1200 ms; 115.8502 ms] (CI 99.9%), Margin = 0.3651 ms (0.32% of Mean)
+Skewness = -0.34, Kurtosis = 2.92, MValue = 2
 -------------------- Histogram --------------------
-[109.486 ms ; 112.313 ms) | @@@@@@@@@@@@@@@
+[114.571 ms ; 116.208 ms) | @@@@@@@@@@@@@@@
+---------------------------------------------------
+
+BinaronVsJson.Json_Deserialize: DefaultJob
+Runtime = .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 600.7190 ms, StdErr = 0.2962 ms (0.05%); N = 14, StdDev = 1.1081 ms
+Min = 599.2788 ms, Q1 = 599.8592 ms, Median = 600.4859 ms, Q3 = 601.9519 ms, Max = 602.6048 ms
+IQR = 2.0927 ms, LowerFence = 596.7202 ms, UpperFence = 605.0909 ms
+ConfidenceInterval = [599.4690 ms; 601.9691 ms] (CI 99.9%), Margin = 1.2501 ms (0.21% of Mean)
+Skewness = 0.37, Kurtosis = 1.61, MValue = 2
+-------------------- Histogram --------------------
+[598.876 ms ; 603.007 ms) | @@@@@@@@@@@@@@
+---------------------------------------------------
+
+BinaronVsJson.Binaron_Deserialize: DefaultJob
+Runtime = .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 173.7795 ms, StdErr = 0.1620 ms (0.09%); N = 13, StdDev = 0.5841 ms
+Min = 172.3075 ms, Q1 = 173.6573 ms, Median = 173.9798 ms, Q3 = 174.1402 ms, Max = 174.3649 ms
+IQR = 0.4829 ms, LowerFence = 172.9330 ms, UpperFence = 174.8645 ms
+ConfidenceInterval = [173.0801 ms; 174.4790 ms] (CI 99.9%), Margin = 0.6994 ms (0.40% of Mean)
+Skewness = -1.3, Kurtosis = 3.68, MValue = 2
+-------------------- Histogram --------------------
+[172.090 ms ; 174.582 ms) | @@@@@@@@@@@@@
 ---------------------------------------------------
 
 // * Summary *
@@ -91,24 +115,15 @@ Skewness = -0.01, Kurtosis = 1.51, MValue = 2
 BenchmarkDotNet=v0.11.5, OS=macOS High Sierra 10.13.6 (17G9016) [Darwin 17.7.0]
 Intel Core i5-3470 CPU 3.20GHz (Max: 3.21GHz) (Ivy Bridge), 1 CPU, 4 logical and 4 physical cores
 .NET Core SDK=3.0.100
-[Host] : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT
-DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT
+  [Host]     : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT
+  DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), 64bit RyuJIT
 
 
-|Method | Mean | Error |StdDev |
-|-------- |---------:|----------:|----------:|
-|Json | 335.3 ms | 0.8092 ms | 0.7569 ms |
-| Binaron | 110.9 ms | 0.8884 ms | 0.8310 ms |
+|              Method |     Mean |     Error |    StdDev |
+|-------------------- |---------:|----------:|----------:|
+|      Json_Serialize | 353.3 ms | 0.9824 ms | 0.9190 ms |
+|   Binaron_Serialize | 115.5 ms | 0.3651 ms | 0.3415 ms |
+|    Json_Deserialize | 600.7 ms | 1.2501 ms | 1.1081 ms |
+| Binaron_Deserialize | 173.8 ms | 0.6994 ms | 0.5841 ms |
 
-// * Legends *
-Mean : Arithmetic mean of all measurements
-Error: Half of 99.9% confidence interval
-StdDev : Standard deviation of all measurements
-1 ms : 1 Millisecond (0.001 sec)
-
-// ***** BenchmarkRunner: End *****
-// ** Remained 0 benchmark(s) to run **
-Run time: 00:00:27 (27.05 sec), executed benchmarks: 2
-
-Global total time: 00:00:30 (30.95 sec), executed benchmarks: 2
 ```

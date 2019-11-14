@@ -48,6 +48,23 @@ namespace Binaron.Serializer.Infrastructure
             if (type.IsEnum)
                 return ReadEnums(reader, parentType, type);
 
+            if (ReadTypedEnumerable(reader, parentType, type, out var array)) return array;
+
+            {
+                var result = CreateResultObject(parentType, type);
+                var addAll = GetEnumerableAdder(type);
+                var (success, addedResult) = addAll(reader, result, parentType.IsArray);
+                if (success)
+                    return addedResult;
+                    
+                Discard(reader);
+                return result;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool ReadTypedEnumerable(BinaryReader reader, Type parentType, Type type, out object enumerable)
+        {
             switch (Type.GetTypeCode(type))
             {
                 case TypeCode.Boolean:
@@ -63,11 +80,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Byte:
                 {
@@ -82,11 +101,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Char:
                 {
@@ -101,11 +122,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.DateTime:
                 {
@@ -120,11 +143,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Decimal:
                 {
@@ -139,11 +164,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Double:
                 {
@@ -158,11 +185,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Int16:
                 {
@@ -177,11 +206,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Int32:
                 {
@@ -196,11 +227,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Int64:
                 {
@@ -215,11 +248,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.SByte:
                 {
@@ -234,11 +269,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.Single:
                 {
@@ -253,11 +290,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.String:
                 {
@@ -271,11 +310,13 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add(v);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.UInt16:
                 {
@@ -290,11 +331,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.UInt32:
                 {
@@ -309,11 +352,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
                 case TypeCode.UInt64:
                 {
@@ -328,24 +373,18 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader);
-                    return result;
+                    enumerable = result;
+                    return true;
                 }
             }
 
-            {
-                var result = CreateResultObject(parentType, type);
-                var addAll = GetEnumerableAdder(type);
-                var (success, addedResult) = addAll(reader, result, parentType.IsArray);
-                if (success)
-                    return addedResult;
-                    
-                Discard(reader);
-                return result;
-            }
+            enumerable = null;
+            return false;
         }
 
         private static Func<BinaryReader, object, bool, (bool Success, object Result)> GetEnumerableEnumAdder(Type type) => EnumerableEnumAdders.GetOrAdd(type, _ =>
@@ -461,6 +500,22 @@ namespace Binaron.Serializer.Infrastructure
             if (type.IsEnum)
                 return ReadEnums(reader, parentType, type, count);
 
+            if (ReadTypedList(reader, parentType, type, count, out var list)) 
+                return list;
+
+            var result = CreateResultObject(parentType, type, count);
+            var addAll = GetListAdder(type);
+            var (success, addedResult) = addAll(reader, result, count, parentType.IsArray);
+            if (success)
+                return addedResult;
+
+            Discard(reader, count);
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool ReadTypedList(BinaryReader reader, Type parentType, Type type, int count, out object list)
+        {
             switch (Type.GetTypeCode(type))
             {
                 case TypeCode.Boolean:
@@ -476,11 +531,15 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        {
+                            list = parentType.IsArray ? ToArray(l) : result;
+                            return true;
+                        }
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Byte:
                 {
@@ -495,11 +554,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Char:
                 {
@@ -514,11 +575,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.DateTime:
                 {
@@ -533,11 +596,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Decimal:
                 {
@@ -552,11 +617,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Double:
                 {
@@ -571,11 +638,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Int16:
                 {
@@ -590,11 +659,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Int32:
                 {
@@ -609,11 +680,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Int64:
                 {
@@ -628,11 +701,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.SByte:
                 {
@@ -647,11 +722,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.Single:
                 {
@@ -666,11 +743,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.String:
                 {
@@ -684,11 +763,13 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add(v);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.UInt16:
                 {
@@ -703,11 +784,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.UInt32:
                 {
@@ -722,11 +805,13 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
                 case TypeCode.UInt64:
                 {
@@ -741,24 +826,18 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
-                    return result;
+                    list = result;
+                    return true;
                 }
             }
 
-            {
-                var result = CreateResultObject(parentType, type, count);
-                var addAll = GetListAdder(type);
-                var (success, addedResult) = addAll(reader, result, count, parentType.IsArray);
-                if (success)
-                    return addedResult;
-
-                Discard(reader, count);
-                return result;
-            }
+            list = null;
+            return false;
         }
 
         private static Func<BinaryReader, object, int, bool, (bool Success, object Result)> GetListEnumAdder(Type type) => ListEnumAdders.GetOrAdd(type, _ =>

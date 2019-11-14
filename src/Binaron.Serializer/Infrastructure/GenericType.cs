@@ -22,6 +22,11 @@ namespace Binaron.Serializer.Infrastructure
                     .FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))?
                     .GenericTypeArguments[0];
             });
+
+        public static class GetICollectionGenericType<T>
+        {
+            public static readonly Type Type = GetICollection(typeof(T));
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Type GetIEnumerable(Type enumerableType) => EnumerableGenericTypeLookup.GetOrAdd(enumerableType,
@@ -32,13 +37,26 @@ namespace Binaron.Serializer.Infrastructure
                     .GenericTypeArguments[0];
             });
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (Type KeyType, Type ValueType) GetIDictionaryWriter(Type dictionaryType) => 
-            WriterDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIDictionary(dictionaryType));
+        public static class GetIEnumerableGenericType<T>
+        {
+            public static readonly Type Type = GetIEnumerable(typeof(T));
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (Type KeyType, Type ValueType) GetIDictionaryReader(Type dictionaryType) => 
-            ReaderDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIEnumerableKvp(dictionaryType));
+        public static (Type KeyType, Type ValueType) GetIDictionaryWriter(Type dictionaryType) => WriterDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIDictionary(dictionaryType));
+
+        public static class GetIDictionaryWriterGenericTypes<T>
+        {
+            public static readonly (Type KeyType, Type ValueType) Types = GetIDictionaryWriter(typeof(T));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (Type KeyType, Type ValueType) GetIDictionaryReader(Type dictionaryType) => ReaderDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIEnumerableKvp(dictionaryType));
+
+        public static class GetIDictionaryReaderGenericTypes<T>
+        {
+            public static readonly (Type KeyType, Type ValueType) Types = GetIDictionaryReader(typeof(T));
+        }
 
         private static (Type KeyType, Type ValueType) GetIDictionary(Type dictionaryType)
         {

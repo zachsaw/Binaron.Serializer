@@ -1,17 +1,14 @@
-using System;
 using System.Runtime.CompilerServices;
 
 namespace Binaron.Serializer.Accessors
 {
-    internal class MemberSetterHandler<T, TResult> : IMemberSetterHandler<T>
+    internal abstract class MemberSetterHandlerBase<T, TResult> : IMemberSetterHandler<T>
     {
         private readonly MemberSetter<TResult> setter;
-        private readonly Func<T, TResult> func;
 
-        public MemberSetterHandler(MemberSetter<TResult> setter, Func<T, TResult> func)
+        protected MemberSetterHandlerBase(MemberSetter<TResult> setter)
         {
             this.setter = setter;
-            this.func = func;
         }
 
         public string MemberName => setter.MemberName;
@@ -22,7 +19,10 @@ namespace Binaron.Serializer.Accessors
         public void Handle(T state, object target)
         {
             ref readonly var pSetter = ref GetSetter();
-            pSetter.Set(target, func(state));
+            pSetter.Set(target, HandleInternal(state));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract TResult HandleInternal(T state);
     }
 }

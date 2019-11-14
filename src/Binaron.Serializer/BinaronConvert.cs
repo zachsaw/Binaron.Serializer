@@ -38,5 +38,17 @@ namespace Binaron.Serializer
             using var writer = new WriterState(stream, options);
             Serializer.WriteValue(writer, obj);
         }
+
+        public static void Serialize<T>(T obj, Stream stream)
+        {
+            using var writer = new WriterState(stream, new SerializerOptions());
+            Serializer.WriteValue(writer, obj);
+        }
+        
+        public static void Serialize<T>(T obj, Stream stream, SerializerOptions options)
+        {
+            using var writer = new WriterState(stream, options);
+            Serializer.WriteValue(writer, obj);
+        }
     }
 }

@@ -10,6 +10,18 @@ namespace Binaron.Serializer
 {
     internal static class Serializer
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue<T>(WriterState writer, T val)
+        {
+            if (val == null)
+            {
+                writer.Write((byte) SerializedType.Null);
+                return;
+            }
+
+            WriteNonNullValue(writer, val);
+        }
+
         public static void WriteValue(WriterState writer, object val)
         {
             if (val == null)
@@ -22,7 +34,7 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteNonNullValue(WriterState writer, object val)
+        public static void WriteNonNullValue<T>(WriterState writer, T val)
         {
             if (WritePrimitive(writer, val))
                 return;
@@ -31,19 +43,39 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteNonNullValue(WriterState writer, object val)
+        {
+            if (WritePrimitive(writer, val))
+                return;
+
+            WriteNonPrimitive(writer, val);
+        }
+
+        public interface INonPrimitiveWriter<in T>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void Write(WriterState writer, T val);
+        }
+
+        private static class GetNonPrimitiveWriterGeneric<T>
+        {
+            public static readonly INonPrimitiveWriter<T> Writer = NonPrimitiveWriters.CreateWriter<T>();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteNonPrimitive<T>(WriterState writer, T val) => GetNonPrimitiveWriterGeneric<T>.Writer.Write(writer, val);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteNonPrimitive(WriterState writer, object val)
         {
             switch (val)
             {
-                case IDictionary dictionary when GenericWriter.WriteDictionary(writer, dictionary):
+                case IDictionary _ when GenericWriter.WriteDictionary(writer, val):
                     break;
                 case IDictionary dictionary:
                     WriteDictionary(writer, dictionary);
                     break;
-                case ICollection list when GenericWriter.WriteDictionary(writer, list):
-                    break;
-                case ICollection list when writer.SkipNullValues:
-                    WriteEnumerable(writer, list);
+                case ICollection _ when GenericWriter.WriteDictionary(writer, val):
                     break;
                 case ICollection list:
                     WriteList(writer, list);
@@ -58,13 +90,22 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteObject<T>(WriterState writer, T val)
+        {
+            writer.Write((byte) SerializedType.Object);
+
+            foreach (var getter in GetterHandler.GetterHandlers<T>.Getters)
+                getter.Handle(writer, val);
+
+            writer.Write((byte) EnumerableType.End);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteObject(WriterState writer, object val)
         {
             writer.Write((byte) SerializedType.Object);
-            var type = val.GetType();
-            var getters = GetterHandler.GetGetterHandlers(type);
 
-            foreach (var getter in getters)
+            foreach (var getter in GetterHandler.GetGetterHandlers(val.GetType()))
                 getter.Handle(writer, val);
 
             writer.Write((byte) EnumerableType.End);
@@ -83,6 +124,18 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteList<T>(WriterState writer, ICollection list)
+        {
+            writer.Write((byte) SerializedType.List);
+            writer.Write(list.Count);
+            if (GenericWriter.WriteList<T>(writer, list))
+                return;
+
+            // fallback to non-generic version
+            WriteListFallback(writer, list);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteList(WriterState writer, ICollection list)
         {
             writer.Write((byte) SerializedType.List);
@@ -91,10 +144,33 @@ namespace Binaron.Serializer
                 return;
 
             // fallback to non-generic version
+            WriteListFallback(writer, list);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteListFallback(WriterState writer, ICollection list)
+        {
             foreach (var item in list)
                 WriteValue(writer, item);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteEnumerable<T>(WriterState writer, IEnumerable enumerable)
+        {
+            writer.Write((byte) SerializedType.Enumerable);
+
+            // ReSharper disable once PossibleMultipleEnumeration
+            if (GenericWriter.WriteEnumerable<T>(writer, enumerable))
+                return;
+
+            // fallback to non-generic version (we are not enumerating twice)
+            // ReSharper disable once PossibleMultipleEnumeration
+            WriteEnumerableFallback(writer, enumerable);
+
+            writer.Write((byte) EnumerableType.End);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteEnumerable(WriterState writer, IEnumerable enumerable)
         {
             writer.Write((byte) SerializedType.Enumerable);
@@ -105,21 +181,19 @@ namespace Binaron.Serializer
 
             // fallback to non-generic version (we are not enumerating twice)
             // ReSharper disable once PossibleMultipleEnumeration
-            foreach (var item in enumerable)
-            {
-                if (item != null)
-                {
-                    writer.Write((byte) EnumerableType.HasItem);
-                    WriteValue(writer, item);
-                }
-                else if (!writer.SkipNullValues)
-                {
-                    writer.Write((byte) EnumerableType.HasItem);
-                    writer.Write((byte) SerializedType.Null);
-                }
-            }
+            WriteEnumerableFallback(writer, enumerable);
 
             writer.Write((byte) EnumerableType.End);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteEnumerableFallback(WriterState writer, IEnumerable enumerable)
+        {
+            foreach (var item in enumerable)
+            {
+                writer.Write((byte) EnumerableType.HasItem);
+                WriteValue(writer, item);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -176,6 +250,57 @@ namespace Binaron.Serializer
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        private static class NonPrimitiveWriters
+        {
+            public static INonPrimitiveWriter<T> CreateWriter<T>()
+            {
+                var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
+                if (types.KeyType != null)
+                    return new GenericDictionaryWriter<T>();
+
+                if (typeof(IDictionary).IsAssignableFrom(typeof(T)))
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(DictionaryWriter<>).MakeGenericType(typeof(T)));
+
+                if (typeof(ICollection).IsAssignableFrom(typeof(T)))
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(ListWriter<>).MakeGenericType(typeof(T)));
+
+                if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
+                    return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(EnumerableWriter<>).MakeGenericType(typeof(T)));
+
+                return new ObjectWriter<T>();
+            }
+
+            private class GenericDictionaryWriter<T> : INonPrimitiveWriter<T>
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => GenericWriter.WriteDictionary(writer, val);
+            }
+
+            private class DictionaryWriter<T> : INonPrimitiveWriter<T> where T : IDictionary
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => WriteDictionary(writer, val);
+            }
+
+            private class ListWriter<T> : INonPrimitiveWriter<T> where T : ICollection
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => WriteList<T>(writer, val);
+            }
+
+            private class EnumerableWriter<T> : INonPrimitiveWriter<T> where T : IEnumerable
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => WriteEnumerable<T>(writer, val);
+            }
+
+            private class ObjectWriter<T> : INonPrimitiveWriter<T>
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => WriteObject(writer, val);
             }
         }
     }
