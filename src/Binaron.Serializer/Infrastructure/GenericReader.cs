@@ -30,7 +30,7 @@ namespace Binaron.Serializer.Infrastructure
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadEnums(BinaryReader reader, Type parentType, Type type)
+        public static object ReadEnums(BinaryReader reader, Type parentType, Type type)
         {
             var result = CreateResultObject(parentType, type);
             var addAll = GetEnumerableEnumAdder(type);
@@ -45,12 +45,6 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object ReadEnumerable(BinaryReader reader, Type parentType, Type type)
         {
-            if (type.IsEnum)
-                return ReadEnums(reader, parentType, type);
-
-            if (ReadTypedEnumerable(reader, parentType, type, out var array)) 
-                return array;
-
             var result = CreateResultObject(parentType, type);
             var addAll = GetEnumerableAdder(type);
             var (success, addedResult) = addAll(reader, result, parentType.IsArray);
@@ -62,7 +56,39 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool ReadTypedEnumerable(BinaryReader reader, Type parentType, Type type, out object enumerable)
+        public static bool ReadTypedEnumerable<T, TElement>(BinaryReader reader, out object enumerable)
+        {
+            var parentType = typeof(T);
+            var type = typeof(TElement);
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Object:
+                {
+                    var result = CreateResultObject(parentType, type);
+                    if (result is ICollection<TElement> l)
+                    {
+                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        {
+                            var valueType = (SerializedType) reader.Read<byte>();
+                            var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
+                            l.Add((TElement) v);
+                        }
+
+                        enumerable = parentType.IsArray ? ToArray(l) : result;
+                        return true;
+                    }
+
+                    Discard(reader);
+                    enumerable = result;
+                    return true;
+                }
+                default:
+                    return ReadTypedEnumerable(reader, parentType, type, out enumerable);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ReadTypedEnumerable(BinaryReader reader, Type parentType, Type type, out object enumerable)
         {
             switch (Type.GetTypeCode(type))
             {
@@ -471,7 +497,7 @@ namespace Binaron.Serializer.Infrastructure
             EnumerableResultObjectCreators.GetOrAdd((parentType, type), _ => new GenericResultObjectCreator.List(parentType, type));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object CreateResultObject(Type parentType, Type type) => GetEnumerableResultObjectCreator(parentType, type).Create();
+        public static object CreateResultObject(Type parentType, Type type) => GetEnumerableResultObjectCreator(parentType, type).Create();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Discard(BinaryReader reader, int count)
@@ -481,7 +507,7 @@ namespace Binaron.Serializer.Infrastructure
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadEnums(BinaryReader reader, Type parentType, Type type, int count)
+        public static object ReadEnums(BinaryReader reader, Type parentType, Type type, int count)
         {
             var result = CreateResultObject(parentType, type, count);
             var addAll = GetListEnumAdder(type);
@@ -494,26 +520,39 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadList(BinaryReader reader, Type parentType, Type type, int count)
+        public static bool ReadTypedList<T, TElement>(BinaryReader reader, int count, out object list)
         {
-            if (type.IsEnum)
-                return ReadEnums(reader, parentType, type, count);
+            var parentType = typeof(T);
+            var type = typeof(TElement);
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Object:
+                {
+                    var result = CreateResultObject(parentType, type, count);
+                    if (result is ICollection<TElement> l)
+                    {
+                        for (var i = 0; i < count; i++)
+                        {
+                            var valueType = (SerializedType) reader.Read<byte>();
+                            var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
+                            l.Add((TElement) v);
+                        }
 
-            if (ReadTypedList(reader, parentType, type, count, out var list)) 
-                return list;
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
+                    }
 
-            var result = CreateResultObject(parentType, type, count);
-            var addAll = GetListAdder(type);
-            var (success, addedResult) = addAll(reader, result, count, parentType.IsArray);
-            if (success)
-                return addedResult;
-
-            Discard(reader, count);
-            return result;
+                    Discard(reader, count);
+                    list = result;
+                    return true;
+                }
+                default:
+                    return ReadTypedList(reader, parentType, type, count, out list);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool ReadTypedList(BinaryReader reader, Type parentType, Type type, int count, out object list)
+        public static bool ReadTypedList(BinaryReader reader, Type parentType, Type type, int count, out object list)
         {
             switch (Type.GetTypeCode(type))
             {
@@ -530,10 +569,8 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        {
-                            list = parentType.IsArray ? ToArray(l) : result;
-                            return true;
-                        }
+                        list = parentType.IsArray ? ToArray(l) : result;
+                        return true;
                     }
 
                     Discard(reader, count);
@@ -844,6 +881,19 @@ namespace Binaron.Serializer.Infrastructure
             var method = typeof(ListAdder).GetMethod(nameof(ListAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
             return (Func<BinaryReader, object, int, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, int, bool, (bool Success, object Result)>), null, method);
         });
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object ReadList(BinaryReader reader, Type type, Type elementType, int count)
+        {
+            var result = CreateResultObject(type, elementType, count);
+            var addAll = GetListAdder(elementType);
+            var (success, addedResult) = addAll(reader, result, count, type.IsArray);
+            if (success)
+                return addedResult;
+
+            Discard(reader, count);
+            return result;
+        }
 
         private static Func<BinaryReader, object, int, bool, (bool Success, object Result)> GetListAdder(Type type) => ListAdders.GetOrAdd(type, _ =>
         {
