@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Binaron.Serializer.Accessors;
 using Binaron.Serializer.Creators;
 using Binaron.Serializer.Enums;
@@ -17,9 +16,8 @@ namespace Binaron.Serializer
         private static readonly ConcurrentDictionary<Type, ResultObjectCreator.Enumerable> EnumerableResultObjectCreators = new ConcurrentDictionary<Type, ResultObjectCreator.Enumerable>();
         private static readonly ConcurrentDictionary<Type, ResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<Type, ResultObjectCreator.Dictionary>();
 
-        public interface IObjectReader
+        private interface IObjectReader
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             object Read(BinaryReader reader);
         }
 
@@ -28,7 +26,6 @@ namespace Binaron.Serializer
             public static readonly IObjectReader Reader = ObjectReaders.CreateReader<T>();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object ReadObject<T>(BinaryReader reader) => GetObjectReaderGeneric<T>.Reader.Read(reader);
 
         public static object ReadValue<T>(BinaryReader reader)
@@ -39,7 +36,6 @@ namespace Binaron.Serializer
 
         private interface IValueReader
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             object Read(BinaryReader reader, SerializedType valueType);
         }
 
@@ -48,7 +44,6 @@ namespace Binaron.Serializer
             public static readonly IValueReader Reader = ValueReaders<T>.CreateReader();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object ReadValue<T>(BinaryReader reader, SerializedType valueType) => GetValueReader<T>.Reader.Read(reader, valueType);
 
         public static void DiscardValue(BinaryReader reader, SerializedType? knownType = null)
@@ -132,9 +127,8 @@ namespace Binaron.Serializer
             }
         }
 
-        public interface IDictionaryReader
+        private interface IDictionaryReader
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             object Read(BinaryReader reader);
         }
 
@@ -145,7 +139,6 @@ namespace Binaron.Serializer
 
         public static object ReadDictionary<T>(BinaryReader reader) => GetDictionaryReader<T>.Reader.Read(reader);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ReadDictionaryNonGeneric(BinaryReader reader, Type type)
         {
             var count = reader.Read<int>();
@@ -178,9 +171,8 @@ namespace Binaron.Serializer
             return result;
         }
 
-        public interface IEnumerableReader
+        private interface IEnumerableReader
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             object Read(BinaryReader reader);
         }
 
@@ -191,7 +183,6 @@ namespace Binaron.Serializer
 
         public static object ReadEnumerable<T>(BinaryReader reader) => GetEnumerableReader<T>.Reader.Read(reader);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ReadEnumerableNonGeneric(BinaryReader reader, Type type)
         {
             var result = CreateResultObject(type);
@@ -209,9 +200,8 @@ namespace Binaron.Serializer
             return result;
         }
 
-        public interface IListReader
+        private interface IListReader
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             object Read(BinaryReader reader);
         }
 
@@ -222,7 +212,6 @@ namespace Binaron.Serializer
 
         public static object ReadList<T>(BinaryReader reader) => GetListReader<T>.Reader.Read(reader);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ReadListNonGeneric(BinaryReader reader, Type type)
         {
             var count = reader.Read<int>();
@@ -241,22 +230,16 @@ namespace Binaron.Serializer
             return result;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ResultObjectCreator.Enumerable GetEnumerableResultObjectCreator(Type type) => EnumerableResultObjectCreators.GetOrAdd(type, _ => new ResultObjectCreator.Enumerable(type));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object CreateResultObject(Type type) => GetEnumerableResultObjectCreator(type).Create();
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ResultObjectCreator.List GetListResultObjectCreator(Type type) => ListResultObjectCreators.GetOrAdd(type, _ => new ResultObjectCreator.List(type));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object CreateResultObject(Type type, int count) => GetListResultObjectCreator(type).Create(ListCapacity.Clamp(count));
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ResultObjectCreator.Dictionary GetDictionaryResultObjectCreator(Type type) => DictionaryResultObjectCreators.GetOrAdd(type, _ => new ResultObjectCreator.Dictionary(type));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object CreateDictionaryResultObject(Type type, int count) => GetDictionaryResultObjectCreator(type).Create(ListCapacity.Clamp(count));
 
         private static class ObjectReaders
@@ -289,7 +272,6 @@ namespace Binaron.Serializer
                     this.setterHandlers = setterHandlers;
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader)
                 {
                     var result = activate();
@@ -317,7 +299,6 @@ namespace Binaron.Serializer
                     this.activate = activate;
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader)
                 {
                     var result = (IDictionary) activate();
@@ -342,13 +323,11 @@ namespace Binaron.Serializer
                     this.elementType = elementType;
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => GenericReader.ReadObjectAsDictionary(reader, type, elementType);
             }
 
             private class DynamicObjectReader : IObjectReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => Deserializer.ReadObject(reader);
             }
         }
@@ -370,13 +349,11 @@ namespace Binaron.Serializer
 
             private class DynamicDictionaryReader : IDictionaryReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => Deserializer.ReadDictionary(reader);
             }
 
             private class DictionaryReader<T> : IDictionaryReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => ReadDictionaryNonGeneric(reader, typeof(T));
             }
 
@@ -391,7 +368,6 @@ namespace Binaron.Serializer
                     this.elementType = elementType;
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader)
                 {
                     var count = reader.Read<int>();
@@ -422,25 +398,21 @@ namespace Binaron.Serializer
 
             private class DynamicEnumerableReader : IEnumerableReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => Deserializer.ReadEnumerable(reader);
             }
 
             private class GenericEnumEnumerableReader<T, TElement> : IEnumerableReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => GenericReader.ReadEnums(reader, typeof(T), typeof(TElement));
             }
 
             private class EnumerableReader<T> : IEnumerableReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => ReadEnumerableNonGeneric(reader, typeof(T));
             }
 
             private class GenericEnumerableReader<T, TElement> : IEnumerableReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => GenericReader.ReadTypedEnumerable<T, TElement>(reader);
             }
         }
@@ -467,13 +439,11 @@ namespace Binaron.Serializer
 
             private class DynamicListReader : IListReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => Deserializer.ReadList(reader);
             }
 
             private class GenericEnumListReader<T, TElement> : IListReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader)
                 {
                     var count = reader.Read<int>();
@@ -483,13 +453,11 @@ namespace Binaron.Serializer
 
             private class ListReader<T> : IListReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => ReadListNonGeneric(reader, typeof(T));
             }
 
             private class GenericListReader<T, TElement> : IListReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader)
                 {
                     var count = reader.Read<int>();
@@ -541,97 +509,81 @@ namespace Binaron.Serializer
 
             private class BoolReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsBool(reader, valueType);
             }
 
             private class ByteReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsByte(reader, valueType);
             }
 
             private class CharReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsChar(reader, valueType);
             }
 
             private class DateTimeReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsDateTime(reader, valueType);
             }
 
             private class DecimalReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsDecimal(reader, valueType);
             }
 
             private class DoubleReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsDouble(reader, valueType);
             }
 
             private class ShortReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsShort(reader, valueType);
             }
 
             private class IntReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsInt(reader, valueType);
             }
 
             private class LongReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsLong(reader, valueType);
             }
 
             private class SByteReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsSByte(reader, valueType);
             }
 
             private class FloatReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsFloat(reader, valueType);
             }
 
             private class StringReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsString(reader, valueType);
             }
 
             private class UShortReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsUShort(reader, valueType);
             }
 
             private class UIntReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsUInt(reader, valueType);
             }
 
             private class ULongReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsULong(reader, valueType);
             }
 
             private class ObjectReader : IValueReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsObject<T>(reader, valueType);
             }
         }

@@ -51,7 +51,7 @@ namespace Binaron.Serializer
             WriteNonPrimitive(writer, val);
         }
 
-        public interface INonPrimitiveWriter<in T>
+        private interface INonPrimitiveWriter<in T>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             void Write(WriterState writer, T val);

@@ -523,7 +523,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(byte val, out object result)
+        private static bool As<T>(byte val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -584,7 +584,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(sbyte val, out object result)
+        private static bool As<T>(sbyte val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -616,7 +616,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(ushort val, out object result)
+        private static bool As<T>(ushort val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -651,7 +651,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(short val, out object result)
+        private static bool As<T>(short val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -680,7 +680,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(uint val, out object result)
+        private static bool As<T>(uint val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -709,7 +709,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(char val, out object result)
+        private static bool As<T>(char val, out object result)
         {
             if (typeof(T) == typeof(char))
             {
@@ -728,7 +728,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(DateTime val, out object result)
+        private static bool As<T>(DateTime val, out object result)
         {
             if (typeof(T) == typeof(DateTime))
             {
@@ -741,7 +741,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(decimal val, out object result)
+        private static bool As<T>(decimal val, out object result)
         {
             if (typeof(T) == typeof(decimal))
             {
@@ -754,7 +754,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(bool val, out object result)
+        private static bool As<T>(bool val, out object result)
         {
             if (typeof(T) == typeof(bool))
             {
@@ -767,7 +767,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(double val, out object result)
+        private static bool As<T>(double val, out object result)
         {
             if (typeof(T) == typeof(double))
             {
@@ -780,7 +780,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(float val, out object result)
+        private static bool As<T>(float val, out object result)
         {
             if (typeof(T) == typeof(float))
             {
@@ -799,7 +799,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(long val, out object result)
+        private static bool As<T>(long val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -822,7 +822,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(ulong val, out object result)
+        private static bool As<T>(ulong val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -845,7 +845,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(int val, out object result)
+        private static bool As<T>(int val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
