@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Binaron.Serializer.Enums;
 
 namespace Binaron.Serializer.Infrastructure
@@ -13,7 +12,6 @@ namespace Binaron.Serializer.Infrastructure
 
         private interface IGenericEnumerableWriter
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             void Write(WriterState writer, IEnumerable list);
         }
 
@@ -32,7 +30,6 @@ namespace Binaron.Serializer.Infrastructure
 
             private class GenericEnumerableWriter<T> : IGenericEnumerableWriter
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, IEnumerable list)
                 {
                     foreach (var item in (IEnumerable<T>) list)
@@ -41,7 +38,6 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WriteEnumerable<T>(WriterState writer, IEnumerable enumerable)
         {
             var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
@@ -67,7 +63,6 @@ namespace Binaron.Serializer.Infrastructure
             return true;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WriteEnumerable(WriterState writer, IEnumerable enumerable)
         {
             var elementType = GenericType.GetIEnumerable(enumerable.GetType());
@@ -81,7 +76,6 @@ namespace Binaron.Serializer.Infrastructure
             return true;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WriteEnumerable(WriterState writer, IEnumerable enumerable, Type elementType)
         {
             switch (Type.GetTypeCode(elementType))
@@ -231,7 +225,6 @@ namespace Binaron.Serializer.Infrastructure
 
         private interface IGenericListWriter
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             void Write(WriterState writer, ICollection list);
         }
 
@@ -252,7 +245,6 @@ namespace Binaron.Serializer.Infrastructure
 
             private class GenericArrayWriter<T> : IGenericListWriter
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, ICollection list)
                 {
                     foreach (var item in (T[]) list)
@@ -262,7 +254,6 @@ namespace Binaron.Serializer.Infrastructure
 
             private class GenericListWriter<T> : IGenericListWriter
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, ICollection list)
                 {
                     foreach (var item in (ICollection<T>) list)
@@ -271,7 +262,6 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WriteList<T>(WriterState writer, ICollection list)
         {
             var listType = typeof(T);
@@ -296,7 +286,6 @@ namespace Binaron.Serializer.Infrastructure
             return true;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WriteList(WriterState writer, ICollection list)
         {
             var listType = list.GetType();
@@ -311,7 +300,6 @@ namespace Binaron.Serializer.Infrastructure
             return true;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WriteArray(WriterState writer, ICollection list, Type elementType)
         {
             switch (Type.GetTypeCode(elementType))
@@ -386,7 +374,6 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WriteList(WriterState writer, ICollection list, Type elementType)
         {
             switch (Type.GetTypeCode(elementType))
@@ -461,30 +448,23 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool WriteDictionary<T>(WriterState writer, T dictionary)
-        {
-            var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
-            if (types.KeyType != null)
-            {
-                var writeAll = GetDictionaryWriter(types);
-                writeAll(writer, dictionary);
-                return true;
-            }
-            return false;
-        }
+        public static void WriteDictionary<T>(WriterState writer, T dictionary) => WriteDictionary(writer, dictionary, GenericType.GetIDictionaryWriterGenericTypes<T>.Types);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WriteDictionary(WriterState writer, object dictionary)
         {
             var types = GenericType.GetIDictionaryWriter(dictionary.GetType());
-            if (types.KeyType != null)
-            {
-                var writeAll = GetDictionaryWriter(types);
-                writeAll(writer, dictionary);
-                return true;
-            }
-            return false;
+            return WriteDictionary(writer, dictionary, types);
+        }
+
+        private static bool WriteDictionary(WriterState writer, object dictionary, (Type KeyType, Type ValueType) types)
+        {
+            if (types.KeyType == null) 
+                return false;
+            
+            var writeAll = GetDictionaryWriter(types);
+            writeAll(writer, dictionary);
+            return true;
+
         }
 
         private static Action<WriterState, object> GetDictionaryWriter((Type KeyType, Type ValueType) types) => DictionaryAdders.GetOrAdd(types, _ =>
@@ -508,7 +488,6 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteEnums(WriterState writer, ICollection list, Type elementType)
         {
             switch (Type.GetTypeCode(elementType))

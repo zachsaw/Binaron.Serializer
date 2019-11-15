@@ -2,11 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Binaron.Serializer.Accessors;
 using Binaron.Serializer.Creators;
 using Binaron.Serializer.Enums;
 using Binaron.Serializer.Infrastructure;
+using Activator = System.Activator;
 
 namespace Binaron.Serializer
 {
@@ -16,9 +16,8 @@ namespace Binaron.Serializer
         private static readonly ConcurrentDictionary<Type, ResultObjectCreator.Enumerable> EnumerableResultObjectCreators = new ConcurrentDictionary<Type, ResultObjectCreator.Enumerable>();
         private static readonly ConcurrentDictionary<Type, ResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<Type, ResultObjectCreator.Dictionary>();
 
-        public interface IObjectReader
+        private interface IObjectReader
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             object Read(BinaryReader reader);
         }
 
@@ -27,64 +26,7 @@ namespace Binaron.Serializer
             public static readonly IObjectReader Reader = ObjectReaders.CreateReader<T>();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object ReadObject<T>(BinaryReader reader) => GetObjectReaderGeneric<T>.Reader.Read(reader);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadObject(BinaryReader reader, Type type)
-        {
-            if (type == typeof(object))
-                return Deserializer.ReadObject(reader);
-
-            var typeInfo = SetterHandler.GetActivatorAndSetterHandlers(type);
-            var valueType = typeInfo.IDictionaryValueType;
-            if (valueType != null)
-                return GenericReader.ReadObjectAsDictionary(reader, type, valueType);
-            
-            var setterHandlers = typeInfo.Setters;
-            var result = typeInfo.Activate();
-
-            if (result is IDictionary d)
-            {
-                while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
-                {
-                    var key = reader.ReadString();
-                    var value = Deserializer.ReadValue(reader);
-                    d.Add(key, value);
-                }
-                return result;
-            }
-
-            while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
-            {
-                var key = reader.ReadString();
-                if (!setterHandlers.TryGetValue(key, out var setter))
-                {
-                    DiscardValue(reader);
-                    continue;
-                }
-
-                setter.Handle(reader, result);
-            }
-
-            return result;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object Default<T>() => default(T);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object AsEnum<T>(object val)
-        {
-            try
-            {
-                return (T) val;
-            }
-            catch (InvalidCastException)
-            {
-                return Default<T>();
-            }
-        }
 
         public static object ReadValue<T>(BinaryReader reader)
         {
@@ -92,241 +34,17 @@ namespace Binaron.Serializer
             return ReadValue<T>(reader, valueType);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadValue<T>(BinaryReader reader, SerializedType valueType)
+        private interface IValueReader
         {
-            switch (valueType)
-            {
-                case SerializedType.Object:
-                    return ReadObject<T>(reader);
-                case SerializedType.Dictionary:
-                    return ReadDictionary<T>(reader);
-                case SerializedType.List:
-                    return ReadList<T>(reader);
-                case SerializedType.Enumerable:
-                    return ReadEnumerable<T>(reader);
-                case SerializedType.String:
-                {
-                    var val = Reader.ReadString(reader);
-                    if (typeof(T) == typeof(string))
-                        return val;
-                    return typeof(T) == typeof(object) ? val : null;
-                }
-                case SerializedType.Byte:
-                {
-                    var val = Reader.ReadByte(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.SByte:
-                {
-                    var val = Reader.ReadSByte(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.UShort:
-                {
-                    var val = Reader.ReadUShort(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Short:
-                {
-                    var val = Reader.ReadShort(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.UInt:
-                {
-                    var val = Reader.ReadUInt(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Int:
-                {
-                    var val = Reader.ReadInt(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.ULong:
-                {
-                    var val = Reader.ReadULong(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Long:
-                {
-                    var val = Reader.ReadLong(reader);
-                    if (typeof(T).IsEnum)
-                        return AsEnum<T>(val);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Float:
-                {
-                    var val = Reader.ReadFloat(reader);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Double:
-                {
-                    var val = Reader.ReadDouble(reader);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Bool:
-                {
-                    var val = Reader.ReadBool(reader);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Decimal:
-                {
-                    var val = Reader.ReadDecimal(reader);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.DateTime:
-                {
-                    var val = Reader.ReadDateTime(reader);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Char:
-                {
-                    var val = Reader.ReadChar(reader);
-                    if (SelfUpgradingReader.As<T>(val, out var result)) 
-                        return result;
-                    return typeof(T) == typeof(object) ? val : GetNullableOrDefault<T>(val);
-                }
-                case SerializedType.Null:
-                    return null;
-                default:
-                    throw new NotSupportedException($"SerializedType '{valueType}' is not supported");
-            }
+            object Read(BinaryReader reader, SerializedType valueType);
         }
 
-        private static readonly ConcurrentDictionary<(Type, Type), Func<object, object>> Upgraders = new ConcurrentDictionary<(Type, Type), Func<object, object>>();
-        private static Func<object, object> GetUpgrader(Type from, Type to) => Upgraders.GetOrAdd((from, to), _ =>
+        private static class GetValueReader<T>
         {
-            var method = typeof(Upgrader).GetMethod(nameof(Upgrader.Upgrade))?.MakeGenericMethod(from, to) ?? throw new MissingMethodException();
-            return (Func<object, object>) Delegate.CreateDelegate(typeof(Func<object, object>), null, method);
-        });
-
-        private static class Upgrader
-        {
-            public static object Upgrade<TFrom, TTo>(object val)
-            {
-                switch (Type.GetTypeCode(typeof(TFrom)))
-                {
-                    case TypeCode.Boolean:
-                    {
-                        return SelfUpgradingReader.As<TTo>((bool) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Byte:
-                    {
-                        return SelfUpgradingReader.As<TTo>((byte) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Char:
-                    {
-                        return SelfUpgradingReader.As<TTo>((char) val, out var result) ? result : null;
-                    }
-                    case TypeCode.DateTime:
-                    {
-                        return SelfUpgradingReader.As<TTo>((DateTime) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Decimal:
-                    {
-                        return SelfUpgradingReader.As<TTo>((decimal) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Double:
-                    {
-                        return SelfUpgradingReader.As<TTo>((double) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Int16:
-                    {
-                        return SelfUpgradingReader.As<TTo>((short) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Int32:
-                    {
-                        return SelfUpgradingReader.As<TTo>((int) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Int64:
-                    {
-                        return SelfUpgradingReader.As<TTo>((long) val, out var result) ? result : null;
-                    }
-                    case TypeCode.SByte:
-                    {
-                        return SelfUpgradingReader.As<TTo>((sbyte) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Single:
-                    {
-                        return SelfUpgradingReader.As<TTo>((float) val, out var result) ? result : null;
-                    }
-                    case TypeCode.UInt16:
-                    {
-                        return SelfUpgradingReader.As<TTo>((ushort) val, out var result) ? result : null;
-                    }
-                    case TypeCode.UInt32:
-                    {
-                        return SelfUpgradingReader.As<TTo>((uint) val, out var result) ? result : null;
-                    }
-                    case TypeCode.UInt64:
-                    {
-                        return SelfUpgradingReader.As<TTo>((ulong) val, out var result) ? result : null;
-                    }
-                    default:
-                        return null;
-                }
-            }
+            public static readonly IValueReader Reader = ValueReaders<T>.CreateReader();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object GetNullableOrDefault<T>(object val)
-        {
-            var type = Nullable.GetUnderlyingType(typeof(T));
-            if (type == null)
-                return Default<T>();
-
-            if (type.IsEnum)
-                return Enum.ToObject(type, val);
-
-            return Upgrade(type, val);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object Upgrade(Type targetType, object val)
-        {
-            var sourceType = val.GetType();
-            return sourceType == targetType ? val : GetUpgrader(sourceType, targetType)(val);
-        }
+        public static object ReadValue<T>(BinaryReader reader, SerializedType valueType) => GetValueReader<T>.Reader.Read(reader, valueType);
 
         public static void DiscardValue(BinaryReader reader, SerializedType? knownType = null)
         {
@@ -409,69 +127,64 @@ namespace Binaron.Serializer
             }
         }
 
-        public static object ReadDictionary<T>(BinaryReader reader) => ReadDictionary(reader, typeof(T), GenericType.GetIDictionaryReaderGenericTypes<T>.Types);
-
-        public static object ReadDictionary(BinaryReader reader, Type type) => ReadDictionary(reader, type, GenericType.GetIDictionaryReader(type));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadDictionary(BinaryReader reader, Type type, (Type KeyType, Type ValueType) dictionaryGenericType)
+        private interface IDictionaryReader
         {
-            if (dictionaryGenericType.KeyType != null)
-            {
-                var count = reader.Read<int>();
-                return GenericReader.ReadDictionary(reader, type, dictionaryGenericType, count);
-            }
-
-            if (type == typeof(object))
-                return Deserializer.ReadDictionary(reader);
-
-            // non-generic type
-            {
-                var count = reader.Read<int>();
-                var result = CreateDictionaryResultObject(type, count);
-                switch (result)
-                {
-                    case IDictionary d:
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            var key = Deserializer.ReadValue(reader);
-                            var value = Deserializer.ReadValue(reader);
-                            d.Add(key, value);
-                        }
-
-                        break;
-                    }
-                    default:
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            DiscardValue(reader); // key
-                            DiscardValue(reader); // value
-                        }
-
-                        break;
-                    }
-                }
-
-                return result;
-            }
+            object Read(BinaryReader reader);
         }
 
-        public static object ReadEnumerable<T>(BinaryReader reader) => ReadEnumerable(reader, typeof(T), GenericType.GetIEnumerableGenericType<T>.Type);
-
-        public static object ReadEnumerable(BinaryReader reader, Type type) => ReadEnumerable(reader, type, GenericType.GetIEnumerable(type));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadEnumerable(BinaryReader reader, Type type, Type elementType)
+        private static class GetDictionaryReader<T>
         {
-            if (elementType != null)
-                return GenericReader.ReadEnumerable(reader, type, elementType);
+            public static readonly IDictionaryReader Reader = DictionaryReaders.CreateReader<T>();
+        }
 
-            if (type == typeof(object))
-                return Deserializer.ReadEnumerable(reader);
+        public static object ReadDictionary<T>(BinaryReader reader) => GetDictionaryReader<T>.Reader.Read(reader);
 
-            // non-generic type
+        private static object ReadDictionaryNonGeneric(BinaryReader reader, Type type)
+        {
+            var count = reader.Read<int>();
+            var result = CreateDictionaryResultObject(type, count);
+            switch (result)
+            {
+                case IDictionary d:
+                {
+                    for (var i = 0; i < count; i++)
+                    {
+                        var key = Deserializer.ReadValue(reader);
+                        var value = Deserializer.ReadValue(reader);
+                        d.Add(key, value);
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    for (var i = 0; i < count; i++)
+                    {
+                        DiscardValue(reader); // key
+                        DiscardValue(reader); // value
+                    }
+
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        private interface IEnumerableReader
+        {
+            object Read(BinaryReader reader);
+        }
+
+        private static class GetEnumerableReader<T>
+        {
+            public static readonly IEnumerableReader Reader = EnumerableReaders.CreateReader<T>();
+        }
+
+        public static object ReadEnumerable<T>(BinaryReader reader) => GetEnumerableReader<T>.Reader.Read(reader);
+
+        private static object ReadEnumerableNonGeneric(BinaryReader reader, Type type)
+        {
             var result = CreateResultObject(type);
             if (result is IList l)
             {
@@ -487,57 +200,46 @@ namespace Binaron.Serializer
             return result;
         }
 
-        public static object ReadList<T>(BinaryReader reader) => ReadList(reader, typeof(T), GenericType.GetIEnumerableGenericType<T>.Type);
-
-        public static object ReadList(BinaryReader reader, Type type) => ReadList(reader, type, GenericType.GetIEnumerable(type));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadList(BinaryReader reader, Type type, Type elementType)
+        private interface IListReader
         {
-            if (elementType != null)
-            {
-                var count = reader.Read<int>();
-                return GenericReader.ReadList(reader, type, elementType, count);
-            }
-
-            if (type == typeof(object))
-                return Deserializer.ReadList(reader);
-
-            // non-generic type
-            {
-                var count = reader.Read<int>();
-                var result = CreateResultObject(type, count);
-                if (result is IList l)
-                {
-                    for (var i = 0; i < count; i++)
-                        l.Add(Deserializer.ReadValue(reader));
-                }
-                else
-                {
-                    for (var i = 0; i < count; i++)
-                        DiscardValue(reader);
-                }
-
-                return result;
-            }
+            object Read(BinaryReader reader);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static class GetListReader<T>
+        {
+            public static readonly IListReader Reader = ListReaders.CreateReader<T>();
+        }
+
+        public static object ReadList<T>(BinaryReader reader) => GetListReader<T>.Reader.Read(reader);
+
+        private static object ReadListNonGeneric(BinaryReader reader, Type type)
+        {
+            var count = reader.Read<int>();
+            var result = CreateResultObject(type, count);
+            if (result is IList l)
+            {
+                for (var i = 0; i < count; i++)
+                    l.Add(Deserializer.ReadValue(reader));
+            }
+            else
+            {
+                for (var i = 0; i < count; i++)
+                    DiscardValue(reader);
+            }
+
+            return result;
+        }
+
         private static ResultObjectCreator.Enumerable GetEnumerableResultObjectCreator(Type type) => EnumerableResultObjectCreators.GetOrAdd(type, _ => new ResultObjectCreator.Enumerable(type));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object CreateResultObject(Type type) => GetEnumerableResultObjectCreator(type).Create();
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ResultObjectCreator.List GetListResultObjectCreator(Type type) => ListResultObjectCreators.GetOrAdd(type, _ => new ResultObjectCreator.List(type));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object CreateResultObject(Type type, int count) => GetListResultObjectCreator(type).Create(ListCapacity.Clamp(count));
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ResultObjectCreator.Dictionary GetDictionaryResultObjectCreator(Type type) => DictionaryResultObjectCreators.GetOrAdd(type, _ => new ResultObjectCreator.Dictionary(type));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object CreateDictionaryResultObject(Type type, int count) => GetDictionaryResultObjectCreator(type).Create(ListCapacity.Clamp(count));
 
         private static class ObjectReaders
@@ -570,7 +272,6 @@ namespace Binaron.Serializer
                     this.setterHandlers = setterHandlers;
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader)
                 {
                     var result = activate();
@@ -598,7 +299,6 @@ namespace Binaron.Serializer
                     this.activate = activate;
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader)
                 {
                     var result = (IDictionary) activate();
@@ -623,14 +323,268 @@ namespace Binaron.Serializer
                     this.elementType = elementType;
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => GenericReader.ReadObjectAsDictionary(reader, type, elementType);
             }
 
             private class DynamicObjectReader : IObjectReader
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => Deserializer.ReadObject(reader);
+            }
+        }
+
+        private static class DictionaryReaders
+        {
+            public static IDictionaryReader CreateReader<T>()
+            {
+                var type = typeof(T);
+                var dictionaryGenericType = GenericType.GetIDictionaryReader(type);
+                if (dictionaryGenericType.KeyType != null)
+                    return new GenericDictionaryReader(type, dictionaryGenericType);
+
+                if (type == typeof(object))
+                    return new DynamicDictionaryReader();
+
+                return new DictionaryReader<T>();
+            }
+
+            private class DynamicDictionaryReader : IDictionaryReader
+            {
+                public object Read(BinaryReader reader) => Deserializer.ReadDictionary(reader);
+            }
+
+            private class DictionaryReader<T> : IDictionaryReader
+            {
+                public object Read(BinaryReader reader) => ReadDictionaryNonGeneric(reader, typeof(T));
+            }
+
+            private class GenericDictionaryReader : IDictionaryReader
+            {
+                private readonly Type type;
+                private readonly (Type KeyType, Type ValueType) elementType;
+
+                public GenericDictionaryReader(Type type, (Type KeyType, Type ValueType) elementType)
+                {
+                    this.type = type;
+                    this.elementType = elementType;
+                }
+
+                public object Read(BinaryReader reader)
+                {
+                    var count = reader.Read<int>();
+                    return GenericReader.ReadDictionary(reader, type, elementType, count);
+                }
+            }
+        }
+
+        private static class EnumerableReaders
+        {
+            public static IEnumerableReader CreateReader<T>()
+            {
+                var type = typeof(T);
+                var elementType = GenericType.GetIEnumerable(type);
+                if (elementType != null)
+                {
+                    if (elementType.IsEnum)
+                        return (IEnumerableReader) Activator.CreateInstance(typeof(GenericEnumEnumerableReader<,>).MakeGenericType(type, elementType));
+
+                    return (IEnumerableReader) Activator.CreateInstance(typeof(GenericEnumerableReader<,>).MakeGenericType(type, elementType));
+                }
+
+                if (type == typeof(object))
+                    return new DynamicEnumerableReader();
+
+                return new EnumerableReader<T>();
+            }
+
+            private class DynamicEnumerableReader : IEnumerableReader
+            {
+                public object Read(BinaryReader reader) => Deserializer.ReadEnumerable(reader);
+            }
+
+            private class GenericEnumEnumerableReader<T, TElement> : IEnumerableReader
+            {
+                public object Read(BinaryReader reader) => GenericReader.ReadEnums(reader, typeof(T), typeof(TElement));
+            }
+
+            private class EnumerableReader<T> : IEnumerableReader
+            {
+                public object Read(BinaryReader reader) => ReadEnumerableNonGeneric(reader, typeof(T));
+            }
+
+            private class GenericEnumerableReader<T, TElement> : IEnumerableReader
+            {
+                public object Read(BinaryReader reader) => GenericReader.ReadTypedEnumerable<T, TElement>(reader);
+            }
+        }
+
+        private static class ListReaders
+        {
+            public static IListReader CreateReader<T>()
+            {
+                var type = typeof(T);
+                var elementType = GenericType.GetIEnumerable(type);
+                if (elementType != null)
+                {
+                    if (elementType.IsEnum)
+                        return (IListReader) Activator.CreateInstance(typeof(GenericEnumListReader<,>).MakeGenericType(type, elementType));
+
+                    return (IListReader) Activator.CreateInstance(typeof(GenericListReader<,>).MakeGenericType(type, elementType));
+                }
+
+                if (type == typeof(object))
+                    return new DynamicListReader();
+
+                return new ListReader<T>();
+            }
+
+            private class DynamicListReader : IListReader
+            {
+                public object Read(BinaryReader reader) => Deserializer.ReadList(reader);
+            }
+
+            private class GenericEnumListReader<T, TElement> : IListReader
+            {
+                public object Read(BinaryReader reader)
+                {
+                    var count = reader.Read<int>();
+                    return GenericReader.ReadEnums(reader, typeof(T), typeof(TElement), count);
+                }
+            }
+
+            private class ListReader<T> : IListReader
+            {
+                public object Read(BinaryReader reader) => ReadListNonGeneric(reader, typeof(T));
+            }
+
+            private class GenericListReader<T, TElement> : IListReader
+            {
+                public object Read(BinaryReader reader)
+                {
+                    var count = reader.Read<int>();
+                    return GenericReader.ReadTypedList<T, TElement>(reader, count);
+                }
+            }
+        }
+
+        private static class ValueReaders<T>
+        {
+            public static IValueReader CreateReader()
+            {
+                switch (Type.GetTypeCode(typeof(T)))
+                {
+                    case TypeCode.Boolean:
+                        return new BoolReader();
+                    case TypeCode.Byte:
+                        return new ByteReader();
+                    case TypeCode.Char:
+                        return new CharReader();
+                    case TypeCode.DateTime:
+                        return new DateTimeReader();
+                    case TypeCode.Decimal:
+                        return new DecimalReader();
+                    case TypeCode.Double:
+                        return new DoubleReader();
+                    case TypeCode.Int16:
+                        return new ShortReader();
+                    case TypeCode.Int32:
+                        return new IntReader();
+                    case TypeCode.Int64:
+                        return new LongReader();
+                    case TypeCode.SByte:
+                        return new SByteReader();
+                    case TypeCode.Single:
+                        return new FloatReader();
+                    case TypeCode.String:
+                        return new StringReader();
+                    case TypeCode.UInt16:
+                        return new UShortReader();
+                    case TypeCode.UInt32:
+                        return new UIntReader();
+                    case TypeCode.UInt64:
+                        return new ULongReader();
+                    default:
+                        return new ObjectReader();
+                }
+            }
+
+            private class BoolReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsBool(reader, valueType);
+            }
+
+            private class ByteReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsByte(reader, valueType);
+            }
+
+            private class CharReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsChar(reader, valueType);
+            }
+
+            private class DateTimeReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsDateTime(reader, valueType);
+            }
+
+            private class DecimalReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsDecimal(reader, valueType);
+            }
+
+            private class DoubleReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsDouble(reader, valueType);
+            }
+
+            private class ShortReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsShort(reader, valueType);
+            }
+
+            private class IntReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsInt(reader, valueType);
+            }
+
+            private class LongReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsLong(reader, valueType);
+            }
+
+            private class SByteReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsSByte(reader, valueType);
+            }
+
+            private class FloatReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsFloat(reader, valueType);
+            }
+
+            private class StringReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsString(reader, valueType);
+            }
+
+            private class UShortReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsUShort(reader, valueType);
+            }
+
+            private class UIntReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsUInt(reader, valueType);
+            }
+
+            private class ULongReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsULong(reader, valueType);
+            }
+
+            private class ObjectReader : IValueReader
+            {
+                public object Read(BinaryReader reader, SerializedType valueType) => SelfUpgradingReader.ReadAsObject<T>(reader, valueType);
             }
         }
     }

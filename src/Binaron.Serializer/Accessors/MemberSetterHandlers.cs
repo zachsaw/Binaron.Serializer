@@ -165,25 +165,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override object HandleInternal(BinaryReader reader)
-            {
-                var valueType = (SerializedType) reader.Read<byte>();
-                switch (valueType)
-                {
-                    case SerializedType.Null:
-                        return null;
-                    case SerializedType.Object:
-                        return TypedDeserializer.ReadObject<T>(reader);
-                    case SerializedType.Dictionary:
-                        return TypedDeserializer.ReadDictionary<T>(reader);
-                    case SerializedType.List:
-                        return TypedDeserializer.ReadList<T>(reader);
-                    case SerializedType.Enumerable:
-                        return TypedDeserializer.ReadEnumerable<T>(reader);
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            protected override object HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
         }
 
         internal class ClassObjectHandler<T> : MemberSetterHandlerBase<BinaryReader, object> where T : class
@@ -193,86 +175,81 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override object HandleInternal(BinaryReader reader)
-            {
-                var valueType = (SerializedType) reader.Read<byte>();
-                switch (valueType)
-                {
-                    case SerializedType.Null:
-                        return null;
-                    case SerializedType.Object:
-                        return TypedDeserializer.ReadObject<T>(reader);
-                    case SerializedType.Dictionary:
-                        return TypedDeserializer.ReadDictionary<T>(reader);
-                    case SerializedType.List:
-                        return TypedDeserializer.ReadList<T>(reader);
-                    case SerializedType.Enumerable:
-                        return TypedDeserializer.ReadEnumerable<T>(reader);
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            protected override object HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
         }
 
         internal class ObjectHandler : MemberSetterHandlerBase<BinaryReader, object>
         {
-            private readonly Type memberType;
+            private readonly IHandler handler;
 
             public ObjectHandler(MemberSetter<object> setter) : base(setter)
             {
-                memberType = setter.MemberInfo.GetMemberType();
+                var memberType = setter.MemberInfo.GetMemberType();
+                handler = (IHandler) Activator.CreateInstance(typeof(Handler<>).MakeGenericType(memberType));
+            }
+
+            private interface IHandler
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                object Handle(BinaryReader reader);
+            }
+
+            private class Handler<T> : IHandler
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public object Handle(BinaryReader reader)
+                {
+                    var valueType = (SerializedType) reader.Read<byte>();
+                    switch (valueType)
+                    {
+                        case SerializedType.Null:
+                            return null;
+                        case SerializedType.Object:
+                            return TypedDeserializer.ReadObject<T>(reader);
+                        case SerializedType.Dictionary:
+                            return TypedDeserializer.ReadDictionary<T>(reader);
+                        case SerializedType.List:
+                            return TypedDeserializer.ReadList<T>(reader);
+                        case SerializedType.Enumerable:
+                            return TypedDeserializer.ReadEnumerable<T>(reader);
+                        case SerializedType.String:
+                            return Reader.ReadString(reader);
+                        case SerializedType.Char:
+                            return Reader.ReadChar(reader);
+                        case SerializedType.Byte:
+                            return Reader.ReadByte(reader);
+                        case SerializedType.SByte:
+                            return Reader.ReadSByte(reader);
+                        case SerializedType.UShort:
+                            return Reader.ReadUShort(reader);
+                        case SerializedType.Short:
+                            return Reader.ReadShort(reader);
+                        case SerializedType.UInt:
+                            return Reader.ReadUInt(reader);
+                        case SerializedType.Int:
+                            return Reader.ReadInt(reader);
+                        case SerializedType.ULong:
+                            return Reader.ReadULong(reader);
+                        case SerializedType.Long:
+                            return Reader.ReadLong(reader);
+                        case SerializedType.Float:
+                            return Reader.ReadFloat(reader);
+                        case SerializedType.Double:
+                            return Reader.ReadDouble(reader);
+                        case SerializedType.Decimal:
+                            return Reader.ReadDecimal(reader);
+                        case SerializedType.Bool:
+                            return Reader.ReadBool(reader);
+                        case SerializedType.DateTime:
+                            return Reader.ReadDateTime(reader);
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override object HandleInternal(BinaryReader reader)
-            {
-                var valueType = (SerializedType) reader.Read<byte>();
-                switch (valueType)
-                {
-                    case SerializedType.Null:
-                        return null;
-                    case SerializedType.Object:
-                        return TypedDeserializer.ReadObject(reader, memberType);
-                    case SerializedType.Dictionary:
-                        return TypedDeserializer.ReadDictionary(reader, memberType);
-                    case SerializedType.List:
-                        return TypedDeserializer.ReadList(reader, memberType);
-                    case SerializedType.Enumerable:
-                        return TypedDeserializer.ReadEnumerable(reader, memberType);
-                    case SerializedType.String:
-                        return Reader.ReadString(reader);
-                    case SerializedType.Char:
-                        return Reader.ReadChar(reader);
-                    case SerializedType.Byte:
-                        return Reader.ReadByte(reader);
-                    case SerializedType.SByte:
-                        return Reader.ReadSByte(reader);
-                    case SerializedType.UShort:
-                        return Reader.ReadUShort(reader);
-                    case SerializedType.Short:
-                        return Reader.ReadShort(reader);
-                    case SerializedType.UInt:
-                        return Reader.ReadUInt(reader);
-                    case SerializedType.Int:
-                        return Reader.ReadInt(reader);
-                    case SerializedType.ULong:
-                        return Reader.ReadULong(reader);
-                    case SerializedType.Long:
-                        return Reader.ReadLong(reader);
-                    case SerializedType.Float:
-                        return Reader.ReadFloat(reader);
-                    case SerializedType.Double:
-                        return Reader.ReadDouble(reader);
-                    case SerializedType.Decimal:
-                        return Reader.ReadDecimal(reader);
-                    case SerializedType.Bool:
-                        return Reader.ReadBool(reader);
-                    case SerializedType.DateTime:
-                        return Reader.ReadDateTime(reader);
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            protected override object HandleInternal(BinaryReader reader) => handler.Handle(reader);
         }
     }
 }

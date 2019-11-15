@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Binaron.Serializer.Enums;
 
@@ -6,6 +7,148 @@ namespace Binaron.Serializer.Infrastructure
 {
     internal static class SelfUpgradingReader
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object ReadAsObject<T>(BinaryReader reader)
+        {
+            var valueType = (SerializedType) reader.Read<byte>();
+            return ReadAsObject<T>(reader, valueType);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object ReadAsObject<T>(BinaryReader reader, SerializedType valueType)
+        {
+            switch (valueType)
+            {
+                case SerializedType.Null:
+                    return null;
+                case SerializedType.Object:
+                    return TypedDeserializer.ReadObject<T>(reader);
+                case SerializedType.Dictionary:
+                    return TypedDeserializer.ReadDictionary<T>(reader);
+                case SerializedType.List:
+                    return TypedDeserializer.ReadList<T>(reader);
+                case SerializedType.Enumerable:
+                    return TypedDeserializer.ReadEnumerable<T>(reader);
+                default:
+                    return ReadAsMiscObject<T>(reader, valueType);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static object ReadAsMiscObject<T>(BinaryReader reader, SerializedType valueType)
+        {
+            var result = Deserializer.ReadValue(reader, valueType);
+            return typeof(T) == typeof(object) ? result : GetNullableOrDefault<T>(result);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static object AsEnum(Type type, object val)
+        {
+            try
+            {
+                return Enum.ToObject(type, val);
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static object GetNullableOrDefault<T>(object val)
+        {
+            var type = Nullable.GetUnderlyingType(typeof(T));
+            if (type == null)
+                return null;
+
+            if (type.IsEnum)
+                return AsEnum(type, val);
+
+            return Upgrade(type, val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static object Upgrade(Type targetType, object val)
+        {
+            var sourceType = val.GetType();
+            return sourceType == targetType ? val : GetUpgrader(sourceType, targetType)(val);
+        }
+
+        private static readonly ConcurrentDictionary<(Type, Type), Func<object, object>> Upgraders = new ConcurrentDictionary<(Type, Type), Func<object, object>>();
+        private static Func<object, object> GetUpgrader(Type from, Type to) => Upgraders.GetOrAdd((from, to), _ =>
+        {
+            var method = typeof(Upgrader).GetMethod(nameof(Upgrader.Upgrade))?.MakeGenericMethod(from, to) ?? throw new MissingMethodException();
+            return (Func<object, object>) Delegate.CreateDelegate(typeof(Func<object, object>), null, method);
+        });
+
+        private static class Upgrader
+        {
+            public static object Upgrade<TFrom, TTo>(object val)
+            {
+                switch (Type.GetTypeCode(typeof(TFrom)))
+                {
+                    case TypeCode.Boolean:
+                    {
+                        return As<TTo>((bool) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Byte:
+                    {
+                        return As<TTo>((byte) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Char:
+                    {
+                        return As<TTo>((char) val, out var result) ? result : null;
+                    }
+                    case TypeCode.DateTime:
+                    {
+                        return As<TTo>((DateTime) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Decimal:
+                    {
+                        return As<TTo>((decimal) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Double:
+                    {
+                        return As<TTo>((double) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Int16:
+                    {
+                        return As<TTo>((short) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Int32:
+                    {
+                        return As<TTo>((int) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Int64:
+                    {
+                        return As<TTo>((long) val, out var result) ? result : null;
+                    }
+                    case TypeCode.SByte:
+                    {
+                        return As<TTo>((sbyte) val, out var result) ? result : null;
+                    }
+                    case TypeCode.Single:
+                    {
+                        return As<TTo>((float) val, out var result) ? result : null;
+                    }
+                    case TypeCode.UInt16:
+                    {
+                        return As<TTo>((ushort) val, out var result) ? result : null;
+                    }
+                    case TypeCode.UInt32:
+                    {
+                        return As<TTo>((uint) val, out var result) ? result : null;
+                    }
+                    case TypeCode.UInt64:
+                    {
+                        return As<TTo>((ulong) val, out var result) ? result : null;
+                    }
+                    default:
+                        return null;
+                }
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool ReadAsBool(BinaryReader reader)
         {
@@ -380,7 +523,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(byte val, out object result)
+        private static bool As<T>(byte val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -441,7 +584,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(sbyte val, out object result)
+        private static bool As<T>(sbyte val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -473,7 +616,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(ushort val, out object result)
+        private static bool As<T>(ushort val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -508,7 +651,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(short val, out object result)
+        private static bool As<T>(short val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -537,7 +680,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(uint val, out object result)
+        private static bool As<T>(uint val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -566,7 +709,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(char val, out object result)
+        private static bool As<T>(char val, out object result)
         {
             if (typeof(T) == typeof(char))
             {
@@ -585,7 +728,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(DateTime val, out object result)
+        private static bool As<T>(DateTime val, out object result)
         {
             if (typeof(T) == typeof(DateTime))
             {
@@ -598,7 +741,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(decimal val, out object result)
+        private static bool As<T>(decimal val, out object result)
         {
             if (typeof(T) == typeof(decimal))
             {
@@ -611,7 +754,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(bool val, out object result)
+        private static bool As<T>(bool val, out object result)
         {
             if (typeof(T) == typeof(bool))
             {
@@ -624,7 +767,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(double val, out object result)
+        private static bool As<T>(double val, out object result)
         {
             if (typeof(T) == typeof(double))
             {
@@ -637,7 +780,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(float val, out object result)
+        private static bool As<T>(float val, out object result)
         {
             if (typeof(T) == typeof(float))
             {
@@ -656,7 +799,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(long val, out object result)
+        private static bool As<T>(long val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -679,7 +822,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(ulong val, out object result)
+        private static bool As<T>(ulong val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {
@@ -702,7 +845,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool As<T>(int val, out object result)
+        private static bool As<T>(int val, out object result)
         {
             switch (Type.GetTypeCode(typeof(T)))
             {

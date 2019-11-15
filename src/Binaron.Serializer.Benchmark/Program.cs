@@ -18,7 +18,7 @@ namespace BinSerializerTest
             public void Setup()
             {
                 // warm-up
-                for (var i = 0; i < 50; i++)
+                for (var i = 0; i < 250; i++)
                 {
                     NewtonsoftJsonTest_Validate(book);
                     BinaronTest_Validate(book);

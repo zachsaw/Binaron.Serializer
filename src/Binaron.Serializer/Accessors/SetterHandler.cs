@@ -39,7 +39,7 @@ namespace Binaron.Serializer.Accessors
             return type.GetProperties(BindingAttr).Cast<MemberInfo>().Concat(type.GetFields(BindingAttr))
                 .Select(member => CreateSetterHandler(type, member))
                 .Where(handler => handler != null)
-                .ToDictionary(handler => handler.MemberName, setter => setter);
+                .ToDictionary(handler => handler.MemberInfo.Name, setter => setter);
         }
 
         private static Type GetActualType(Type type)
