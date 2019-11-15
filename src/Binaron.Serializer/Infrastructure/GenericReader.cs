@@ -14,9 +14,7 @@ namespace Binaron.Serializer.Infrastructure
         private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Func<BinaryReader, object, int, (bool Success, object Result)>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Func<BinaryReader, object, int, (bool Success, object Result)>>();
         private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, (bool Success, object Result)>> ObjectAsDictionaryAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, (bool Success, object Result)>>();
         private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, int, bool, (bool Success, object Result)>> ListEnumAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, int, bool, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, int, bool, (bool Success, object Result)>> ListAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, int, bool, (bool Success, object Result)>>();
         private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, bool, (bool Success, object Result)>> EnumerableEnumAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, bool, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, bool, (bool Success, object Result)>> EnumerableAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, bool, (bool Success, object Result)>>();
 
         private static readonly ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary>();
         private static readonly ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List> ListResultObjectCreators = new ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List>();
@@ -43,20 +41,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadEnumerable(BinaryReader reader, Type parentType, Type type)
-        {
-            var result = CreateResultObject(parentType, type);
-            var addAll = GetEnumerableAdder(type);
-            var (success, addedResult) = addAll(reader, result, parentType.IsArray);
-            if (success)
-                return addedResult;
-
-            Discard(reader);
-            return result;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ReadTypedEnumerable<T, TElement>(BinaryReader reader, out object enumerable)
+        public static object ReadTypedEnumerable<T, TElement>(BinaryReader reader)
         {
             var parentType = typeof(T);
             var type = typeof(TElement);
@@ -74,16 +59,17 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add((TElement) v);
                         }
 
-                        enumerable = parentType.IsArray ? ToArray(l) : result;
-                        return true;
+                        return parentType.IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
-                    enumerable = result;
-                    return true;
+                    return result;
                 }
                 default:
-                    return ReadTypedEnumerable(reader, parentType, type, out enumerable);
+                {
+                    ReadTypedEnumerable(reader, parentType, type, out var result);
+                    return result;
+                }
             }
         }
 
@@ -417,52 +403,9 @@ namespace Binaron.Serializer.Infrastructure
             var method = typeof(EnumerableAdder).GetMethod(nameof(EnumerableAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
             return (Func<BinaryReader, object, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, bool, (bool Success, object Result)>), null, method);
         });
-        
-        private static Func<BinaryReader, object, bool, (bool Success, object Result)> GetEnumerableAdder(Type type) => EnumerableAdders.GetOrAdd(type, _ =>
-        {
-            var method = typeof(EnumerableAdder).GetMethod(nameof(EnumerableAdder.AddAll))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
-            return (Func<BinaryReader, object, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, bool, (bool Success, object Result)>), null, method);
-        });
 
         private static class EnumerableAdder
         {
-            public static (bool Success, object Result) AddAll<T>(BinaryReader reader, object list, bool convertToArray)
-            {
-                if (!(list is ICollection<T> l))
-                    return (false, list);
-
-                Add(reader, l);
-
-                return (true, convertToArray ? ToArray(l) : l);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void Add<T>(BinaryReader reader, ICollection<T> list)
-            {
-                do
-                {
-                    try
-                    {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
-                        {
-                            var valueType = (SerializedType) reader.Read<byte>();
-                            if (valueType == SerializedType.Null)
-                                list.Add(default);
-                            var value = TypedDeserializer.ReadValue<T>(reader, valueType);
-                            if (value != null)
-                                list.Add((T) value);
-                        }
-                        break;
-                    }
-                    catch (InvalidCastException)
-                    {
-                    }
-                    catch (OverflowException)
-                    {
-                    }
-                } while (true);
-            }
-
             public static (bool Success, object Result) AddEnums<T>(BinaryReader reader, object list, bool convertToArray) where T : struct
             {
                 if (!(list is ICollection<T> l)) 
@@ -520,7 +463,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ReadTypedList<T, TElement>(BinaryReader reader, int count, out object list)
+        public static object ReadTypedList<T, TElement>(BinaryReader reader, int count)
         {
             var parentType = typeof(T);
             var type = typeof(TElement);
@@ -538,16 +481,17 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add((TElement) v);
                         }
 
-                        list = parentType.IsArray ? ToArray(l) : result;
-                        return true;
+                        return parentType.IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
-                    list = result;
-                    return true;
+                    return result;
                 }
                 default:
-                    return ReadTypedList(reader, parentType, type, count, out list);
+                {
+                    ReadTypedList(reader, parentType, type, count, out var result);
+                    return result;
+                }
             }
         }
 
@@ -882,72 +826,8 @@ namespace Binaron.Serializer.Infrastructure
             return (Func<BinaryReader, object, int, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, int, bool, (bool Success, object Result)>), null, method);
         });
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadList(BinaryReader reader, Type type, Type elementType, int count)
-        {
-            var result = CreateResultObject(type, elementType, count);
-            var addAll = GetListAdder(elementType);
-            var (success, addedResult) = addAll(reader, result, count, type.IsArray);
-            if (success)
-                return addedResult;
-
-            Discard(reader, count);
-            return result;
-        }
-
-        private static Func<BinaryReader, object, int, bool, (bool Success, object Result)> GetListAdder(Type type) => ListAdders.GetOrAdd(type, _ =>
-        {
-            var method = typeof(ListAdder).GetMethod(nameof(ListAdder.AddAll))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
-            return (Func<BinaryReader, object, int, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, int, bool, (bool Success, object Result)>), null, method);
-        });
-
         private static class ListAdder
         {
-            public static (bool Success, object Result) AddAll<T>(BinaryReader reader, object list, int count, bool convertToArray)
-            {
-                if (!(list is ICollection<T> l)) 
-                    return (false, list);
-
-                AddAll(reader, count, l);
-
-                return (true, convertToArray ? ToArray(l) : l);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void AddAll<T>(BinaryReader reader, int count, ICollection<T> list)
-            {
-                var i = 0;
-                do
-                {
-                    try
-                    {
-                        for (; i < count; i++)
-                        {
-                            var valueType = (SerializedType) reader.Read<byte>();
-                            if (valueType == SerializedType.Null)
-                            {
-                                list.Add(default);
-                            }
-                            else
-                            {
-                                var value = TypedDeserializer.ReadValue<T>(reader, valueType);
-                                if (value != null)
-                                    list.Add((T) value);
-                            }
-                        }
-                        break;
-                    }
-                    catch (InvalidCastException)
-                    {
-                        ++i;
-                    }
-                    catch (OverflowException)
-                    {
-                        ++i;
-                    }
-                } while (true);
-            }
-
             public static (bool Success, object Result) AddEnums<T>(BinaryReader reader, object list, int count, bool convertToArray) where T : struct
             {
                 if (!(list is ICollection<T> l)) 

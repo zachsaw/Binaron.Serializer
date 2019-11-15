@@ -31,46 +31,6 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object ReadObject<T>(BinaryReader reader) => GetObjectReaderGeneric<T>.Reader.Read(reader);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadObject(BinaryReader reader, Type type)
-        {
-            if (type == typeof(object))
-                return Deserializer.ReadObject(reader);
-
-            var typeInfo = SetterHandler.GetActivatorAndSetterHandlers(type);
-            var valueType = typeInfo.IDictionaryValueType;
-            if (valueType != null)
-                return GenericReader.ReadObjectAsDictionary(reader, type, valueType);
-            
-            var setterHandlers = typeInfo.Setters;
-            var result = typeInfo.Activate();
-
-            if (result is IDictionary d)
-            {
-                while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
-                {
-                    var key = reader.ReadString();
-                    var value = Deserializer.ReadValue(reader);
-                    d.Add(key, value);
-                }
-                return result;
-            }
-
-            while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
-            {
-                var key = reader.ReadString();
-                if (!setterHandlers.TryGetValue(key, out var setter))
-                {
-                    DiscardValue(reader);
-                    continue;
-                }
-
-                setter.Handle(reader, result);
-            }
-
-            return result;
-        }
-
         public static object ReadValue<T>(BinaryReader reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
@@ -185,23 +145,6 @@ namespace Binaron.Serializer
 
         public static object ReadDictionary<T>(BinaryReader reader) => GetDictionaryReader<T>.Reader.Read(reader);
 
-        public static object ReadDictionary(BinaryReader reader, Type type) => ReadDictionary(reader, type, GenericType.GetIDictionaryReader(type));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadDictionary(BinaryReader reader, Type type, (Type KeyType, Type ValueType) dictionaryGenericType)
-        {
-            if (dictionaryGenericType.KeyType != null)
-            {
-                var count = reader.Read<int>();
-                return GenericReader.ReadDictionary(reader, type, dictionaryGenericType, count);
-            }
-
-            if (type == typeof(object))
-                return Deserializer.ReadDictionary(reader);
-
-            return ReadDictionaryNonGeneric(reader, type);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ReadDictionaryNonGeneric(BinaryReader reader, Type type)
         {
@@ -248,28 +191,6 @@ namespace Binaron.Serializer
 
         public static object ReadEnumerable<T>(BinaryReader reader) => GetEnumerableReader<T>.Reader.Read(reader);
 
-        public static object ReadEnumerable(BinaryReader reader, Type type) => ReadEnumerable(reader, type, GenericType.GetIEnumerable(type));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadEnumerable(BinaryReader reader, Type type, Type elementType)
-        {
-            if (elementType != null)
-            {
-                if (elementType.IsEnum)
-                    return GenericReader.ReadEnums(reader, type, elementType);
-
-                if (GenericReader.ReadTypedEnumerable(reader, type, elementType, out var array)) 
-                    return array;
-
-                return GenericReader.ReadEnumerable(reader, type, elementType);
-            }
-
-            if (type == typeof(object))
-                return Deserializer.ReadEnumerable(reader);
-
-            return ReadEnumerableNonGeneric(reader, type);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ReadEnumerableNonGeneric(BinaryReader reader, Type type)
         {
@@ -300,29 +221,6 @@ namespace Binaron.Serializer
         }
 
         public static object ReadList<T>(BinaryReader reader) => GetListReader<T>.Reader.Read(reader);
-
-        public static object ReadList(BinaryReader reader, Type type) => ReadList(reader, type, GenericType.GetIEnumerable(type));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadList(BinaryReader reader, Type type, Type elementType)
-        {
-            if (elementType != null)
-            {
-                var count = reader.Read<int>();
-                if (elementType.IsEnum)
-                    return GenericReader.ReadEnums(reader, type, elementType, count);
-
-                if (GenericReader.ReadTypedList(reader, type, elementType, count, out var list)) 
-                    return list;
-
-                return GenericReader.ReadList(reader, type, elementType, count);
-            }
-
-            if (type == typeof(object))
-                return Deserializer.ReadList(reader);
-
-            return ReadListNonGeneric(reader, type);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ReadListNonGeneric(BinaryReader reader, Type type)
@@ -543,13 +441,7 @@ namespace Binaron.Serializer
             private class GenericEnumerableReader<T, TElement> : IEnumerableReader
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public object Read(BinaryReader reader)
-                {
-                    if (GenericReader.ReadTypedEnumerable<T, TElement>(reader, out var list))
-                        return list;
-
-                    return GenericReader.ReadEnumerable(reader, typeof(T), typeof(TElement));
-                }
+                public object Read(BinaryReader reader) => GenericReader.ReadTypedEnumerable<T, TElement>(reader);
             }
         }
 
@@ -601,10 +493,7 @@ namespace Binaron.Serializer
                 public object Read(BinaryReader reader)
                 {
                     var count = reader.Read<int>();
-                    if (GenericReader.ReadTypedList<T, TElement>(reader, count, out var list)) 
-                        return list;
-
-                    return GenericReader.ReadList(reader, typeof(T), typeof(TElement), count);
+                    return GenericReader.ReadTypedList<T, TElement>(reader, count);
                 }
             }
         }
