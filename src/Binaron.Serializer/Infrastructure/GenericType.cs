@@ -53,11 +53,6 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Type KeyType, Type ValueType) GetIDictionaryReader(Type dictionaryType) => ReaderDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIEnumerableKvp(dictionaryType));
 
-        public static class GetIDictionaryReaderGenericTypes<T>
-        {
-            public static readonly (Type KeyType, Type ValueType) Types = GetIDictionaryReader(typeof(T));
-        }
-
         private static (Type KeyType, Type ValueType) GetIDictionary(Type dictionaryType)
         {
             var results = dictionaryType.GetInterfaces().Concat(dictionaryType.Yield().Where(t => t.IsInterface))

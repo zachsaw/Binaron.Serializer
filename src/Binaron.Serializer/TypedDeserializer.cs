@@ -172,7 +172,18 @@ namespace Binaron.Serializer
             }
         }
 
-        public static object ReadDictionary<T>(BinaryReader reader) => ReadDictionary(reader, typeof(T), GenericType.GetIDictionaryReaderGenericTypes<T>.Types);
+        public interface IDictionaryReader
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            object Read(BinaryReader reader);
+        }
+
+        private static class GetDictionaryReader<T>
+        {
+            public static readonly IDictionaryReader Reader = DictionaryReaders.CreateReader<T>();
+        }
+
+        public static object ReadDictionary<T>(BinaryReader reader) => GetDictionaryReader<T>.Reader.Read(reader);
 
         public static object ReadDictionary(BinaryReader reader, Type type) => ReadDictionary(reader, type, GenericType.GetIDictionaryReader(type));
 
@@ -441,6 +452,53 @@ namespace Binaron.Serializer
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Read(BinaryReader reader) => Deserializer.ReadObject(reader);
+            }
+        }
+
+        private static class DictionaryReaders
+        {
+            public static IDictionaryReader CreateReader<T>()
+            {
+                var type = typeof(T);
+                var dictionaryGenericType = GenericType.GetIDictionaryReader(type);
+                if (dictionaryGenericType.KeyType != null)
+                    return new GenericDictionaryReader(type, dictionaryGenericType);
+
+                if (type == typeof(object))
+                    return new DynamicDictionaryReader();
+
+                return new DictionaryReader<T>();
+            }
+
+            private class DynamicDictionaryReader : IDictionaryReader
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public object Read(BinaryReader reader) => Deserializer.ReadDictionary(reader);
+            }
+
+            private class DictionaryReader<T> : IDictionaryReader
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public object Read(BinaryReader reader) => ReadDictionaryNonGeneric(reader, typeof(T));
+            }
+
+            private class GenericDictionaryReader : IDictionaryReader
+            {
+                private readonly Type type;
+                private readonly (Type KeyType, Type ValueType) elementType;
+
+                public GenericDictionaryReader(Type type, (Type KeyType, Type ValueType) elementType)
+                {
+                    this.type = type;
+                    this.elementType = elementType;
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public object Read(BinaryReader reader)
+                {
+                    var count = reader.Read<int>();
+                    return GenericReader.ReadDictionary(reader, type, elementType, count);
+                }
             }
         }
 
