@@ -48,18 +48,17 @@ namespace Binaron.Serializer.Infrastructure
             if (type.IsEnum)
                 return ReadEnums(reader, parentType, type);
 
-            if (ReadTypedEnumerable(reader, parentType, type, out var array)) return array;
+            if (ReadTypedEnumerable(reader, parentType, type, out var array)) 
+                return array;
 
-            {
-                var result = CreateResultObject(parentType, type);
-                var addAll = GetEnumerableAdder(type);
-                var (success, addedResult) = addAll(reader, result, parentType.IsArray);
-                if (success)
-                    return addedResult;
-                    
-                Discard(reader);
-                return result;
-            }
+            var result = CreateResultObject(parentType, type);
+            var addAll = GetEnumerableAdder(type);
+            var (success, addedResult) = addAll(reader, result, parentType.IsArray);
+            if (success)
+                return addedResult;
+
+            Discard(reader);
+            return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

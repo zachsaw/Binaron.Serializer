@@ -61,6 +61,12 @@ namespace Binaron.Serializer
         public static object ReadValue(BinaryReader reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
+            return ReadValue(reader, valueType);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object ReadValue(BinaryReader reader, SerializedType valueType)
+        {
             switch (valueType)
             {
                 case SerializedType.Object:

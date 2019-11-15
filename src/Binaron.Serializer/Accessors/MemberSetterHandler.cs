@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Binaron.Serializer.Accessors
@@ -11,7 +12,7 @@ namespace Binaron.Serializer.Accessors
             this.setter = setter;
         }
 
-        public string MemberName => setter.MemberName;
+        public MemberInfo MemberInfo => setter.MemberInfo;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ref readonly MemberSetter<TResult> GetSetter() => ref setter;
