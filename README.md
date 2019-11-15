@@ -39,7 +39,7 @@ This is the first cut of Binary.Serializer. It currently only supports null valu
 Binary.Serializer also uses and relies heavily on the newly released features of `.net standard 2.1` for maximum performance and thus is only compatible with `.net core app 3.0` and above.
 
 ## High unit test coverage
-Writing a serializer was easy. Writing a deserializer that deserializes to `ExpandoObject`(dynamic type) was just as easy. A deserializer however was a PITA simply because of the need to make Binaron.Serializer fit its serialized data as best it could (to sensible limits set in the Binary Object Notation documentation) to the destination object. For example, an `int32` type should fit `int64` and the deserializer shoud be smart enough to do that transparently. Likewise, an object with properties / fields that's been serialized should be deserializable to a dictionary.
+Writing a serializer was easy. Writing a deserializer that deserializes to `ExpandoObject`(dynamic type) was just as easy. However, deserializing to a specific type was a PITA simply because of the need to make Binaron.Serializer fit its serialized data as best it could (to sensible limits set in the Binary Object Notation documentation) to the destination object. For example, an `int32` type should fit `int64` and the deserializer shoud be smart enough to do that transparently. Likewise, an object with properties / fields that's been serialized should be deserializable to a dictionary.
 
 To make sure all these permutations are covered and tested, the unit tests in this repository has a **92% coverage**. Not perfect but most would agree it is high enough and will be improved in the near future.
 
