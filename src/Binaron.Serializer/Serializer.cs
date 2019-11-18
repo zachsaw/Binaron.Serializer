@@ -43,7 +43,7 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void WriteNonNullValue(WriterState writer, object val)
+        public static void WriteNonNullValue(WriterState writer, object val)
         {
             if (WritePrimitive(writer, val))
                 return;
