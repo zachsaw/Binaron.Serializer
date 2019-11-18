@@ -240,7 +240,7 @@ namespace Binaron.Serializer.Accessors
                 else
                 {
                     WriteMemberName(writer, MemberName);
-                    Serializer.WriteNonNullValue(writer, (T) val);
+                    Serializer.WriteNonNullValue(writer, val);
                 }
             }
         }

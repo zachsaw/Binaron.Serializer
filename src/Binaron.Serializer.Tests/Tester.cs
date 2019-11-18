@@ -29,6 +29,11 @@ namespace Binaron.Serializer.Tests
             return (result1, result2);
         }
 
+        public static T TestRoundTrip<T>(T val) => TestRoundTrip(val, new SerializerOptions());
+        public static T TestRoundTrip<T>(T val, SerializerOptions options) => TestRoundTrip<T>((object) val, options);
+        public static (T, object) TestRoundTrip2<T>(T val) => TestRoundTrip2(val, new SerializerOptions());
+        public static (T, object) TestRoundTrip2<T>(T val, SerializerOptions options) => TestRoundTrip2<T>((object) val, options);
+
         public static IEnumerable GetEnumerable(params object[] items)
         {
             // ReSharper disable once LoopCanBeConvertedToQuery

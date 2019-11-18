@@ -11,14 +11,14 @@ namespace Binaron.Serializer.Tests
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
         public void DiscardNoSetterPropertyTests<TSource>(TSource source)
         {
-            var dest = Tester.TestRoundTrip<TestClassNoSetter<TSource>>(new TestClassNoSetter<TSource>(source));
+            var dest = Tester.TestRoundTrip(new TestClassNoSetter<TSource>(source));
             Assert.AreEqual(default(TSource), dest.Value);
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
         public void DiscardNoGetterPropertyTests<TSource>(TSource source)
         {
-            var dest = Tester.TestRoundTrip<TestClassNoGetter<TSource>>(new TestClassNoGetter<TSource>(source));
+            var dest = Tester.TestRoundTrip(new TestClassNoGetter<TSource>(source));
             Assert.AreEqual(default(TSource), dest.GetValue());
         }
 

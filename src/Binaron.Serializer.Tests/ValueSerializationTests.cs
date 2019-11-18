@@ -112,6 +112,24 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
+        public void NestedStructInClassAsObjectTest()
+        {
+            var sourceClass = new TestClass<object> {Value = new TestStruct<object> {Value = 1}};
+            var dest = Tester.TestRoundTrip<TestClass<TestStruct<object>>>(sourceClass);
+
+            Assert.AreEqual(1, dest.Value.Value);
+        }
+
+        [Test]
+        public void NestedStructInClassAsTypedObjectTest()
+        {
+            var sourceClass = new TestClass<TestStruct<object>> {Value = new TestStruct<object> {Value = 1}};
+            var dest = Tester.TestRoundTrip(sourceClass);
+
+            Assert.AreEqual(1, dest.Value.Value);
+        }
+
+        [Test]
         public void RootLevelNullToObjectTest()
         {
             var (dest, dest2) = Tester.TestRoundTrip2<object>(null);
@@ -125,7 +143,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<object> {RootValue = now, Value = null};
-            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<object>>(sourceClass);
+            (var destClass, dynamic dest) = Tester.TestRoundTrip2(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(null, destClass.Value);
@@ -138,7 +156,7 @@ namespace Binaron.Serializer.Tests
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<object> {RootValue = now, Value = null};
-            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<object>>(sourceStruct);
+            (var destStruct, dynamic dest) = Tester.TestRoundTrip2(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(null, destStruct.Value);
