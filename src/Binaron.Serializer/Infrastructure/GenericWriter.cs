@@ -25,6 +25,9 @@ namespace Binaron.Serializer.Infrastructure
             public static IGenericEnumerableWriter CreateWriter<T>()
             {
                 var elementType = GenericType.GetICollectionGenericType<T>.Type;
+                if (elementType == null)
+                    return null;
+
                 return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType));
             }
 
@@ -238,6 +241,9 @@ namespace Binaron.Serializer.Infrastructure
             public static IGenericListWriter CreateWriter<T>()
             {
                 var elementType = GenericType.GetICollectionGenericType<T>.Type;
+                if (elementType == null)
+                    return null;
+
                 return (IGenericListWriter) (typeof(T).IsArray
                     ? Activator.CreateInstance(typeof(GenericArrayWriter<>).MakeGenericType(elementType)) 
                     : Activator.CreateInstance(typeof(GenericListWriter<>).MakeGenericType(elementType)));
