@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Binaron.Serializer.Accessors;
 using Binaron.Serializer.Enums;
@@ -70,6 +71,9 @@ namespace Binaron.Serializer
         {
             switch (val)
             {
+                case IDictionary<string, object> dictAsObj: // treat IDictionary<string, object> as Object type
+                    WriteDictionaryAsObject(writer, dictAsObj);
+                    break;
                 case IDictionary _ when GenericWriter.WriteDictionary(writer, val):
                     break;
                 case IDictionary dictionary:
@@ -107,6 +111,21 @@ namespace Binaron.Serializer
 
             foreach (var getter in GetterHandler.GetGetterHandlers(val.GetType()))
                 getter.Handle(writer, val);
+
+            writer.Write((byte) EnumerableType.End);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteDictionaryAsObject(WriterState writer, IDictionary<string, object> dictionary)
+        {
+            writer.Write((byte) SerializedType.Object);
+
+            foreach (var (key, value) in dictionary.Keys.Zip(dictionary.Values))
+            {
+                writer.Write((byte) EnumerableType.HasItem);
+                writer.WriteString(key);
+                WriteValue(writer, value);
+            }
 
             writer.Write((byte) EnumerableType.End);
         }
@@ -259,7 +278,12 @@ namespace Binaron.Serializer
             {
                 var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
                 if (types.KeyType != null)
+                {
+                    if (types.KeyType == typeof(string) && types.ValueType == typeof(object))
+                        return new DictionaryAsObjectWriter<T>();
+
                     return new GenericDictionaryWriter<T>();
+                }
 
                 if (typeof(IDictionary).IsAssignableFrom(typeof(T)))
                     return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(DictionaryWriter<>).MakeGenericType(typeof(T)));
@@ -271,6 +295,12 @@ namespace Binaron.Serializer
                     return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(EnumerableWriter<>).MakeGenericType(typeof(T)));
 
                 return new ObjectWriter<T>();
+            }
+
+            private class DictionaryAsObjectWriter<T> : INonPrimitiveWriter<T>
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => WriteDictionaryAsObject(writer, (IDictionary<string, object>) val);
             }
 
             private class GenericDictionaryWriter<T> : INonPrimitiveWriter<T>
