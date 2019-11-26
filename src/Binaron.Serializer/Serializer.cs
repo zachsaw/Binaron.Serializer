@@ -297,37 +297,37 @@ namespace Binaron.Serializer
                 return new ObjectWriter<T>();
             }
 
-            private class DictionaryAsObjectWriter<T> : INonPrimitiveWriter<T>
+            private sealed class DictionaryAsObjectWriter<T> : INonPrimitiveWriter<T>
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteDictionaryAsObject(writer, (IDictionary<string, object>) val);
             }
 
-            private class GenericDictionaryWriter<T> : INonPrimitiveWriter<T>
+            private sealed class GenericDictionaryWriter<T> : INonPrimitiveWriter<T>
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => GenericWriter.WriteDictionary(writer, val);
             }
 
-            private class DictionaryWriter<T> : INonPrimitiveWriter<T> where T : IDictionary
+            private sealed class DictionaryWriter<T> : INonPrimitiveWriter<T> where T : IDictionary
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteDictionary(writer, val);
             }
 
-            private class ListWriter<T> : INonPrimitiveWriter<T> where T : ICollection
+            private sealed class ListWriter<T> : INonPrimitiveWriter<T> where T : ICollection
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteList<T>(writer, val);
             }
 
-            private class EnumerableWriter<T> : INonPrimitiveWriter<T> where T : IEnumerable
+            private sealed class EnumerableWriter<T> : INonPrimitiveWriter<T> where T : IEnumerable
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteEnumerable<T>(writer, val);
             }
 
-            private class ObjectWriter<T> : INonPrimitiveWriter<T>
+            private sealed class ObjectWriter<T> : INonPrimitiveWriter<T>
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteObject(writer, val);

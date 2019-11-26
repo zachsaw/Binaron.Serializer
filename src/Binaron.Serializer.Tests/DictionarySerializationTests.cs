@@ -84,7 +84,7 @@ namespace Binaron.Serializer.Tests
             }
         }
         
-        private class TestDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+        private sealed class TestDictionary<TKey, TValue> : IDictionary<TKey, TValue>
         {
             private readonly Dictionary<TKey, TValue> backing = new Dictionary<TKey, TValue>();
             

@@ -6,7 +6,7 @@ namespace Binaron.Serializer.Creators
 {
     internal static class ResultObjectCreator
     {
-        internal class List
+        internal sealed class List
         {
             private readonly Func<int, object> createWithCapacity;
             private readonly Func<object> create;
@@ -38,7 +38,7 @@ namespace Binaron.Serializer.Creators
             }
         }
 
-        internal class Enumerable
+        internal sealed class Enumerable
         {
             private readonly Func<object> create;
 
@@ -66,7 +66,7 @@ namespace Binaron.Serializer.Creators
             return type.IsAssignableFrom(typeof(ArrayList));
         }
         
-        internal class Dictionary
+        internal sealed class Dictionary
         {
             private readonly Func<int, object> createWithCapacity;
             private readonly Func<object> create;

@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Binaron.Serializer.Tests.Extensions
 {
-    internal class Method
+    internal sealed class Method
     {
         private readonly MethodInfo method;
 

@@ -828,7 +828,7 @@ namespace Binaron.Serializer.IeeeDecimal
         }
 
         // nested types
-        private class Decimal128Comparer : IComparer<Decimal128>
+        private sealed class Decimal128Comparer : IComparer<Decimal128>
         {
             public static Decimal128Comparer Instance { get; } = new Decimal128Comparer();
 

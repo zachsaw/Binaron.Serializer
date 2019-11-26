@@ -147,12 +147,12 @@ namespace Binaron.Serializer.Tests
                 yield return item;
         }
 
-        private class TestClass<T>
+        private sealed class TestClass<T>
         {
             public T Value { get; set; }
         }
 
-        private class TestClassNoSetter<T>
+        private sealed class TestClassNoSetter<T>
         {
             public T Value { get; }
 
@@ -166,7 +166,7 @@ namespace Binaron.Serializer.Tests
             }
         }
 
-        private class TestClassNoGetter<T>
+        private sealed class TestClassNoGetter<T>
         {
             private T val;
 
@@ -187,7 +187,7 @@ namespace Binaron.Serializer.Tests
             public T GetValue() => val;
         }
 
-        private class TestEnumerable<T> : IEnumerable<T>
+        private sealed class TestEnumerable<T> : IEnumerable<T>
         {
             public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>) Array.Empty<T>()).GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

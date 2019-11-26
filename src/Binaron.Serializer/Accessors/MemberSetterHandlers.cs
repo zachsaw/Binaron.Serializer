@@ -8,7 +8,7 @@ namespace Binaron.Serializer.Accessors
 {
     internal static class MemberSetterHandlers
     {
-        internal class BoolHandler : MemberSetterHandlerBase<BinaryReader, bool>
+        internal sealed class BoolHandler : MemberSetterHandlerBase<BinaryReader, bool>
         {
             public BoolHandler(MemberSetter<bool> setter) : base(setter)
             {
@@ -18,7 +18,7 @@ namespace Binaron.Serializer.Accessors
             protected override bool HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsBool(reader);
         }
 
-        internal class ByteHandler : MemberSetterHandlerBase<BinaryReader, byte>
+        internal sealed class ByteHandler : MemberSetterHandlerBase<BinaryReader, byte>
         {
             public ByteHandler(MemberSetter<byte> setter) : base(setter)
             {
@@ -28,7 +28,7 @@ namespace Binaron.Serializer.Accessors
             protected override byte HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsByte(reader);
         }
 
-        internal class CharHandler : MemberSetterHandlerBase<BinaryReader, char>
+        internal sealed class CharHandler : MemberSetterHandlerBase<BinaryReader, char>
         {
             public CharHandler(MemberSetter<char> setter) : base(setter)
             {
@@ -38,7 +38,7 @@ namespace Binaron.Serializer.Accessors
             protected override char HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsChar(reader);
         }
 
-        internal class DateTimeHandler : MemberSetterHandlerBase<BinaryReader, DateTime>
+        internal sealed class DateTimeHandler : MemberSetterHandlerBase<BinaryReader, DateTime>
         {
             public DateTimeHandler(MemberSetter<DateTime> setter) : base(setter)
             {
@@ -48,7 +48,7 @@ namespace Binaron.Serializer.Accessors
             protected override DateTime HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsDateTime(reader);
         }
 
-        internal class DecimalHandler : MemberSetterHandlerBase<BinaryReader, decimal>
+        internal sealed class DecimalHandler : MemberSetterHandlerBase<BinaryReader, decimal>
         {
             public DecimalHandler(MemberSetter<decimal> setter) : base(setter)
             {
@@ -58,7 +58,7 @@ namespace Binaron.Serializer.Accessors
             protected override decimal HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsDecimal(reader);
         }
 
-        internal class DoubleHandler : MemberSetterHandlerBase<BinaryReader, double>
+        internal sealed class DoubleHandler : MemberSetterHandlerBase<BinaryReader, double>
         {
             public DoubleHandler(MemberSetter<double> setter) : base(setter)
             {
@@ -68,7 +68,7 @@ namespace Binaron.Serializer.Accessors
             protected override double HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsDouble(reader);
         }
 
-        internal class ShortHandler : MemberSetterHandlerBase<BinaryReader, short>
+        internal sealed class ShortHandler : MemberSetterHandlerBase<BinaryReader, short>
         {
             public ShortHandler(MemberSetter<short> setter) : base(setter)
             {
@@ -78,7 +78,7 @@ namespace Binaron.Serializer.Accessors
             protected override short HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsShort(reader);
         }
 
-        internal class IntHandler : MemberSetterHandlerBase<BinaryReader, int>
+        internal sealed class IntHandler : MemberSetterHandlerBase<BinaryReader, int>
         {
             public IntHandler(MemberSetter<int> setter) : base(setter)
             {
@@ -88,7 +88,7 @@ namespace Binaron.Serializer.Accessors
             protected override int HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsInt(reader);
         }
 
-        internal class LongHandler : MemberSetterHandlerBase<BinaryReader, long>
+        internal sealed class LongHandler : MemberSetterHandlerBase<BinaryReader, long>
         {
             public LongHandler(MemberSetter<long> setter) : base(setter)
             {
@@ -98,7 +98,7 @@ namespace Binaron.Serializer.Accessors
             protected override long HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsLong(reader);
         }
 
-        internal class SByteHandler : MemberSetterHandlerBase<BinaryReader, sbyte>
+        internal sealed class SByteHandler : MemberSetterHandlerBase<BinaryReader, sbyte>
         {
             public SByteHandler(MemberSetter<sbyte> setter) : base(setter)
             {
@@ -108,7 +108,7 @@ namespace Binaron.Serializer.Accessors
             protected override sbyte HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsSByte(reader);
         }
 
-        internal class FloatHandler : MemberSetterHandlerBase<BinaryReader, float>
+        internal sealed class FloatHandler : MemberSetterHandlerBase<BinaryReader, float>
         {
             public FloatHandler(MemberSetter<float> setter) : base(setter)
             {
@@ -118,7 +118,7 @@ namespace Binaron.Serializer.Accessors
             protected override float HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsFloat(reader);
         }
 
-        internal class UShortHandler : MemberSetterHandlerBase<BinaryReader, ushort>
+        internal sealed class UShortHandler : MemberSetterHandlerBase<BinaryReader, ushort>
         {
             public UShortHandler(MemberSetter<ushort> setter) : base(setter)
             {
@@ -128,7 +128,7 @@ namespace Binaron.Serializer.Accessors
             protected override ushort HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsUShort(reader);
         }
 
-        internal class UIntHandler : MemberSetterHandlerBase<BinaryReader, uint>
+        internal sealed class UIntHandler : MemberSetterHandlerBase<BinaryReader, uint>
         {
             public UIntHandler(MemberSetter<uint> setter) : base(setter)
             {
@@ -138,7 +138,7 @@ namespace Binaron.Serializer.Accessors
             protected override uint HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsUInt(reader);
         }
 
-        internal class ULongHandler : MemberSetterHandlerBase<BinaryReader, ulong>
+        internal sealed class ULongHandler : MemberSetterHandlerBase<BinaryReader, ulong>
         {
             public ULongHandler(MemberSetter<ulong> setter) : base(setter)
             {
@@ -148,7 +148,7 @@ namespace Binaron.Serializer.Accessors
             protected override ulong HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsULong(reader);
         }
 
-        internal class StringHandler : MemberSetterHandlerBase<BinaryReader, string>
+        internal sealed class StringHandler : MemberSetterHandlerBase<BinaryReader, string>
         {
             public StringHandler(MemberSetter<string> setter) : base(setter)
             {
@@ -158,7 +158,7 @@ namespace Binaron.Serializer.Accessors
             protected override string HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsString(reader);
         }
 
-        internal class StructObjectHandler<T> : MemberSetterHandlerBase<BinaryReader, object> where T : struct
+        internal sealed class StructObjectHandler<T> : MemberSetterHandlerBase<BinaryReader, object> where T : struct
         {
             public StructObjectHandler(MemberSetter<object> setter) : base(setter)
             {
@@ -168,7 +168,7 @@ namespace Binaron.Serializer.Accessors
             protected override object HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
         }
 
-        internal class ClassObjectHandler<T> : MemberSetterHandlerBase<BinaryReader, object> where T : class
+        internal sealed class ClassObjectHandler<T> : MemberSetterHandlerBase<BinaryReader, object> where T : class
         {
             public ClassObjectHandler(MemberSetter<object> setter) : base(setter)
             {
@@ -178,7 +178,7 @@ namespace Binaron.Serializer.Accessors
             protected override object HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
         }
 
-        internal class ObjectHandler : MemberSetterHandlerBase<BinaryReader, object>
+        internal sealed class ObjectHandler : MemberSetterHandlerBase<BinaryReader, object>
         {
             private readonly IHandler handler;
 
@@ -194,7 +194,7 @@ namespace Binaron.Serializer.Accessors
                 object Handle(BinaryReader reader);
             }
 
-            private class Handler<T> : IHandler
+            private sealed class Handler<T> : IHandler
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Handle(BinaryReader reader)

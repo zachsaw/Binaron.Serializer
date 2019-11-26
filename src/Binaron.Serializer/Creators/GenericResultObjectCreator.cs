@@ -6,7 +6,7 @@ namespace Binaron.Serializer.Creators
 {
     internal static class GenericResultObjectCreator
     {
-        internal class List
+        internal sealed class List
         {
             private readonly Func<int, object> createWithCapacity;
             private readonly Func<object> create;
@@ -51,7 +51,7 @@ namespace Binaron.Serializer.Creators
             return parentType.IsAssignableFrom(typeof(List<>).MakeGenericType(type));
         }
         
-        internal class Dictionary
+        internal sealed class Dictionary
         {
             private readonly Func<int, object> createWithCapacity;
             private readonly Func<object> create;

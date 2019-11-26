@@ -12,7 +12,7 @@ namespace Binaron.Serializer.Tests
             Assert.AreEqual(skipNulls ? (object) 1 : null, dest.Value);
         }
 
-        private class TestClass
+        private sealed class TestClass
         {
             public object Value { get; set; } = 1;
         }

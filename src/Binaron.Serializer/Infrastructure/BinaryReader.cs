@@ -6,10 +6,10 @@ using System.Text;
 
 namespace Binaron.Serializer.Infrastructure
 {
-    internal class BinaryReader : IDisposable
+    internal sealed class BinaryReader : IDisposable
     {
         private const int BufferSize = 32 * 1024; // 32KB
-        private readonly UnmanagedMemory<byte> buffer = new UnmanagedMemory<byte>(BufferSize);
+        private readonly UnmanagedMemoryManager<byte> buffer = new UnmanagedMemoryManager<byte>(BufferSize);
         private readonly Stream stream;
         private int bufferOffset;
         private int bufferLength;
@@ -32,7 +32,8 @@ namespace Binaron.Serializer.Infrastructure
             if (bufferOffset < 0)
                 return;
 
-            buffer.Dispose();
+            IDisposable disposable = buffer;
+            disposable.Dispose();
             bufferOffset = -1;
             GC.SuppressFinalize(this);
         }
@@ -47,7 +48,7 @@ namespace Binaron.Serializer.Infrastructure
                     throw new EndOfStreamException();
             }
 
-            var val = *(T*) (buffer.Data + bufferOffset);
+            var val = *(T*) (buffer.Memory + bufferOffset);
             bufferOffset += sizeof(T);
             return val;
         }
@@ -72,7 +73,7 @@ namespace Binaron.Serializer.Infrastructure
                     throw new EndOfStreamException();
             }
 
-            var val = new string((char*) (buffer.Data + bufferOffset), 0, len / sizeof(char));
+            var val = new string((char*) (buffer.Memory + bufferOffset), 0, len / sizeof(char));
             bufferOffset += len;
             return val;
         }
@@ -82,13 +83,13 @@ namespace Binaron.Serializer.Infrastructure
             var strLen = len / sizeof(char);
             var sb = new StringBuilder();
             var remainder = bufferLength / sizeof(char);
-            sb.Append(new ReadOnlySpan<char>(buffer.Data, remainder));
+            sb.Append(new ReadOnlySpan<char>(buffer.Memory, remainder));
             bufferLength = 0;
             strLen -= remainder;
 
             while (strLen > 0)
             {
-                var span = new Span<byte>(buffer.Data, Math.Min(strLen * sizeof(char), buffer.Length));
+                var span = new Span<byte>(buffer.Memory, Math.Min(strLen * sizeof(char), buffer.Length));
                 if (stream.Read(span) != span.Length)
                     throw new EndOfStreamException();
                 var readCharLength = span.Length / sizeof(char);
@@ -101,7 +102,7 @@ namespace Binaron.Serializer.Infrastructure
 
         private unsafe void Fill()
         {
-            var span = new Span<byte>(buffer.Data, buffer.Length);
+            var span = new Span<byte>(buffer.Memory, buffer.Length);
             var remainder = bufferLength - bufferOffset;
             span.Slice(bufferOffset, remainder).CopyTo(span);
             bufferLength = stream.Read(span.Slice(remainder)) + remainder;

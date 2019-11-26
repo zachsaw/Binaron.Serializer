@@ -31,7 +31,7 @@ namespace Binaron.Serializer.Infrastructure
                 return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType));
             }
 
-            private class GenericEnumerableWriter<T> : IGenericEnumerableWriter
+            private sealed class GenericEnumerableWriter<T> : IGenericEnumerableWriter
             {
                 public void Write(WriterState writer, IEnumerable list)
                 {
@@ -249,7 +249,7 @@ namespace Binaron.Serializer.Infrastructure
                     : Activator.CreateInstance(typeof(GenericListWriter<>).MakeGenericType(elementType)));
             }
 
-            private class GenericArrayWriter<T> : IGenericListWriter
+            private sealed class GenericArrayWriter<T> : IGenericListWriter
             {
                 public void Write(WriterState writer, ICollection list)
                 {
@@ -258,7 +258,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
             }
 
-            private class GenericListWriter<T> : IGenericListWriter
+            private sealed class GenericListWriter<T> : IGenericListWriter
             {
                 public void Write(WriterState writer, ICollection list)
                 {

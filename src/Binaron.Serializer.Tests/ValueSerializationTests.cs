@@ -248,7 +248,7 @@ namespace Binaron.Serializer.Tests
             }
         }
 
-        private class TestClass<T>
+        private sealed class TestClass<T>
         {
             public DateTime RootValue { get; set; }
             public T Value { get; set; }

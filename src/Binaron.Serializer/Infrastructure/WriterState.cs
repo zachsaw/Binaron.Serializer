@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Binaron.Serializer.Infrastructure
 {
-    internal class WriterState : IDisposable
+    internal sealed class WriterState : IDisposable
     {
         private readonly BinaryWriter writer;
 

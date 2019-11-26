@@ -40,7 +40,7 @@ namespace Binaron.Serializer.Tests
             Assert.AreEqual(false, getter.IsValid);
         }
         
-        private class TestClass
+        private sealed class TestClass
         {
             public int Value { get; }
             public int NoWrite => 0;

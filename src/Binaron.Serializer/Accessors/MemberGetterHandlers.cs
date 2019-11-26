@@ -7,7 +7,7 @@ namespace Binaron.Serializer.Accessors
 {
     internal static class MemberGetterHandlers
     {
-        internal class BoolHandler : MemberGetterHandlerBase<WriterState, bool>
+        internal sealed class BoolHandler : MemberGetterHandlerBase<WriterState, bool>
         {
             public BoolHandler(MemberGetter<bool> getter) : base(getter)
             {
@@ -21,7 +21,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class ByteHandler : MemberGetterHandlerBase<WriterState, byte>
+        internal sealed class ByteHandler : MemberGetterHandlerBase<WriterState, byte>
         {
             public ByteHandler(MemberGetter<byte> getter) : base(getter)
             {
@@ -35,7 +35,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class CharHandler : MemberGetterHandlerBase<WriterState, char>
+        internal sealed class CharHandler : MemberGetterHandlerBase<WriterState, char>
         {
             public CharHandler(MemberGetter<char> getter) : base(getter)
             {
@@ -49,7 +49,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class DateTimeHandler : MemberGetterHandlerBase<WriterState, DateTime>
+        internal sealed class DateTimeHandler : MemberGetterHandlerBase<WriterState, DateTime>
         {
             public DateTimeHandler(MemberGetter<DateTime> getter) : base(getter)
             {
@@ -63,7 +63,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class DecimalHandler : MemberGetterHandlerBase<WriterState, decimal>
+        internal sealed class DecimalHandler : MemberGetterHandlerBase<WriterState, decimal>
         {
             public DecimalHandler(MemberGetter<decimal> getter) : base(getter)
             {
@@ -77,7 +77,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class DoubleHandler : MemberGetterHandlerBase<WriterState, double>
+        internal sealed class DoubleHandler : MemberGetterHandlerBase<WriterState, double>
         {
             public DoubleHandler(MemberGetter<double> getter) : base(getter)
             {
@@ -91,7 +91,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class ShortHandler : MemberGetterHandlerBase<WriterState, short>
+        internal sealed class ShortHandler : MemberGetterHandlerBase<WriterState, short>
         {
             public ShortHandler(MemberGetter<short> getter) : base(getter)
             {
@@ -105,7 +105,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class IntHandler : MemberGetterHandlerBase<WriterState, int>
+        internal sealed class IntHandler : MemberGetterHandlerBase<WriterState, int>
         {
             public IntHandler(MemberGetter<int> getter) : base(getter)
             {
@@ -119,7 +119,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class LongHandler : MemberGetterHandlerBase<WriterState, long>
+        internal sealed class LongHandler : MemberGetterHandlerBase<WriterState, long>
         {
             public LongHandler(MemberGetter<long> getter) : base(getter)
             {
@@ -133,7 +133,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class SByteHandler : MemberGetterHandlerBase<WriterState, sbyte>
+        internal sealed class SByteHandler : MemberGetterHandlerBase<WriterState, sbyte>
         {
             public SByteHandler(MemberGetter<sbyte> getter) : base(getter)
             {
@@ -147,7 +147,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class FloatHandler : MemberGetterHandlerBase<WriterState, float>
+        internal sealed class FloatHandler : MemberGetterHandlerBase<WriterState, float>
         {
             public FloatHandler(MemberGetter<float> getter) : base(getter)
             {
@@ -161,7 +161,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class UShortHandler : MemberGetterHandlerBase<WriterState, ushort>
+        internal sealed class UShortHandler : MemberGetterHandlerBase<WriterState, ushort>
         {
             public UShortHandler(MemberGetter<ushort> getter) : base(getter)
             {
@@ -175,7 +175,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class UIntHandler : MemberGetterHandlerBase<WriterState, uint>
+        internal sealed class UIntHandler : MemberGetterHandlerBase<WriterState, uint>
         {
             public UIntHandler(MemberGetter<uint> getter) : base(getter)
             {
@@ -189,7 +189,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class ULongHandler : MemberGetterHandlerBase<WriterState, ulong>
+        internal sealed class ULongHandler : MemberGetterHandlerBase<WriterState, ulong>
         {
             public ULongHandler(MemberGetter<ulong> getter) : base(getter)
             {
@@ -203,7 +203,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class StringHandler : MemberGetterHandlerBase<WriterState, string>
+        internal sealed class StringHandler : MemberGetterHandlerBase<WriterState, string>
         {
             public StringHandler(MemberGetter<string> getter) : base(getter)
             {
@@ -224,7 +224,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class ObjectHandler<T> : MemberGetterHandlerBase<WriterState, object>
+        internal sealed class ObjectHandler<T> : MemberGetterHandlerBase<WriterState, object>
         {
             public ObjectHandler(MemberGetter<object> getter) : base(getter)
             {
@@ -245,7 +245,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class TypedObjectHandler<T> : MemberGetterHandlerBase<WriterState, object>
+        internal sealed class TypedObjectHandler<T> : MemberGetterHandlerBase<WriterState, object>
         {
             public TypedObjectHandler(MemberGetter<object> getter) : base(getter)
             {
