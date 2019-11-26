@@ -43,7 +43,7 @@ namespace Binaron.Serializer.Infrastructure
             if (bufferOffset + sizeof(T) > bufferLength)
             {
                 Fill();
-                if (bufferOffset + sizeof(T) > bufferLength)
+                if (sizeof(T) > bufferLength)
                     throw new EndOfStreamException();
             }
 
@@ -68,7 +68,7 @@ namespace Binaron.Serializer.Infrastructure
                     return ReadStringSlow(len);
 
                 // yes
-                if (bufferOffset + len > bufferLength)
+                if (len > bufferLength)
                     throw new EndOfStreamException();
             }
 
