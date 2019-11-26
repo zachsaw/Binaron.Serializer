@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Binaron.Serializer.Tests.Extensions;
 using NUnit.Framework;
 
@@ -11,7 +12,7 @@ namespace Binaron.Serializer.Tests
     public class ListSerializationTests
     {
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.AllListCases))]
-        public void RootListTest<TSourceItem>(Type sourceType, Type destType, object list, TSourceItem sourceItem, object destItem)
+        public async ValueTask RootListTest<TSourceItem>(Type sourceType, Type destType, object list, TSourceItem sourceItem, object destItem)
         {
             var source = list.DynamicCast(sourceType);
             if (source == null)
@@ -19,8 +20,8 @@ namespace Binaron.Serializer.Tests
 
             // Empty
             {
-                using var stream = new MemoryStream();
-                BinaronConvert.Serialize(source, stream);
+                await using var stream = new MemoryStream();
+                await BinaronConvert.Serialize(source, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = (IEnumerable) Converter.Deserialize(destType, stream);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -31,8 +32,8 @@ namespace Binaron.Serializer.Tests
             // Single
             {
                 source = AddItem<TSourceItem>(sourceType, sourceItem, source);
-                using var stream = new MemoryStream();
-                BinaronConvert.Serialize(source, stream);
+                await using var stream = new MemoryStream();
+                await BinaronConvert.Serialize(source, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = (IEnumerable) Converter.Deserialize(destType, stream);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -44,8 +45,8 @@ namespace Binaron.Serializer.Tests
             {
                 source = AddItem<TSourceItem>(sourceType, sourceItem, source);
                 source = AddItem<TSourceItem>(sourceType, sourceItem, source);
-                using var stream = new MemoryStream();
-                BinaronConvert.Serialize(source, stream);
+                await using var stream = new MemoryStream();
+                await BinaronConvert.Serialize(source, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = (IEnumerable) Converter.Deserialize(destType, stream);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -56,12 +57,12 @@ namespace Binaron.Serializer.Tests
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestClassAndTestStruct))]
-        public void ClassesAndStructsInListTest<TType>(IList<TType> _) where TType : Tester.ITestBase, new()
+        public async ValueTask ClassesAndStructsInListTest<TType>(IList<TType> _) where TType : Tester.ITestBase, new()
         {
             // Empty
             {
-                using var stream = new MemoryStream();
-                BinaronConvert.Serialize(new TType[0], stream);
+                await using var stream = new MemoryStream();
+                await BinaronConvert.Serialize(new TType[0], stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = BinaronConvert.Deserialize<TType[]>(stream);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -71,8 +72,8 @@ namespace Binaron.Serializer.Tests
             }
             // Single
             {
-                using var stream = new MemoryStream();
-                BinaronConvert.Serialize(new[] {new TType{Value=1}}, stream);
+                await using var stream = new MemoryStream();
+                await BinaronConvert.Serialize(new[] {new TType{Value=1}}, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = BinaronConvert.Deserialize<TType[]>(stream);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -84,8 +85,8 @@ namespace Binaron.Serializer.Tests
             }
             // Multi
             {
-                using var stream = new MemoryStream();
-                BinaronConvert.Serialize(new[] {new TType{Value=1}, new TType{Value=2}, new TType{Value=3}}, stream);
+                await using var stream = new MemoryStream();
+                await BinaronConvert.Serialize(new[] {new TType{Value=1}, new TType{Value=2}, new TType{Value=3}}, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = BinaronConvert.Deserialize<TType[]>(stream);
                 Assert.AreEqual(3, dest.Length);
@@ -106,52 +107,52 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void IntToNullableIntTest()
+        public async ValueTask IntToNullableIntTest()
         {
             const int val = int.MinValue;
-            var dest = Tester.TestRoundTrip<IList<int?>>(new []{val});
+            var dest = await Tester.TestRoundTrip<IList<int?>>(new []{val});
             Assert.AreEqual(val, dest.Single());
         }
         
         [Test]
-        public void EnumToNullableEnumTest()
+        public async ValueTask EnumToNullableEnumTest()
         {
             const TestByteEnum val = TestByteEnum.Min;
-            var dest = Tester.TestRoundTrip<IList<TestByteEnum?>>(new []{val});
+            var dest = await Tester.TestRoundTrip<IList<TestByteEnum?>>(new []{val});
             Assert.AreEqual(val, dest.Single());
         }
         
         [Test]
-        public void NullableStructTest()
+        public async ValueTask NullableStructTest()
         {
             var val = new Tester.TestStruct {Value = 1, NullableValue = 2};
-            var dest = Tester.TestRoundTrip<IList<Tester.TestStruct?>>(new []{val});
+            var dest = await Tester.TestRoundTrip<IList<Tester.TestStruct?>>(new []{val});
             Assert.AreEqual(val.Value, dest.SingleOrDefault()?.Value);
             Assert.AreEqual(val.NullableValue, dest.SingleOrDefault()?.NullableValue);
         }
 
         [Test]
-        public void ObjectToGenericIDictionaryTest() => TestFromObject<IDictionary<string, int>>();
+        public async ValueTask ObjectToGenericIDictionaryTest() => await TestFromObject<IDictionary<string, int>>();
 
         [Test]
-        public void ObjectToGenericIEnumerableTest() => TestFromObject<IEnumerable<KeyValuePair<string, int>>>();
+        public async ValueTask ObjectToGenericIEnumerableTest() => await TestFromObject<IEnumerable<KeyValuePair<string, int>>>();
 
         [Test]
-        public void ObjectToGenericICollectionTest() => TestFromObject<ICollection<KeyValuePair<string, int>>>();
+        public async ValueTask ObjectToGenericICollectionTest() => await TestFromObject<ICollection<KeyValuePair<string, int>>>();
 
         [Test]
-        public void ObjectToIDictionaryTest() => TestFromObject<IDictionary>();
+        public async ValueTask ObjectToIDictionaryTest() => await TestFromObject<IDictionary>();
 
         [Test]
-        public void ObjectToIEnumerableTest() => TestFromObject<IEnumerable>();
+        public async ValueTask ObjectToIEnumerableTest() => await TestFromObject<IEnumerable>();
         
         [Test]
-        public void ObjectToICollectionTest() => TestFromObject<ICollection>();
+        public async ValueTask ObjectToICollectionTest() => await TestFromObject<ICollection>();
 
-        private static void TestFromObject<T>() where T : IEnumerable
+        private static async ValueTask TestFromObject<T>() where T : IEnumerable
         {
             var val = new Tester.TestClass {Value = 1};
-            var dest = Tester.TestRoundTrip<T>(val);
+            var dest = await Tester.TestRoundTrip<T>(val);
             Assert.AreEqual(1, dest.Count());
         }
 

@@ -1,27 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Binaron.Serializer.Tests
 {
     public static class Tester
     {
-        public static T TestRoundTrip<T>(object val) => TestRoundTrip<T>(val, new SerializerOptions());
+        public static ValueTask<T> TestRoundTrip<T>(object val) => TestRoundTrip<T>(val, new SerializerOptions());
 
-        public static T TestRoundTrip<T>(object val, SerializerOptions options)
+        public static async ValueTask<T> TestRoundTrip<T>(object val, SerializerOptions options)
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(val, stream, options);
+            await using var stream = new MemoryStream();
+            await BinaronConvert.Serialize(val, stream, options);
             stream.Seek(0, SeekOrigin.Begin);
             return BinaronConvert.Deserialize<T>(stream);
         }
 
-        public static (T, object) TestRoundTrip2<T>(object val) => TestRoundTrip2<T>(val, new SerializerOptions());
+        public static ValueTask<(T, object)> TestRoundTrip2<T>(object val) => TestRoundTrip2<T>(val, new SerializerOptions());
 
-        public static (T, object) TestRoundTrip2<T>(object val, SerializerOptions options)
+        public static async ValueTask<(T, object)> TestRoundTrip2<T>(object val, SerializerOptions options)
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(val, stream, options);
+            await using var stream = new MemoryStream();
+            await BinaronConvert.Serialize(val, stream, options);
             stream.Seek(0, SeekOrigin.Begin);
             var result1 = BinaronConvert.Deserialize<T>(stream);
             stream.Seek(0, SeekOrigin.Begin);
@@ -29,10 +30,10 @@ namespace Binaron.Serializer.Tests
             return (result1, result2);
         }
 
-        public static T TestRoundTrip<T>(T val) => TestRoundTrip(val, new SerializerOptions());
-        public static T TestRoundTrip<T>(T val, SerializerOptions options) => TestRoundTrip<T>((object) val, options);
-        public static (T, object) TestRoundTrip2<T>(T val) => TestRoundTrip2(val, new SerializerOptions());
-        public static (T, object) TestRoundTrip2<T>(T val, SerializerOptions options) => TestRoundTrip2<T>((object) val, options);
+        public static ValueTask<T> TestRoundTrip<T>(T val) => TestRoundTrip(val, new SerializerOptions());
+        public static ValueTask<T> TestRoundTrip<T>(T val, SerializerOptions options) => TestRoundTrip<T>((object) val, options);
+        public static ValueTask<(T, object)> TestRoundTrip2<T>(T val) => TestRoundTrip2(val, new SerializerOptions());
+        public static ValueTask<(T, object)> TestRoundTrip2<T>(T val, SerializerOptions options) => TestRoundTrip2<T>((object) val, options);
 
         public static IEnumerable GetEnumerable(params object[] items)
         {

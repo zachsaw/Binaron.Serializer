@@ -194,7 +194,7 @@ namespace Binaron.Serializer.Accessors
 
             var memberType = getter.MemberInfo.GetMemberType();
             if (memberType == typeof(object) || Nullable.GetUnderlyingType(memberType) != null)
-                return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.ObjectHandler<>).MakeGenericType(memberType), getter);
+                return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.ObjectHandler), getter);
 
             return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.TypedObjectHandler<>).MakeGenericType(memberType), getter);
         }

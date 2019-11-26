@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Binaron.Serializer;
@@ -15,13 +16,13 @@ namespace BinSerializerTest
             private readonly Book book = Book.Create();
 
             [GlobalSetup]
-            public void Setup()
+            public async ValueTask Setup()
             {
                 // warm-up
                 for (var i = 0; i < 250; i++)
                 {
                     NewtonsoftJsonTest_Validate(book);
-                    BinaronTest_Validate(book);
+                    await BinaronTest_Validate(book);
                 }
             }
 
@@ -32,9 +33,9 @@ namespace BinSerializerTest
             }
 
             [Benchmark]
-            public void Binaron_Serialize()
+            public async ValueTask Binaron_Serialize()
             {
-                BinaronTest_Serialize(book);
+                await BinaronTest_Serialize(book);
             }
 
             [Benchmark]
@@ -44,9 +45,9 @@ namespace BinSerializerTest
             }
 
             [Benchmark]
-            public void Binaron_Deserialize()
+            public async ValueTask Binaron_Deserialize()
             {
-                BinaronTest_Deserialize(book);
+                await BinaronTest_Deserialize(book);
             }
         }
 
@@ -55,20 +56,20 @@ namespace BinSerializerTest
             BenchmarkRunner.Run<BinaronVsJson>();
         }
 
-        private static void BinaronTest_Serialize(Book input)
+        private static async ValueTask BinaronTest_Serialize(Book input)
         {
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             for (var i = 0; i < 200; i++)
             {
-                BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
+                await BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
                 stream.Position = 0;
             }
         }
 
-        private static void BinaronTest_Deserialize(Book input)
+        private static async ValueTask BinaronTest_Deserialize(Book input)
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
+            await using var stream = new MemoryStream();
+            await BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
             stream.Position = 0;
 
             for (var i = 0; i < 200; i++)
@@ -78,10 +79,10 @@ namespace BinSerializerTest
             }
         }
 
-        private static void BinaronTest_Validate(Book input)
+        private static async ValueTask BinaronTest_Validate(Book input)
         {
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
+            await using var stream = new MemoryStream();
+            await BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
             stream.Position = 0;
 
             var book = BinaronConvert.Deserialize<Book>(stream);

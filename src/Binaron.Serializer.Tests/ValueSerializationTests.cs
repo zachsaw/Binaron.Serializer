@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Binaron.Serializer.Tests.Extensions;
 using NUnit.Framework;
 
@@ -7,20 +8,20 @@ namespace Binaron.Serializer.Tests
     public class ValueSerializationTests
     {
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void RootLevelValueTests<TDestination>(object source, TDestination expectation)
+        public async ValueTask RootLevelValueTests<TDestination>(object source, TDestination expectation)
         {
-            var (dest, dest2) = Tester.TestRoundTrip2<TDestination>(source);
+            var (dest, dest2) = await Tester.TestRoundTrip2<TDestination>(source);
 
             Assert.AreEqual(expectation, dest);
             Assert.AreEqual(GetExpectation(source), dest2);
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void NonRootLevelValueInClassTests<TSource, TDestination>(TSource source, TDestination expectation)
+        public async ValueTask NonRootLevelValueInClassTests<TSource, TDestination>(TSource source, TDestination expectation)
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<TSource> {RootValue = now, Value = source};
-            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<TDestination>>(sourceClass);
+            (var destClass, dynamic dest) = await Tester.TestRoundTrip2<TestClass<TDestination>>(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(expectation, destClass.Value);
@@ -29,11 +30,11 @@ namespace Binaron.Serializer.Tests
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void NonRootLevelValueInStructTests<TSource, TDestination>(TSource source, TDestination expectation)
+        public async ValueTask NonRootLevelValueInStructTests<TSource, TDestination>(TSource source, TDestination expectation)
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<TSource> {RootValue = now, Value = source};
-            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<TDestination>>(sourceStruct);
+            (var destStruct, dynamic dest) = await Tester.TestRoundTrip2<TestStruct<TDestination>>(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(expectation, destStruct.Value);
@@ -42,20 +43,20 @@ namespace Binaron.Serializer.Tests
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void RootLevelValueTests(object source, object _)
+        public async ValueTask RootLevelValueTests(object source, object _)
         {
-            var (dest, dest2) = Tester.TestRoundTrip2<object>(source);
+            var (dest, dest2) = await Tester.TestRoundTrip2<object>(source);
 
             Assert.AreEqual(GetExpectation(source), dest);
             Assert.AreEqual(GetExpectation(source), dest2);
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void NonRootLevelValueInClassTests<TSource>(TSource source, object _)
+        public async ValueTask NonRootLevelValueInClassTests<TSource>(TSource source, object _)
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<TSource> {RootValue = now, Value = source};
-            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<object>>(sourceClass);
+            (var destClass, dynamic dest) = await Tester.TestRoundTrip2<TestClass<object>>(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(GetExpectation(source), destClass.Value);
@@ -64,11 +65,11 @@ namespace Binaron.Serializer.Tests
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void NonRootLevelValueInStructTests<TSource>(TSource source, object _)
+        public async ValueTask NonRootLevelValueInStructTests<TSource>(TSource source, object _)
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<TSource> {RootValue = now, Value = source};
-            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<object>>(sourceStruct);
+            (var destStruct, dynamic dest) = await Tester.TestRoundTrip2<TestStruct<object>>(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(GetExpectation(source), destStruct.Value);
@@ -77,20 +78,20 @@ namespace Binaron.Serializer.Tests
         }
         
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void RootLevelNullToValueTests<TDestination>(object _, TDestination __)
+        public async ValueTask RootLevelNullToValueTests<TDestination>(object _, TDestination __)
         {
-            var (dest, dest2) = Tester.TestRoundTrip2<TDestination>(null);
+            var (dest, dest2) = await Tester.TestRoundTrip2<TDestination>(null);
 
             Assert.AreEqual(default(TDestination), dest);
             Assert.AreEqual(null, dest2);
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void NonRootLevelNullToValueInClassTests<TDestination>(object _, TDestination __)
+        public async ValueTask NonRootLevelNullToValueInClassTests<TDestination>(object _, TDestination __)
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<object> {RootValue = now, Value = null};
-            (var destClass, dynamic dest) = Tester.TestRoundTrip2<TestClass<TDestination>>(sourceClass);
+            (var destClass, dynamic dest) = await Tester.TestRoundTrip2<TestClass<TDestination>>(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(default(TDestination), destClass.Value);
@@ -99,11 +100,11 @@ namespace Binaron.Serializer.Tests
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCases))]
-        public void NonRootLevelNullToValueInStructTests<TDestination>(object _, TDestination __)
+        public async ValueTask NonRootLevelNullToValueInStructTests<TDestination>(object _, TDestination __)
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<object> {RootValue = now, Value = null};
-            (var destStruct, dynamic dest) = Tester.TestRoundTrip2<TestStruct<TDestination>>(sourceStruct);
+            (var destStruct, dynamic dest) = await Tester.TestRoundTrip2<TestStruct<TDestination>>(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(default(TDestination), destStruct.Value);
@@ -112,38 +113,38 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void NestedStructInClassAsObjectTest()
+        public async ValueTask NestedStructInClassAsObjectTest()
         {
             var sourceClass = new TestClass<object> {Value = new TestStruct<object> {Value = 1}};
-            var dest = Tester.TestRoundTrip<TestClass<TestStruct<object>>>(sourceClass);
+            var dest = await Tester.TestRoundTrip<TestClass<TestStruct<object>>>(sourceClass);
 
             Assert.AreEqual(1, dest.Value.Value);
         }
 
         [Test]
-        public void NestedStructInClassAsTypedObjectTest()
+        public async ValueTask NestedStructInClassAsTypedObjectTest()
         {
             var sourceClass = new TestClass<TestStruct<object>> {Value = new TestStruct<object> {Value = 1}};
-            var dest = Tester.TestRoundTrip(sourceClass);
+            var dest = await Tester.TestRoundTrip(sourceClass);
 
             Assert.AreEqual(1, dest.Value.Value);
         }
 
         [Test]
-        public void RootLevelNullToObjectTest()
+        public async ValueTask RootLevelNullToObjectTest()
         {
-            var (dest, dest2) = Tester.TestRoundTrip2<object>(null);
+            var (dest, dest2) = await Tester.TestRoundTrip2<object>(null);
 
             Assert.AreEqual(null, dest);
             Assert.AreEqual(null, dest2);
         }
 
         [Test]
-        public void NonRootLevelNullToObjectInClassTest()
+        public async ValueTask NonRootLevelNullToObjectInClassTest()
         {
             var now = DateTime.UtcNow;
             var sourceClass = new TestClass<object> {RootValue = now, Value = null};
-            (var destClass, dynamic dest) = Tester.TestRoundTrip2(sourceClass);
+            (var destClass, dynamic dest) = await Tester.TestRoundTrip2(sourceClass);
 
             Assert.AreEqual(now, destClass.RootValue);
             Assert.AreEqual(null, destClass.Value);
@@ -152,11 +153,11 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void NonRootLevelNullToObjectInStructTest()
+        public async ValueTask NonRootLevelNullToObjectInStructTest()
         {
             var now = DateTime.UtcNow;
             var sourceStruct = new TestStruct<object> {RootValue = now, Value = null};
-            (var destStruct, dynamic dest) = Tester.TestRoundTrip2(sourceStruct);
+            (var destStruct, dynamic dest) = await Tester.TestRoundTrip2(sourceStruct);
 
             Assert.AreEqual(now, destStruct.RootValue);
             Assert.AreEqual(null, destStruct.Value);
@@ -165,25 +166,25 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void ClassToStructTest()
+        public async ValueTask ClassToStructTest()
         {
             var val = new TestClass<int> {Value = 1};
-            var dest = Tester.TestRoundTrip<TestStruct<int>>(val);
+            var dest = await Tester.TestRoundTrip<TestStruct<int>>(val);
             Assert.AreEqual(1, dest.Value);
         }
 
         [Test]
-        public void StructToClassTest()
+        public async ValueTask StructToClassTest()
         {
             var val = new TestStruct<int> {Value = 1};
-            var dest = Tester.TestRoundTrip<TestClass<int>>(val);
+            var dest = await Tester.TestRoundTrip<TestClass<int>>(val);
             Assert.AreEqual(1, dest.Value);
         }
         
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCasesOfValueTypes))]
-        public void ToNullableTest<TDestination>(object source, TDestination expectation) where TDestination : struct
+        public async ValueTask ToNullableTest<TDestination>(object source, TDestination expectation) where TDestination : struct
         {
-            var dest = Tester.TestRoundTrip<TDestination?>(source);
+            var dest = await Tester.TestRoundTrip<TDestination?>(source);
             TDestination? expected;
             if (source.GetType() != typeof(TDestination))
             {
@@ -198,25 +199,25 @@ namespace Binaron.Serializer.Tests
         }
         
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfEnums))]
-        public void EnumToNullableEnumTest<T>(T val) where T : struct
+        public async ValueTask EnumToNullableEnumTest<T>(T val) where T : struct
         {
-            var dest = Tester.TestRoundTrip<T?>(val);
+            var dest = await Tester.TestRoundTrip<T?>(val);
             Assert.AreEqual(val, dest);
         }
         
         [Test]
-        public void NullableStructTest()
+        public async ValueTask NullableStructTest()
         {
             var val = new TestStruct<int?> {Value = 1};
-            var dest = Tester.TestRoundTrip<TestStruct<int?>?>(val);
+            var dest = await Tester.TestRoundTrip<TestStruct<int?>?>(val);
             Assert.AreEqual(val.Value, dest?.Value);
         }
         
         [Test]
-        public void NullableStructNullValueTest()
+        public async ValueTask NullableStructNullValueTest()
         {
             var val = new TestStruct<int?>();
-            var dest = Tester.TestRoundTrip<TestStruct<int?>?>(val);
+            var dest = await Tester.TestRoundTrip<TestStruct<int?>?>(val);
             Assert.AreEqual(null, dest?.Value);
         }
 

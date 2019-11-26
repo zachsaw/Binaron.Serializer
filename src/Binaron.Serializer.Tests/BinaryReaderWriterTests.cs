@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using BinaryWriter = Binaron.Serializer.Infrastructure.BinaryWriter;
 
@@ -8,12 +9,13 @@ namespace Binaron.Serializer.Tests
     public class BinaryReaderWriterTests
     {
         [Test]
-        public void UnmanagedTest()
+        public async ValueTask UnmanagedTest()
         {
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write(1);
+                await writer.Write(1);
+                await writer.Flush();
                 writer.Dispose(); // double dispose is OK
             }
 
@@ -26,13 +28,14 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void StringTest()
+        public async ValueTask StringTest()
         {
             const string str = "Test";
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
-                writer.WriteString(str);
+                await writer.WriteString(str);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -43,13 +46,14 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void EmptyStringTest()
+        public async ValueTask EmptyStringTest()
         {
             var str = string.Empty;
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
-                writer.WriteString(str);
+                await writer.WriteString(str);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -61,13 +65,14 @@ namespace Binaron.Serializer.Tests
 
         [TestCase(1 * 1024 * 1024)]
         [TestCase(2 * 1024 * 1024)]
-        public void ManyUnmanagedBoundaryTests(int bufferSize)
+        public async ValueTask ManyUnmanagedBoundaryTests(int bufferSize)
         {
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < bufferSize / sizeof(int); i++)
-                    writer.Write(i);
+                    await writer.Write(i);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -80,14 +85,15 @@ namespace Binaron.Serializer.Tests
 
         [TestCase(1 * 1024 * 1024)]
         [TestCase(2 * 1024 * 1024)]
-        public void ManyStringBoundaryTests(int bufferSize)
+        public async ValueTask ManyStringBoundaryTests(int bufferSize)
         {
             const string str = "Test";
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < bufferSize / (sizeof(int) + sizeof(char) * str.Length); i++)
-                    writer.WriteString(str);
+                    await writer.WriteString(str);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -100,13 +106,14 @@ namespace Binaron.Serializer.Tests
 
         [TestCase(1 * 1024 * 1024)]
         [TestCase(2 * 1024 * 1024)]
-        public void ManyUnmanagedTests(int bufferSize)
+        public async ValueTask ManyUnmanagedTests(int bufferSize)
         {
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < 1 + bufferSize / sizeof(int); i++)
-                    writer.Write(i);
+                    await writer.Write(i);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -119,14 +126,15 @@ namespace Binaron.Serializer.Tests
 
         [TestCase(1 * 1024 * 1024)]
         [TestCase(2 * 1024 * 1024)]
-        public void ManyStringTests(int bufferSize)
+        public async ValueTask ManyStringTests(int bufferSize)
         {
             const string str = "Test";
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
                 for (var i = 0; i < 1 + bufferSize / (sizeof(int) + sizeof(char) * str.Length); i++)
-                    writer.WriteString(str);
+                    await writer.WriteString(str);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -139,29 +147,31 @@ namespace Binaron.Serializer.Tests
         
         [TestCase(sizeof(char))]
         [TestCase(2 * 1024 * 1024 + sizeof(char))]
-        public void EndOfStreamTests(int bufferSize)
+        public async ValueTask EndOfStreamTests(int bufferSize)
         {
             var str = CreateString(bufferSize / sizeof(char));
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
-                writer.WriteString(str);
+                await writer.WriteString(str);
+                await writer.Flush();
             }
 
-            using var newStream = new MemoryStream(stream.ToArray().Take((int) stream.Length - sizeof(char)).ToArray());
+            await using var newStream = new MemoryStream(stream.ToArray().Take((int) stream.Length - sizeof(char)).ToArray());
             using var reader = new Infrastructure.BinaryReader(newStream);
             Assert.Throws<EndOfStreamException>(() => reader.ReadString());
         }
 
         [TestCase(1 * 1024 * 1024)]
         [TestCase(2 * 1024 * 1024)]
-        public void StringThatCanJustFitBufferTests(int bufferSize)
+        public async ValueTask StringThatCanJustFitBufferTests(int bufferSize)
         {
             var str = CreateString(bufferSize / sizeof(char));
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
-                writer.WriteString(str);
+                await writer.WriteString(str);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -173,13 +183,14 @@ namespace Binaron.Serializer.Tests
 
         [TestCase(2 * 1024 * 1024)]
         [TestCase(4 * 1024 * 1024)]
-        public void StringThatCannotFitBufferTests(int bufferSize)
+        public async ValueTask StringThatCannotFitBufferTests(int bufferSize)
         {
             var str = CreateString((bufferSize + sizeof(char)) / sizeof(char));
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
-                writer.WriteString(str);
+                await writer.WriteString(str);
+                await writer.Flush();
             }
 
             stream.Seek(0, SeekOrigin.Begin);

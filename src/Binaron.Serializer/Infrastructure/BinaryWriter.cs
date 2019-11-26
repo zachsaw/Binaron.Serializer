@@ -38,14 +38,14 @@ namespace Binaron.Serializer.Infrastructure
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task Flush()
+        public async ValueTask Flush()
         {
-            await stream.WriteAsync(buffer.Memory.Slice(bufferOffset));
+            await stream.WriteAsync(buffer.Memory.Slice(0, bufferOffset));
             bufferOffset = 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task Write<T>(T value) where T : unmanaged
+        public async ValueTask Write<T>(T value) where T : unmanaged
         {
             if (bufferOffset + SizeOf<T>() > buffer.Length)
                 await Flush();
@@ -61,7 +61,7 @@ namespace Binaron.Serializer.Infrastructure
         private unsafe void Write<T>(T value, int offset) where T : unmanaged => *(T*) (buffer.Data + offset) = value;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task WriteString(string value)
+        public async ValueTask WriteString(string value)
         {
             var strLength = value.Length;
             await Write(strLength);
@@ -70,14 +70,16 @@ namespace Binaron.Serializer.Infrastructure
             if (bufferOffset + length > buffer.Length)
             {
                 await Flush();
-                using var memoryMgr = new StringMemoryManager(value);
-                await stream.WriteAsync(memoryMgr.Memory);
+                if (length > buffer.Length)
+                {
+                    using var memoryMgr = new StringMemoryManager(value);
+                    await stream.WriteAsync(memoryMgr.Memory);
+                    return;
+                }
             }
-            else
-            {
-                CopyToBuffer(value, length);
-                bufferOffset += length;
-            }
+
+            CopyToBuffer(value, length);
+            bufferOffset += length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

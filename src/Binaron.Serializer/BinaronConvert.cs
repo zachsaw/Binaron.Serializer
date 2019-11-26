@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Binaron.Serializer.Infrastructure;
 using BinaryReader = Binaron.Serializer.Infrastructure.BinaryReader;
 
@@ -27,28 +28,28 @@ namespace Binaron.Serializer
             }
         }
 
-        public static void Serialize(object obj, Stream stream)
+        public static async ValueTask Serialize(object obj, Stream stream)
         {
-            using var writer = new WriterState(stream, new SerializerOptions());
-            Serializer.WriteValue(writer, obj);
+            await using var writer = new WriterState(stream, new SerializerOptions());
+            await Serializer.WriteValue(writer, obj);
         }
         
-        public static void Serialize(object obj, Stream stream, SerializerOptions options)
+        public static async ValueTask Serialize(object obj, Stream stream, SerializerOptions options)
         {
-            using var writer = new WriterState(stream, options);
-            Serializer.WriteValue(writer, obj);
+            await using var writer = new WriterState(stream, options);
+            await Serializer.WriteValue(writer, obj);
         }
 
-        public static void Serialize<T>(T obj, Stream stream)
+        public static async ValueTask Serialize<T>(T obj, Stream stream)
         {
-            using var writer = new WriterState(stream, new SerializerOptions());
-            Serializer.WriteValue(writer, obj);
+            await using var writer = new WriterState(stream, new SerializerOptions());
+            await Serializer.WriteValue(writer, obj);
         }
         
-        public static void Serialize<T>(T obj, Stream stream, SerializerOptions options)
+        public static async ValueTask Serialize<T>(T obj, Stream stream, SerializerOptions options)
         {
-            using var writer = new WriterState(stream, options);
-            Serializer.WriteValue(writer, obj);
+            await using var writer = new WriterState(stream, options);
+            await Serializer.WriteValue(writer, obj);
         }
     }
 }

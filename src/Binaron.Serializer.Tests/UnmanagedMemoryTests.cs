@@ -9,16 +9,16 @@ namespace Binaron.Serializer.Tests
         [Test]
         public unsafe void CanReadWriteTest()
         {
-            using var memory = new UnmanagedMemoryManager<int>(1);
-            memory.Memory[0] = int.MinValue;
+            using var memory = new UnmanagedMemory<int>(1);
+            memory.Data[0] = int.MinValue;
             Assert.AreEqual(1, memory.Length);
-            Assert.AreEqual(int.MinValue, memory.Memory[0]);
+            Assert.AreEqual(int.MinValue, memory.Data[0]);
         }
 
         [Test]
         public void ZeroLengthTest()
         {
-            using var memory = new UnmanagedMemoryManager<int>(0);
+            using var memory = new UnmanagedMemory<int>(0);
             Assert.AreEqual(0, memory.Length);
         }
 
@@ -27,19 +27,19 @@ namespace Binaron.Serializer.Tests
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
-                using var _ = new UnmanagedMemoryManager<int>(-1);
+                using var _ = new UnmanagedMemory<int>(-1);
             });
         }
 
         [Test]
         public unsafe void DoubleDisposeTest()
         {
-            using var memory = new UnmanagedMemoryManager<int>(0);
+            using var memory = new UnmanagedMemory<int>(0);
             ((IDisposable) memory).Dispose();
             ((IDisposable) memory).Dispose();
             Assert.Throws<NullReferenceException>(() =>
             {
-                var _ = *memory.Memory;
+                var _ = *memory.Data;
             });
             Assert.Throws<NullReferenceException>(() =>
             {

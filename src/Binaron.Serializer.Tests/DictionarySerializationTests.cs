@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Binaron.Serializer.Tests.Extensions;
 using NUnit.Framework;
 
@@ -11,11 +12,11 @@ namespace Binaron.Serializer.Tests
     public class DictionarySerializationTests
     {
         [TestCaseSource(nameof(AllListCases))]
-        public void RootDictionaryTests(Type destType)
+        public async ValueTask RootDictionaryTests(Type destType)
         {
             var source = new Dictionary<string, string> {{"a key", "a value"}};
-            using var stream = new MemoryStream();
-            BinaronConvert.Serialize(source, stream);
+            await using var stream = new MemoryStream();
+            await BinaronConvert.Serialize(source, stream);
             stream.Seek(0, SeekOrigin.Begin);
             var dest = (IEnumerable) Converter.Deserialize(destType, stream);
             stream.Seek(0, SeekOrigin.Begin);
@@ -25,26 +26,26 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
-        public void IntToNullableIntTest()
+        public async ValueTask IntToNullableIntTest()
         {
             const int val = int.MinValue;
-            var dest = Tester.TestRoundTrip<IDictionary<int?, int?>>(new Dictionary<int, int>{{val, val}});
+            var dest = await Tester.TestRoundTrip<IDictionary<int?, int?>>(new Dictionary<int, int>{{val, val}});
             Assert.AreEqual((val, val), (dest.Single().Key, dest.Single().Value));
         }
 
         [Test]
-        public void EnumToNullableEnumTest()
+        public async ValueTask EnumToNullableEnumTest()
         {
             const TestByteEnum val = TestByteEnum.Max;
-            var dest = Tester.TestRoundTrip<IDictionary<TestByteEnum?, TestByteEnum?>>(new Dictionary<TestByteEnum, TestByteEnum>{{val, val}});
+            var dest = await Tester.TestRoundTrip<IDictionary<TestByteEnum?, TestByteEnum?>>(new Dictionary<TestByteEnum, TestByteEnum>{{val, val}});
             Assert.AreEqual((val, val), (dest.Single().Key, dest.Single().Value));
         }
         
         [Test]
-        public void NullableStructTest()
+        public async ValueTask NullableStructTest()
         {
             var val = new TestStruct {Value = 1, NullableValue = 2};
-            var dest = Tester.TestRoundTrip<IDictionary<TestStruct?, TestStruct?>>(new Dictionary<TestStruct, TestStruct>{{val, val}});
+            var dest = await Tester.TestRoundTrip<IDictionary<TestStruct?, TestStruct?>>(new Dictionary<TestStruct, TestStruct>{{val, val}});
             Assert.AreEqual(val.Value, dest.Single().Key?.Value);
             Assert.AreEqual(val.NullableValue, dest.Single().Key?.NullableValue);
             Assert.AreEqual(val.Value, dest.Single().Value?.Value);

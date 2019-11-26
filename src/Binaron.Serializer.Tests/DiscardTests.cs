@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
+using Binaron.Serializer.Tests.Extensions;
 using NUnit.Framework;
 
 namespace Binaron.Serializer.Tests
@@ -9,135 +10,135 @@ namespace Binaron.Serializer.Tests
     public class DiscardTests
     {
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardNoSetterPropertyTests<TSource>(TSource source)
+        public async ValueTask DiscardNoSetterPropertyTests<TSource>(TSource source)
         {
-            var dest = Tester.TestRoundTrip(new TestClassNoSetter<TSource>(source));
+            var dest = await Tester.TestRoundTrip(new TestClassNoSetter<TSource>(source));
             Assert.AreEqual(default(TSource), dest.Value);
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardNoGetterPropertyTests<TSource>(TSource source)
+        public async ValueTask DiscardNoGetterPropertyTests<TSource>(TSource source)
         {
-            var dest = Tester.TestRoundTrip(new TestClassNoGetter<TSource>(source));
+            var dest = await Tester.TestRoundTrip(new TestClassNoGetter<TSource>(source));
             Assert.AreEqual(default(TSource), dest.GetValue());
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardObjectTests<TSource>(TSource source)
+        public async ValueTask DiscardObjectTests<TSource>(TSource source)
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, TSource>>>(new TestClass<TSource> {Value = source});
+            var dest = await Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, TSource>>>(new TestClass<TSource> {Value = source});
             Assert.AreEqual(0, dest.Count());
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardListTests<TSource>(TSource source)
+        public async ValueTask DiscardListTests<TSource>(TSource source)
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<TSource>>(new[] {source});
+            var dest = await Tester.TestRoundTrip<TestEnumerable<TSource>>(new[] {source});
             Assert.AreEqual(0, dest.Count());
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardEnumerableTests<TSource>(TSource source)
+        public async ValueTask DiscardEnumerableTests<TSource>(TSource source)
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<TSource>>(GetEnumerable(new[] {source}));
+            var dest = await Tester.TestRoundTrip<TestEnumerable<TSource>>(GetEnumerable(new[] {source}));
             Assert.AreEqual(0, dest.Count());
         }
 
         [Test]
-        public void DiscardDictionaryTest()
+        public async ValueTask DiscardDictionaryTest()
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, string>>>(new Dictionary<string, string> {{"key", "value"}});
+            var dest = await Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, string>>>(new Dictionary<string, string> {{"key", "value"}});
             Assert.AreEqual(0, dest.Count());
         }
 
         [Test]
-        public void DiscardObjectAsIntTest()
+        public async ValueTask DiscardObjectAsIntTest()
         {
-            var dest = Tester.TestRoundTrip<int>(new TestClass<int> {Value = 1});
+            var dest = await Tester.TestRoundTrip<int>(new TestClass<int> {Value = 1});
             Assert.AreEqual(0, dest);
         }
 
         [Test]
-        public void DiscardListAsIntTest()
+        public async ValueTask DiscardListAsIntTest()
         {
-            var dest = Tester.TestRoundTrip<int>(new[] {1});
+            var dest = await Tester.TestRoundTrip<int>(new[] {1});
             Assert.AreEqual(0, dest);
         }
 
         [Test]
-        public void DiscardEnumerableAsIntTest()
+        public async ValueTask DiscardEnumerableAsIntTest()
         {
-            var dest = Tester.TestRoundTrip<int>(GetEnumerable(new[] {1}));
+            var dest = await Tester.TestRoundTrip<int>(GetEnumerable(new[] {1}));
             Assert.AreEqual(0, dest);
         }
 
         [Test]
-        public void DiscardDictionaryAsIntTest()
+        public async ValueTask DiscardDictionaryAsIntTest()
         {
-            var dest = Tester.TestRoundTrip<int>(new Dictionary<string, string> {{"key", "value"}});
+            var dest = await Tester.TestRoundTrip<int>(new Dictionary<string, string> {{"key", "value"}});
             Assert.AreEqual(0, dest);
         }
 
         [Test]
-        public void DiscardListOfListTest()
+        public async ValueTask DiscardListOfListTest()
         {
-            var dest = Tester.TestRoundTrip<int[]>(new[] {new[] {1}});
+            var dest = await Tester.TestRoundTrip<int[]>(new[] {new[] {1}});
             Assert.AreEqual(0, dest.Length);
         }
 
         [Test]
-        public void DiscardListOfEnumerableTest()
+        public async ValueTask DiscardListOfEnumerableTest()
         {
-            var dest = Tester.TestRoundTrip<int[]>(new[] {GetEnumerable(new[] {1})});
+            var dest = await Tester.TestRoundTrip<int[]>(new[] {GetEnumerable(new[] {1})});
             Assert.AreEqual(0, dest.Length);
         }
 
         [Test]
-        public void DiscardListOfDictionaryTest()
+        public async ValueTask DiscardListOfDictionaryTest()
         {
-            var dest = Tester.TestRoundTrip<int[]>(new[] {new Dictionary<string, string> {{"key", "value"}}});
+            var dest = await Tester.TestRoundTrip<int[]>(new[] {new Dictionary<string, string> {{"key", "value"}}});
             Assert.AreEqual(0, dest.Length);
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardCustomEnumerableTests(dynamic value)
+        public async ValueTask DiscardCustomEnumerableTests(dynamic value)
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<object>>(GetEnumerable(new[] {value}));
+            var dest = await Tester.TestRoundTrip<TestEnumerable<object>>(GetEnumerable(new[] {value}));
             Assert.AreEqual(0, dest.Count());
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardCustomListTests(dynamic value)
+        public async ValueTask DiscardCustomListTests(dynamic value)
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<object>>(new[] {value});
+            var dest = await Tester.TestRoundTrip<TestEnumerable<object>>(new[] {value});
             Assert.AreEqual(0, dest.Count());
         }
 
         [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
-        public void DiscardCustomDictionaryTests(dynamic value)
+        public async ValueTask DiscardCustomDictionaryTests(dynamic value)
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<object>>(new Hashtable {{value, value}});
+            var dest = await Tester.TestRoundTrip<TestEnumerable<object>>(new Hashtable {{value, value}});
             Assert.AreEqual(0, dest.Count());
         }
 
         [Test]
-        public void DiscardCustomEnumerableKvpTest()
+        public async ValueTask DiscardCustomEnumerableKvpTest()
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<object>>(GetEnumerable(new[] {new KeyValuePair<string, string>("key", "value")}));
+            var dest = await Tester.TestRoundTrip<TestEnumerable<object>>(GetEnumerable(new[] {new KeyValuePair<string, string>("key", "value")}));
             Assert.AreEqual(0, dest.Count());
         }
 
         [Test]
-        public void DiscardCustomDestEnumerableDictionaryTest()
+        public async ValueTask DiscardCustomDestEnumerableDictionaryTest()
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, string>>>(new Dictionary<string, string> {{"key", "value"}});
+            var dest = await Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, string>>>(new Dictionary<string, string> {{"key", "value"}});
             Assert.AreEqual(0, dest.Count());
         }
         
         [Test]
-        public void DiscardObjectAsDictionaryTest()
+        public async ValueTask DiscardObjectAsDictionaryTest()
         {
-            var dest = Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, string>>>(new TestClass<int> {Value = 1});
+            var dest = await Tester.TestRoundTrip<TestEnumerable<KeyValuePair<string, string>>>(new TestClass<int> {Value = 1});
             Assert.AreEqual(0, dest.Count());
         }
 

@@ -41,6 +41,6 @@ namespace Binaron.Serializer.Accessors
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract Task HandleInternal(T state, TResult result);
+        protected abstract ValueTask HandleInternal(T state, TResult result);
     }
 }

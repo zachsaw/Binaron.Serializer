@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Binaron.Serializer.Tests
@@ -6,9 +7,9 @@ namespace Binaron.Serializer.Tests
     {
         [TestCase(false)]
         [TestCase(true)]
-        public void PreserveOrSkipNullsObjectTest(bool skipNulls)
+        public async ValueTask PreserveOrSkipNullsObjectTest(bool skipNulls)
         {
-            var dest = Tester.TestRoundTrip(new TestClass {Value = null}, new SerializerOptions {SkipNullValues = skipNulls});
+            var dest = await Tester.TestRoundTrip(new TestClass {Value = null}, new SerializerOptions {SkipNullValues = skipNulls});
             Assert.AreEqual(skipNulls ? (object) 1 : null, dest.Value);
         }
 

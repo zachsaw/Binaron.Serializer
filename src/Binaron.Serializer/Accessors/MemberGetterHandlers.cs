@@ -15,7 +15,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, bool val)
+            protected override async ValueTask HandleInternal(WriterState writer, bool val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -29,7 +29,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, byte val)
+            protected override async ValueTask HandleInternal(WriterState writer, byte val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -43,7 +43,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, char val)
+            protected override async ValueTask HandleInternal(WriterState writer, char val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -57,7 +57,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, DateTime val)
+            protected override async ValueTask HandleInternal(WriterState writer, DateTime val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -71,7 +71,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, decimal val)
+            protected override async ValueTask HandleInternal(WriterState writer, decimal val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -85,7 +85,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, double val)
+            protected override async ValueTask HandleInternal(WriterState writer, double val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -99,7 +99,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, short val)
+            protected override async ValueTask HandleInternal(WriterState writer, short val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -113,7 +113,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, int val)
+            protected override async ValueTask HandleInternal(WriterState writer, int val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -127,7 +127,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, long val)
+            protected override async ValueTask HandleInternal(WriterState writer, long val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -141,7 +141,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, sbyte val)
+            protected override async ValueTask HandleInternal(WriterState writer, sbyte val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -155,7 +155,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, float val)
+            protected override async ValueTask HandleInternal(WriterState writer, float val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -169,7 +169,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, ushort val)
+            protected override async ValueTask HandleInternal(WriterState writer, ushort val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -183,7 +183,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, uint val)
+            protected override async ValueTask HandleInternal(WriterState writer, uint val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -197,7 +197,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, ulong val)
+            protected override async ValueTask HandleInternal(WriterState writer, ulong val)
             {
                 await WriteMemberName(writer, MemberName);
                 await Writer.Write(writer, val);
@@ -211,7 +211,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, string val)
+            protected override async ValueTask HandleInternal(WriterState writer, string val)
             {
                 if (val == null)
                 {
@@ -225,14 +225,14 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal sealed class ObjectHandler<T> : MemberGetterHandlerBase<WriterState, object>
+        internal sealed class ObjectHandler : MemberGetterHandlerBase<WriterState, object>
         {
             public ObjectHandler(MemberGetter<object> getter) : base(getter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, object val)
+            protected override async ValueTask HandleInternal(WriterState writer, object val)
             {
                 if (val == null)
                 {
@@ -241,7 +241,7 @@ namespace Binaron.Serializer.Accessors
                 else
                 {
                     await WriteMemberName(writer, MemberName);
-                    Serializer.WriteNonNullValue(writer, val);
+                    await Serializer.WriteNonNullValue(writer, val);
                 }
             }
         }
@@ -253,7 +253,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override async Task HandleInternal(WriterState writer, object val)
+            protected override async ValueTask HandleInternal(WriterState writer, object val)
             {
                 if (val == null)
                 {
@@ -262,13 +262,13 @@ namespace Binaron.Serializer.Accessors
                 else
                 {
                     await WriteMemberName(writer, MemberName);
-                    Serializer.WriteNonPrimitive(writer, (T) val);
+                    await Serializer.WriteNonPrimitive(writer, (T) val);
                 }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static async Task WriteNull(WriterState writer, string memberName)
+        private static async ValueTask WriteNull(WriterState writer, string memberName)
         {
             if (writer.SkipNullValues)
                 return;
@@ -278,7 +278,7 @@ namespace Binaron.Serializer.Accessors
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static async Task WriteMemberName(WriterState writer, string memberName)
+        private static async ValueTask WriteMemberName(WriterState writer, string memberName)
         {
             await writer.Write((byte) EnumerableType.HasItem);
             await writer.WriteString(memberName);
