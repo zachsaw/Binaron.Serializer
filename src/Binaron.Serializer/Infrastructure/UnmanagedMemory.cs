@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Binaron.Serializer.Infrastructure
 {
     internal unsafe class UnmanagedMemory<T> : IDisposable where T : unmanaged
     {
-        private void* memory;
         private void* data;
 
         public UnmanagedMemory(int length)
@@ -14,9 +12,8 @@ namespace Binaron.Serializer.Infrastructure
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length));
 
-            memory = Allocate(length);
-            SetLength(memory, length);
-            data = (int*) memory + 1;
+            data = Allocate(length);
+            Length = length;
         }
 
         ~UnmanagedMemory()
@@ -26,22 +23,18 @@ namespace Binaron.Serializer.Infrastructure
 
         public void Dispose()
         {
-            if (memory == null)
+            if (data == null)
                 return;
 
-            Free(memory);
-            memory = null;
+            Free(data);
             data = null;
 
             GC.SuppressFinalize(this);
         }
 
-        public int Length => GetLength(memory);
-        public T* Data => (T*) data;
+        public int Length { get; }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetLength(void* mem) => *(int*) mem;
-        private static void SetLength(void* mem, int len) => *(int*) mem = len;
+        public T* Data => (T*) data;
 
         private static void Free(void* mem)
         {
@@ -50,7 +43,7 @@ namespace Binaron.Serializer.Infrastructure
 
         private static void* Allocate(int length)
         {
-            var bytes = sizeof(int) + sizeof(T) * (long) length;
+            var bytes = sizeof(T) * (long) length;
             return Marshal.AllocHGlobal(new IntPtr(bytes)).ToPointer();
         }
     }

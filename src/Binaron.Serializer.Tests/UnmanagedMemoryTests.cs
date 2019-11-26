@@ -41,10 +41,6 @@ namespace Binaron.Serializer.Tests
             {
                 var _ = *memory.Data;
             });
-            Assert.Throws<NullReferenceException>(() =>
-            {
-                var _ = memory.Length;
-            });
         }
     }
 }

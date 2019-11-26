@@ -64,16 +64,18 @@ namespace Binaron.Serializer.Infrastructure
             {
                 Flush();
 
-                fixed (char* ptr = value)
+                if (length > buffer.Length)
                 {
-                    stream.Write(new ReadOnlySpan<byte>(ptr, length));
+                    fixed (char* ptr = value)
+                    {
+                        stream.Write(new ReadOnlySpan<byte>(ptr, length));
+                    }
+                    return;
                 }
             }
-            else
-            {
-                value.AsSpan().CopyTo(new Span<char>(buffer.Data + bufferOffset, length));
-                bufferOffset += length;
-            }
+
+            value.AsSpan().CopyTo(new Span<char>(buffer.Data + bufferOffset, strLength));
+            bufferOffset += length;
         }
     }
 }
