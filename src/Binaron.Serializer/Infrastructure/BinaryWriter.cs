@@ -1,8 +1,6 @@
 using System;
-using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Binaron.Serializer.Infrastructure
@@ -72,7 +70,8 @@ namespace Binaron.Serializer.Infrastructure
             if (bufferOffset + length > buffer.Length)
             {
                 await Flush();
-                await stream.WriteAsync(value.AsMemory().Cast<char, byte>());
+                using var memoryMgr = new StringMemoryManager(value);
+                await stream.WriteAsync(memoryMgr.Memory);
             }
             else
             {
@@ -83,36 +82,5 @@ namespace Binaron.Serializer.Infrastructure
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe void CopyToBuffer(string value, int length) => value.AsSpan().CopyTo(new Span<char>(buffer.Data + bufferOffset, length));
-    }
-
-    internal static class MemoryExtensions
-    {
-        public static Memory<TTo> Cast<TFrom, TTo>(this ReadOnlyMemory<TFrom> from)
-            where TFrom : unmanaged
-            where TTo : unmanaged
-        {
-            // avoid the extra allocation/indirection, at the cost of a gen-0 box
-            if (typeof(TFrom) == typeof(TTo)) return (Memory<TTo>)(object)from;
-
-            return new CastMemoryManager<TFrom, TTo>(from).Memory;
-        }
-
-        private sealed class CastMemoryManager<TFrom, TTo> : MemoryManager<TTo>
-            where TFrom : unmanaged
-            where TTo : unmanaged
-        {
-            private readonly ReadOnlyMemory<TFrom> _from;
-
-            public CastMemoryManager(ReadOnlyMemory<TFrom> from) => _from = from;
-
-            public override Span<TTo> GetSpan() => MemoryMarshal.Cast<TFrom, TTo>(_from.Span);
-
-            protected override void Dispose(bool disposing)
-            {
-            }
-
-            public override MemoryHandle Pin(int elementIndex = 0) => throw new NotSupportedException();
-            public override void Unpin() => throw new NotSupportedException();
-        }
     }
 }

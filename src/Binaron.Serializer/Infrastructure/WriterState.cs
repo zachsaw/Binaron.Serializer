@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Binaron.Serializer.Infrastructure
 {
@@ -22,10 +23,10 @@ namespace Binaron.Serializer.Infrastructure
         public bool SkipNullValues { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write<T>(T value) where T : unmanaged => writer.Write(value);
+        public async Task Write<T>(T value) where T : unmanaged => await writer.Write(value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteString(string value) => writer.WriteString(value);
+        public async Task WriteString(string value) => await writer.WriteString(value);
 
         public void Dispose()
         {

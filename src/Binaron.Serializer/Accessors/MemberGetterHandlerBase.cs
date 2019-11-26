@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Binaron.Serializer.Accessors
 {
@@ -40,6 +41,6 @@ namespace Binaron.Serializer.Accessors
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract void HandleInternal(T state, TResult result);
+        protected abstract Task HandleInternal(T state, TResult result);
     }
 }
