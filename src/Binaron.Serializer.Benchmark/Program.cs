@@ -13,6 +13,7 @@ namespace BinSerializerTest
     {
         public class BinaronVsJsonTrainedWeights
         {
+            private const int Loop = 5;
             private readonly TrainedWeights trainedWeights = TrainedWeights.Create();
             
             [GlobalSetup]
@@ -24,39 +25,28 @@ namespace BinSerializerTest
             }
             
             [Benchmark]
-            public void Json_Serialize()
-            {
-                NewtonsoftJsonTest_Serialize(trainedWeights, 5);
-            }
+            public void Json_Serialize() => NewtonsoftJsonTest_Serialize(trainedWeights, Loop);
 
             [Benchmark]
-            public void Binaron_Serialize()
-            {
-                BinaronTest_Serialize(trainedWeights, 5);
-            }
+            public void Binaron_Serialize() => BinaronTest_Serialize(trainedWeights, Loop);
 
             [Benchmark]
-            public void Json_Deserialize()
-            {
-                NewtonsoftJsonTest_Deserialize(trainedWeights, 5);
-            }
+            public void Json_Deserialize() => NewtonsoftJsonTest_Deserialize(trainedWeights, Loop);
 
             [Benchmark]
-            public void Binaron_Deserialize()
-            {
-                BinaronTest_Deserialize(trainedWeights, 5);
-            }
+            public void Binaron_Deserialize() => BinaronTest_Deserialize(trainedWeights, Loop);
         }
 
         public class BinaronVsJsonBook
         {
+            private const int Loop = 200;
             private readonly Book book = Book.Create();
 
             [GlobalSetup]
             public void Setup()
             {
                 // warm-up
-                for (var i = 0; i < 250; i++)
+                for (var i = 0; i < Loop; i++)
                 {
                     NewtonsoftJsonTest_Validate(book, Validate);
                     BinaronTest_Validate(book, Validate);
@@ -64,28 +54,16 @@ namespace BinSerializerTest
             }
 
             [Benchmark]
-            public void Json_Serialize()
-            {
-                NewtonsoftJsonTest_Serialize(book, 200);
-            }
+            public void Json_Serialize() => NewtonsoftJsonTest_Serialize(book, Loop);
 
             [Benchmark]
-            public void Binaron_Serialize()
-            {
-                BinaronTest_Serialize(book, 200);
-            }
+            public void Binaron_Serialize() => BinaronTest_Serialize(book, Loop);
 
             [Benchmark]
-            public void Json_Deserialize()
-            {
-                NewtonsoftJsonTest_Deserialize(book, 200);
-            }
+            public void Json_Deserialize() => NewtonsoftJsonTest_Deserialize(book, Loop);
 
             [Benchmark]
-            public void Binaron_Deserialize()
-            {
-                BinaronTest_Deserialize(book, 200);
-            }
+            public void Binaron_Deserialize() => BinaronTest_Deserialize(book, Loop);
         }
 
         public static void Main()
