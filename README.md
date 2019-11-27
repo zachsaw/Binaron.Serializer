@@ -6,7 +6,7 @@
 
 In this repository, you'll find 2 benchmarks using BenchmarkDotNet comparing Binaron.Serializer to Newtonsoft.JSON.
 
-The first one showcases best case scenario vs a JSON serializer, where we serialize an array of double of 128k items. In reality, this could be your typical weights from a CNN model.
+The first one showcases best case scenario vs a JSON serializer, where we serialize an array of double with 128k items. In reality, this could be your typical weights from a CNN model.
 
 ## Benchmark 1
 
