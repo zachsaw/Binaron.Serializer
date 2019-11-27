@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
@@ -10,7 +11,44 @@ namespace BinSerializerTest
 {
     public static class Program
     {
-        public class BinaronVsJson
+        public class BinaronVsJsonTrainedWeights
+        {
+            private readonly TrainedWeights trainedWeights = TrainedWeights.Create();
+            
+            [GlobalSetup]
+            public void Setup()
+            {
+                // warm-up
+                NewtonsoftJsonTest_Validate(trainedWeights, Validate);
+                BinaronTest_Validate(trainedWeights, Validate);
+            }
+            
+            [Benchmark]
+            public void Json_Serialize()
+            {
+                NewtonsoftJsonTest_Serialize(trainedWeights, 5);
+            }
+
+            [Benchmark]
+            public void Binaron_Serialize()
+            {
+                BinaronTest_Serialize(trainedWeights, 5);
+            }
+
+            [Benchmark]
+            public void Json_Deserialize()
+            {
+                NewtonsoftJsonTest_Deserialize(trainedWeights, 5);
+            }
+
+            [Benchmark]
+            public void Binaron_Deserialize()
+            {
+                BinaronTest_Deserialize(trainedWeights, 5);
+            }
+        }
+
+        public class BinaronVsJsonBook
         {
             private readonly Book book = Book.Create();
 
@@ -20,90 +58,79 @@ namespace BinSerializerTest
                 // warm-up
                 for (var i = 0; i < 250; i++)
                 {
-                    NewtonsoftJsonTest_Validate(book);
-                    BinaronTest_Validate(book);
+                    NewtonsoftJsonTest_Validate(book, Validate);
+                    BinaronTest_Validate(book, Validate);
                 }
             }
 
             [Benchmark]
             public void Json_Serialize()
             {
-                NewtonsoftJsonTest_Serialize(book);
+                NewtonsoftJsonTest_Serialize(book, 200);
             }
 
             [Benchmark]
             public void Binaron_Serialize()
             {
-                BinaronTest_Serialize(book);
+                BinaronTest_Serialize(book, 200);
             }
 
             [Benchmark]
             public void Json_Deserialize()
             {
-                NewtonsoftJsonTest_Deserialize(book);
+                NewtonsoftJsonTest_Deserialize(book, 200);
             }
 
             [Benchmark]
             public void Binaron_Deserialize()
             {
-                BinaronTest_Deserialize(book);
+                BinaronTest_Deserialize(book, 200);
             }
         }
 
         public static void Main()
         {
-            BenchmarkRunner.Run<BinaronVsJson>();
+            BenchmarkRunner.Run<BinaronVsJsonTrainedWeights>();
+            BenchmarkRunner.Run<BinaronVsJsonBook>();
         }
 
-        private static void BinaronTest_Serialize(Book input)
+        private static void BinaronTest_Serialize<T>(T input, int loop)
         {
             using var stream = new MemoryStream();
-            for (var i = 0; i < 200; i++)
+            for (var i = 0; i < loop; i++)
             {
                 BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
                 stream.Position = 0;
             }
         }
 
-        private static void BinaronTest_Deserialize(Book input)
+        private static void BinaronTest_Deserialize<T>(T input, int loop)
         {
             using var stream = new MemoryStream();
             BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
             stream.Position = 0;
 
-            for (var i = 0; i < 200; i++)
+            for (var i = 0; i < loop; i++)
             {
-                var _ = BinaronConvert.Deserialize<Book>(stream);
+                var _ = BinaronConvert.Deserialize<T>(stream);
                 stream.Position = 0;
             }
         }
 
-        private static void BinaronTest_Validate(Book input)
+        private static void BinaronTest_Validate<T>(T input, Action<T> validate)
         {
             using var stream = new MemoryStream();
             BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
             stream.Position = 0;
 
-            var book = BinaronConvert.Deserialize<Book>(stream);
-
-            Trace.Assert(book.Changes.Count == 3);
-
-            Trace.Assert((string) book.Metadata["Matrix"] == "Neo");
-
-            foreach (var page in book.Pages)
-            foreach (var note in page.Notes)
-            {
-                Trace.Assert(note.Headnote.Note != null);
-            }
-
-            Trace.Assert(book.Genres[0] == Genre.Action);
-            Trace.Assert(book.Genres[1] == Genre.Comedy);
+            var value = BinaronConvert.Deserialize<T>(stream);
+            validate(value);
         }
 
-        private static void NewtonsoftJsonTest_Serialize(Book input)
+        private static void NewtonsoftJsonTest_Serialize<T>(T input, int loop)
         {
             using var stream = new MemoryStream();
-            for (var i = 0; i < 200; i++)
+            for (var i = 0; i < loop; i++)
             {
                 using var writer = new StreamWriter(stream, leaveOpen: true);
                 using var jsonWriter = new JsonTextWriter(writer);
@@ -116,7 +143,7 @@ namespace BinSerializerTest
             }
         }
 
-        private static void NewtonsoftJsonTest_Deserialize(Book input)
+        private static void NewtonsoftJsonTest_Deserialize<T>(T input, int loop)
         {
             using var stream = new MemoryStream();
             {
@@ -129,17 +156,17 @@ namespace BinSerializerTest
                 }
                 stream.Position = 0;
             }
-            for (var i = 0; i < 200; i++)
+            for (var i = 0; i < loop; i++)
             {
                 using var reader = new StreamReader(stream, leaveOpen: true);
                 using var jsonReader = new JsonTextReader(reader);
                 var ser = new JsonSerializer();
-                var _ = ser.Deserialize<Book>(jsonReader);
+                var _ = ser.Deserialize<T>(jsonReader);
                 stream.Position = 0;
             }
         }
 
-        private static void NewtonsoftJsonTest_Validate(Book input)
+        private static void NewtonsoftJsonTest_Validate<T>(T input, Action<T> validate)
         {
             using var stream = new MemoryStream();
             using var writer = new StreamWriter(stream, leaveOpen: true);
@@ -154,21 +181,34 @@ namespace BinSerializerTest
                 using var reader = new StreamReader(stream, leaveOpen: true);
                 using var jsonReader = new JsonTextReader(reader);
                 var ser = new JsonSerializer();
-                var book = ser.Deserialize<Book>(jsonReader);
-
-                Trace.Assert(book.Changes.Count == 3);
-
-                Trace.Assert((string) book.Metadata["Matrix"] == "Neo");
-
-                foreach (var page in book.Pages)
-                foreach (var note in page.Notes)
-                {
-                    Trace.Assert(note.Headnote.Note != null);
-                }
-
-                Trace.Assert(book.Genres[0] == Genre.Action);
-                Trace.Assert(book.Genres[1] == Genre.Comedy);
+                var value = ser.Deserialize<T>(jsonReader);
+                validate(value);
             }
+        }
+        
+        private static void Validate(TrainedWeights value)
+        {
+            var source = TrainedWeights.Create();
+            Trace.Assert(value.Weights.Length == source.Weights.Length);
+
+            for (var i = 0; i < source.Weights.Length; i++) 
+                Trace.Assert(Math.Abs(value.Weights[i] - source.Weights[i]) < double.Epsilon);
+        }
+        
+        private static void Validate(Book value)
+        {
+            Trace.Assert(value.Changes.Count == 3);
+
+            Trace.Assert((string) value.Metadata["Matrix"] == "Neo");
+
+            foreach (var page in value.Pages)
+            foreach (var note in page.Notes)
+            {
+                Trace.Assert(note.Headnote.Note != null);
+            }
+
+            Trace.Assert(value.Genres[0] == Genre.Action);
+            Trace.Assert(value.Genres[1] == Genre.Comedy);
         }
     }
 }
