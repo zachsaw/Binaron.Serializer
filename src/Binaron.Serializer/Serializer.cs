@@ -185,8 +185,6 @@ namespace Binaron.Serializer
             // fallback to non-generic version (we are not enumerating twice)
             // ReSharper disable once PossibleMultipleEnumeration
             WriteEnumerableFallback(writer, enumerable);
-
-            writer.Write((byte) EnumerableType.End);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -201,8 +199,6 @@ namespace Binaron.Serializer
             // fallback to non-generic version (we are not enumerating twice)
             // ReSharper disable once PossibleMultipleEnumeration
             WriteEnumerableFallback(writer, enumerable);
-
-            writer.Write((byte) EnumerableType.End);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -213,6 +209,8 @@ namespace Binaron.Serializer
                 writer.Write((byte) EnumerableType.HasItem);
                 WriteValue(writer, item);
             }
+
+            writer.Write((byte) EnumerableType.End);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

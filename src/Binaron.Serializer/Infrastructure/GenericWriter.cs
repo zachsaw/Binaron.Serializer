@@ -24,7 +24,7 @@ namespace Binaron.Serializer.Infrastructure
         {
             public static IGenericEnumerableWriter CreateWriter<T>()
             {
-                var elementType = GenericType.GetICollectionGenericType<T>.Type;
+                var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
                 if (elementType == null)
                     return null;
 
@@ -36,7 +36,11 @@ namespace Binaron.Serializer.Infrastructure
                 public void Write(WriterState writer, IEnumerable list)
                 {
                     foreach (var item in (IEnumerable<T>) list)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
                         Serializer.WriteNonPrimitive(writer, item);
+                    }
+                    writer.Write((byte) EnumerableType.End);
                 }
             }
         }
