@@ -42,7 +42,8 @@ The second benchmark is your typical DTO where Binaron.Serializer's advantage is
 
 var input = new Book();
 
-using var stream = new MemoryStream(); // C# 8.0 syntaxBinaronConvert.Serialize(input, stream);
+using var stream = new MemoryStream(); // C# 8.0 syntax
+BinaronConvert.Serialize(input, stream);
 
 stream.Position = 0;
 
