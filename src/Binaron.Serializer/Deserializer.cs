@@ -69,6 +69,9 @@ namespace Binaron.Serializer
         {
             switch (valueType)
             {
+                case SerializedType.CustomObject:
+                    ReadValue(reader); // discard custom object ID
+                    return ReadObject(reader);
                 case SerializedType.Object:
                     return ReadObject(reader);
                 case SerializedType.Dictionary:

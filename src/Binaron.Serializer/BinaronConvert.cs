@@ -26,12 +26,6 @@ namespace Binaron.Serializer
             }
         }
 
-        public static object Deserialize(Stream stream, DeserializerOptions options)
-        {
-            using var reader = new ReaderState(stream, options);
-            return Deserializer.ReadValue(reader);
-        }
-
         public static T Deserialize<T>(Stream stream, DeserializerOptions options)
         {
             using var reader = new ReaderState(stream, options);
