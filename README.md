@@ -123,9 +123,30 @@ var person = BinaronConvert.Deserialize<IPerson>(stream, new DeserializerOptions
 
 ```
 
-## Limitations
+# Ignore Attributes
 
-Binaron.Serializer currently only supports null value skipping in its serializer options. It does not support property ignore attributes yet. This will be implemented in the future (Feel free to contribute via Pull Requests).
+Binaron.Serializer supports the following ignore attributes: `System.NonSerializedAttribute` and `System.Runtime.Serialization.IgnoreDataMemberAttribute`.
+
+```C#
+
+public class Person
+{
+    [IgnoreDataMember]
+    public int Age { get; set; }
+
+    [IgnoreDataMember]
+    public int AgeField;
+
+    [field:NonSerialized]
+    public DateTime Dob { get; set; }
+
+    [NonSerialized]
+    public DateTime DobField;
+}
+
+```
+
+## Limitations
 
 Binaron.Serializer also uses and relies heavily on the newly released features of `.net standard 2.1` for maximum performance and thus is only compatible with `.net core app 3.0` and above.
 

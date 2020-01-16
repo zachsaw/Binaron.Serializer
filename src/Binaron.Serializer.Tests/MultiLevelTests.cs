@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Binaron.Serializer.CustomObject;
 using Binaron.Serializer.Extensions;
@@ -38,6 +39,9 @@ namespace Binaron.Serializer.Tests
             var customObjectFactories = new ICustomObjectFactory[] {new NodeObjectFactory()};
             var result = BinaronConvert.Deserialize<Nested>(stream, new DeserializerOptions {CustomObjectFactories = customObjectFactories});
 
+            Assert.IsNull(result.Annotation1);
+            Assert.IsNull(result.Annotation2);
+
             var derived1 = (DerivedNode) result.Nodes["One"];
             var derived2 = (DerivedNode) result.Nodes["Two"];
 
@@ -58,6 +62,8 @@ namespace Binaron.Serializer.Tests
         {
             return new Nested
             {
+                Annotation1 = "Ignore1",
+                Annotation2 = "Ignore2",
                 Nodes = new Dictionary<string, Node>
                 {
                     {
@@ -135,12 +141,20 @@ namespace Binaron.Serializer.Tests
 
         public class Nested
         {
+            [field:NonSerialized]
+            public string Annotation1 { get; set; }
+            [IgnoreDataMember]
+            public string Annotation2 { get; set; }
             public IDictionary<string, Node> Nodes { get; set; }
         }
 
         public abstract class Node
         {
             public string Name { get; set; }
+            [field:NonSerialized]
+            public string Type { get; }
+
+            protected Node() => Type = GetType().Name;
         }
 
         public class DerivedNode : Node
