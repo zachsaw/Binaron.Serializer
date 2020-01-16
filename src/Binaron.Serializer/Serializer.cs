@@ -96,9 +96,19 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteObject<T>(WriterState writer, T val)
         {
-            writer.Write((byte) SerializedType.Object);
+            var type = val.GetType();
+            if (writer.CustomObjectIdentifierProviders == null || !writer.CustomObjectIdentifierProviders.TryGetValue(typeof(T), out var customObjectIdentifierProvider))
+            {
+                writer.Write((byte) SerializedType.Object);
+            }
+            else
+            {
+                writer.Write((byte) SerializedType.CustomObject);
+                WriteValue(writer, customObjectIdentifierProvider.GetIdentifier(type));
+            }
 
-            foreach (var getter in GetterHandler.GetterHandlers<T>.Getters)
+            var getters = type == typeof(T) ? GetterHandler.GetterHandlers<T>.Getters : GetterHandler.GetGetterHandlers(type);
+            foreach (var getter in getters)
                 getter.Handle(writer, val);
 
             writer.Write((byte) EnumerableType.End);

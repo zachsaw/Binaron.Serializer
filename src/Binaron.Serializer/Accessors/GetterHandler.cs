@@ -28,9 +28,9 @@ namespace Binaron.Serializer.Accessors
                 .OrderBy(GetHandlerOrder)
                 .ToArray(); // Enumerate _now_ so we can cache MemberGetters
 
-        public static int GetFieldOffset(this FieldInfo fi) => GetFieldOffset(fi.FieldHandle);
+        private static int GetFieldOffset(this FieldInfo fi) => GetFieldOffset(fi.FieldHandle);
 
-        public static int GetFieldOffset(RuntimeFieldHandle h) => Marshal.ReadInt32(h.Value + (4 + IntPtr.Size)) & 0xFFFFFF;
+        private static int GetFieldOffset(RuntimeFieldHandle h) => Marshal.ReadInt32(h.Value + (4 + IntPtr.Size)) & 0xFFFFFF;
 
         private static int GetHandlerOrder(IMemberGetterHandler<WriterState> handler)
         {
@@ -194,7 +194,7 @@ namespace Binaron.Serializer.Accessors
 
             var memberType = getter.MemberInfo.GetMemberType();
             if (memberType == typeof(object) || Nullable.GetUnderlyingType(memberType) != null)
-                return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.ObjectHandler<>).MakeGenericType(memberType), getter);
+                return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.ObjectHandler), getter);
 
             return (IMemberGetterHandler<WriterState>) Activator.CreateInstance(typeof(MemberGetterHandlers.TypedObjectHandler<>).MakeGenericType(memberType), getter);
         }

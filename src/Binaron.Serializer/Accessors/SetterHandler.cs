@@ -15,14 +15,17 @@ namespace Binaron.Serializer.Accessors
     {
         private const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.Instance;
 
-        private static readonly ConcurrentDictionary<Type, (Func<object> Activate, IDictionary<string, IMemberSetterHandler<BinaryReader>> Setters, Type IDictionaryValueType, Type ActualType)> ActivatorsAndSetters = 
-            new ConcurrentDictionary<Type, (Func<object>, IDictionary<string, IMemberSetterHandler<BinaryReader>>, Type IDictionaryValueType, Type ActualType)>();
+        private static readonly ConcurrentDictionary<Type, (Func<object> Activate, IDictionary<string, IMemberSetterHandler<ReaderState>> Setters, Type IDictionaryValueType, Type ActualType)> ActivatorsAndSetters = 
+            new ConcurrentDictionary<Type, (Func<object>, IDictionary<string, IMemberSetterHandler<ReaderState>>, Type IDictionaryValueType, Type ActualType)>();
+
+        private static readonly ConcurrentDictionary<Type, IDictionary<string, IMemberSetterHandler<ReaderState>>> SetterHandlers = 
+            new ConcurrentDictionary<Type, IDictionary<string, IMemberSetterHandler<ReaderState>>>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (Func<object> Activate, IDictionary<string, IMemberSetterHandler<BinaryReader>> Setters, Type IDictionaryValueType, Type ActualType) GetActivatorAndSetterHandlers(Type type) => 
+        public static (Func<object> Activate, IDictionary<string, IMemberSetterHandler<ReaderState>> Setters, Type IDictionaryValueType, Type ActualType) GetActivatorAndSetterHandlers(Type type) => 
             ActivatorsAndSetters.GetOrAdd(type, _ => CreateActivatorsAndSetters(type));
 
-        private static (Func<object>, IDictionary<string, IMemberSetterHandler<BinaryReader>>, Type IDictionaryValueType, Type ActualType) CreateActivatorsAndSetters(Type type)
+        private static (Func<object>, IDictionary<string, IMemberSetterHandler<ReaderState>>, Type IDictionaryValueType, Type ActualType) CreateActivatorsAndSetters(Type type)
         {
             var (keyType, valueType) = GenericType.GetIDictionaryReader(type);
             if (keyType == typeof(string))
@@ -32,9 +35,12 @@ namespace Binaron.Serializer.Accessors
             return (CreateActivator(actualType), CreateSetters(actualType), null, actualType);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IDictionary<string, IMemberSetterHandler<ReaderState>> GetSetterHandlers(Type type) => SetterHandlers.GetOrAdd(type, _ => CreateSetters(type));
+
         private static Func<object> CreateActivator(Type type) => Activator.Get(type);
 
-        private static IDictionary<string, IMemberSetterHandler<BinaryReader>> CreateSetters(Type type)
+        private static IDictionary<string, IMemberSetterHandler<ReaderState>> CreateSetters(Type type)
         {
             return type.GetProperties(BindingAttr).Cast<MemberInfo>().Concat(type.GetFields(BindingAttr))
                 .Select(member => CreateSetterHandler(type, member))
@@ -57,7 +63,7 @@ namespace Binaron.Serializer.Accessors
             throw new NotSupportedException($"Interface '{type}' is not supported");
         }
 
-        private static IMemberSetterHandler<BinaryReader> CreateSetterHandler(Type type, MemberInfo member)
+        private static IMemberSetterHandler<ReaderState> CreateSetterHandler(Type type, MemberInfo member)
         {
             var memberType = member.GetMemberType();
             switch (Type.GetTypeCode(memberType))
@@ -97,97 +103,97 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForBool(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForBool(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<bool>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.BoolHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForByte(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForByte(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<byte>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.ByteHandler(setter);
         }
 
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForChar(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForChar(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<char>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.CharHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForDateTime(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForDateTime(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<DateTime>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.DateTimeHandler(setter);
         }
 
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForDecimal(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForDecimal(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<decimal>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.DecimalHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForDouble(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForDouble(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<double>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.DoubleHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForShort(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForShort(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<short>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.ShortHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForInt(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForInt(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<int>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.IntHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForLong(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForLong(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<long>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.LongHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForSByte(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForSByte(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<sbyte>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.SByteHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForFloat(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForFloat(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<float>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.FloatHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForUShort(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForUShort(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<ushort>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.UShortHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForUInt(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForUInt(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<uint>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.UIntHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForULong(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForULong(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<ulong>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.ULongHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForString(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForString(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<string>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.StringHandler(setter);
         }
         
-        private static IMemberSetterHandler<BinaryReader> CreateHandlerForObject(Type type, MemberInfo prop)
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForObject(Type type, MemberInfo prop)
         {
             var setter = new MemberSetter<object>(type, prop.Name);
             if (!setter.IsValid)
@@ -198,8 +204,8 @@ namespace Binaron.Serializer.Accessors
                 return new MemberSetterHandlers.ObjectHandler(setter);
 
             return !memberType.IsValueType
-                ? (IMemberSetterHandler<BinaryReader>) System.Activator.CreateInstance(typeof(MemberSetterHandlers.ClassObjectHandler<>).MakeGenericType(memberType), setter)
-                : (IMemberSetterHandler<BinaryReader>) System.Activator.CreateInstance(typeof(MemberSetterHandlers.StructObjectHandler<>).MakeGenericType(memberType), setter);
+                ? (IMemberSetterHandler<ReaderState>) System.Activator.CreateInstance(typeof(MemberSetterHandlers.ClassObjectHandler<>).MakeGenericType(memberType), setter)
+                : (IMemberSetterHandler<ReaderState>) System.Activator.CreateInstance(typeof(MemberSetterHandlers.StructObjectHandler<>).MakeGenericType(memberType), setter);
         }
     }
 }

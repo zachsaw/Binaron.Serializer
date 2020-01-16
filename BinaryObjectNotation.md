@@ -47,6 +47,17 @@ e.g. `[HasItem] [PropertyFoo] [Value Object of PropertyFoo] [PropertyBar] [Value
 
 e.g. `[End]` - no items
 
+### CustomObject
+`[Value] [Object]`
+
+Value is a custom identifier of a value of any type supported by the Binary Object Notation.
+Object is the same as the object format above.
+
+The CustomObject type is to annotate the object with an identifier so we could deserialize with additional information.
+This is typically used to support polymorphism.
+
+e.g. 
+
 ### Dictionary
 `[Length (Int)] [Key Object] [Value Object] ...`
 

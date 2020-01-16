@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Binaron.Serializer.Extensions;
 
 namespace Binaron.Serializer.Accessors
@@ -21,10 +22,9 @@ namespace Binaron.Serializer.Accessors
             MemberName = memberName;
             var memberInfo = MemberInfo = targetType.GetMemberInfo(memberName);
 
-            var canRead = memberInfo is FieldInfo || ((PropertyInfo) memberInfo).CanRead;
+            var canRead = GetCanRead(targetType, memberName, memberInfo);
             if (canRead)
             {
-                memberInfo = targetType.TryGetBackingField(memberName) ?? memberInfo;
                 getDelegate = GetGetDelegate(targetType, memberInfo.GetMemberType(), memberInfo);
                 IsValid = true;
             }
@@ -33,6 +33,25 @@ namespace Binaron.Serializer.Accessors
                 getDelegate = null;
                 IsValid = false;
             }
+        }
+
+        private static bool GetCanRead(Type targetType, string memberName, MemberInfo memberInfo)
+        {
+            var canRead = memberInfo is FieldInfo || ((PropertyInfo) memberInfo).CanRead;
+
+            if (!canRead)
+                return false;
+
+            if (memberInfo.GetCustomAttributes(typeof(IgnoreDataMemberAttribute), false).Length != 0)
+                return false;
+
+            if (memberInfo is PropertyInfo)
+                memberInfo = targetType.TryGetBackingField(memberName) ?? memberInfo;
+
+            if (memberInfo is FieldInfo fi && fi.GetCustomAttributes(typeof(NonSerializedAttribute), false).Length != 0)
+                return false;
+
+            return true;
         }
 
         [Pure]

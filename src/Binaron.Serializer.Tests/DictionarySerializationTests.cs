@@ -25,6 +25,17 @@ namespace Binaron.Serializer.Tests
         }
 
         [Test]
+        public void ClassWithDictionaryTest()
+        {
+            var source = new ClassWithDictionary {Dictionary = new Dictionary<string, object> {{"a key", "a value"}}};
+            using var stream = new MemoryStream();
+            BinaronConvert.Serialize(source, stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            dynamic dest = BinaronConvert.Deserialize(stream);
+            Assert.AreEqual("a value", ((IDictionary<string, object>) dest.Dictionary)["a key"]);
+        }
+
+        [Test]
         public void IntToNullableIntTest()
         {
             const int val = int.MinValue;
@@ -84,6 +95,11 @@ namespace Binaron.Serializer.Tests
             }
         }
         
+        private class ClassWithDictionary
+        {
+            public Dictionary<string, object> Dictionary { get; set; }
+        }
+
         private class TestDictionary<TKey, TValue> : IDictionary<TKey, TValue>
         {
             private readonly Dictionary<TKey, TValue> backing = new Dictionary<TKey, TValue>();

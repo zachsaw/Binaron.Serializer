@@ -224,7 +224,7 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
-        internal class ObjectHandler<T> : MemberGetterHandlerBase<WriterState, object>
+        internal class ObjectHandler : MemberGetterHandlerBase<WriterState, object>
         {
             public ObjectHandler(MemberGetter<object> getter) : base(getter)
             {
