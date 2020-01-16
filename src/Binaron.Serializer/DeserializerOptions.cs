@@ -1,9 +1,10 @@
+using System.Collections.Generic;
 using Binaron.Serializer.CustomObject;
 
 namespace Binaron.Serializer
 {
-    public struct DeserializerOptions
+    public class DeserializerOptions
     {
-        public ICustomObjectFactory[] CustomObjectFactories { get; set; }
+        public List<ICustomObjectFactory> CustomObjectFactories { get; set; } = new List<ICustomObjectFactory>();
     }
 }

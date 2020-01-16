@@ -116,11 +116,9 @@ For serialization / deserialization, you'll need to provide the PersonIdentifier
 
 ```C#
 
-var identifiers = new ICustomObjectIdentifierProvider[] {new PersonIdentifierProvider()};
-BinaronConvert.Serialize(person, stream, new SerializerOptions {SkipNullValues = true, CustomObjectIdentifierProviders = identifiers});
+BinaronConvert.Serialize(person, stream, new SerializerOptions {SkipNullValues = true, CustomObjectIdentifierProviders = {new PersonIdentifierProvider()}});
 
-var factories = new ICustomObjectFactory[] {new PersonFactory()};
-var person = BinaronConvert.Deserialize<IPerson>(stream, new DeserializerOptions {CustomObjectFactories = factories});
+var person = BinaronConvert.Deserialize<IPerson>(stream, new DeserializerOptions {CustomObjectFactories = {new PersonFactory()}});
 
 ```
 

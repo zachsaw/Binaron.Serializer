@@ -32,12 +32,10 @@ namespace Binaron.Serializer.Tests
             var obj = CreatedNestedStructure();
 
             await using var stream = new MemoryStream();
-            var objectIdentifierProviders = new ICustomObjectIdentifierProvider[] {new NodeObjectIdentifierProvider()};
-            BinaronConvert.Serialize(obj, stream, new SerializerOptions {SkipNullValues = true, CustomObjectIdentifierProviders = objectIdentifierProviders});
+            BinaronConvert.Serialize(obj, stream, new SerializerOptions {SkipNullValues = true, CustomObjectIdentifierProviders = {new NodeObjectIdentifierProvider()}});
 
             stream.Position = 0;
-            var customObjectFactories = new ICustomObjectFactory[] {new NodeObjectFactory()};
-            var result = BinaronConvert.Deserialize<Nested>(stream, new DeserializerOptions {CustomObjectFactories = customObjectFactories});
+            var result = BinaronConvert.Deserialize<Nested>(stream, new DeserializerOptions {CustomObjectFactories = {new NodeObjectFactory()}});
 
             stream.Position = 0;
             dynamic dynamicResult = BinaronConvert.Deserialize(stream);

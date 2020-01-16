@@ -15,7 +15,9 @@ namespace Binaron.Serializer.Infrastructure
         {
             writer = new BinaryWriter(stream);
             SkipNullValues = options.SkipNullValues;
-            CustomObjectIdentifierProviders = options.CustomObjectIdentifierProviders?.ToDictionary(handler => handler.BaseType, handler => handler);
+            var identifierProviders = options.CustomObjectIdentifierProviders?.ToDictionary(handler => handler.BaseType, handler => handler);
+            if (identifierProviders?.Any() == true)
+                CustomObjectIdentifierProviders = identifierProviders;
         }
 
         ~WriterState()

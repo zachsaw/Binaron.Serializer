@@ -14,7 +14,9 @@ namespace Binaron.Serializer.Infrastructure
         public ReaderState(Stream stream, DeserializerOptions options)
         {
             reader = new BinaryReader(stream);
-            CustomObjectFactories = options.CustomObjectFactories?.ToDictionary(handler => handler.BaseType, handler => handler);
+            var factories = options.CustomObjectFactories?.ToDictionary(handler => handler.BaseType, handler => handler);
+            if (factories?.Any() == true)
+                CustomObjectFactories = factories;
         }
 
         public Dictionary<Type, ICustomObjectFactory> CustomObjectFactories { get; }
