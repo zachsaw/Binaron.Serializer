@@ -39,6 +39,9 @@ namespace Binaron.Serializer.Tests
             var customObjectFactories = new ICustomObjectFactory[] {new NodeObjectFactory()};
             var result = BinaronConvert.Deserialize<Nested>(stream, new DeserializerOptions {CustomObjectFactories = customObjectFactories});
 
+            stream.Position = 0;
+            dynamic dynamicResult = BinaronConvert.Deserialize(stream);
+
             Assert.IsNull(result.Annotation1);
             Assert.IsNull(result.Annotation2);
 
@@ -56,6 +59,8 @@ namespace Binaron.Serializer.Tests
             var innerNestedNode = value.InnerNested.Nodes["InnerNode1"];
             Assert.AreEqual("InnerDerivedNode1", innerNestedNode.Name);
             Assert.AreEqual(true, ((DerivedNode) innerNestedNode).IsSelected);
+
+            Assert.NotNull(dynamicResult.Nodes["One"]);
         }
 
         private static Nested CreatedNestedStructure()
