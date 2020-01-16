@@ -8,177 +8,177 @@ namespace Binaron.Serializer.Accessors
 {
     internal static class MemberSetterHandlers
     {
-        internal class BoolHandler : MemberSetterHandlerBase<BinaryReader, bool>
+        internal class BoolHandler : MemberSetterHandlerBase<ReaderState, bool>
         {
             public BoolHandler(MemberSetter<bool> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override bool HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsBool(reader);
+            protected override bool HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsBool(reader);
         }
 
-        internal class ByteHandler : MemberSetterHandlerBase<BinaryReader, byte>
+        internal class ByteHandler : MemberSetterHandlerBase<ReaderState, byte>
         {
             public ByteHandler(MemberSetter<byte> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override byte HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsByte(reader);
+            protected override byte HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsByte(reader);
         }
 
-        internal class CharHandler : MemberSetterHandlerBase<BinaryReader, char>
+        internal class CharHandler : MemberSetterHandlerBase<ReaderState, char>
         {
             public CharHandler(MemberSetter<char> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override char HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsChar(reader);
+            protected override char HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsChar(reader);
         }
 
-        internal class DateTimeHandler : MemberSetterHandlerBase<BinaryReader, DateTime>
+        internal class DateTimeHandler : MemberSetterHandlerBase<ReaderState, DateTime>
         {
             public DateTimeHandler(MemberSetter<DateTime> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override DateTime HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsDateTime(reader);
+            protected override DateTime HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsDateTime(reader);
         }
 
-        internal class DecimalHandler : MemberSetterHandlerBase<BinaryReader, decimal>
+        internal class DecimalHandler : MemberSetterHandlerBase<ReaderState, decimal>
         {
             public DecimalHandler(MemberSetter<decimal> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override decimal HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsDecimal(reader);
+            protected override decimal HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsDecimal(reader);
         }
 
-        internal class DoubleHandler : MemberSetterHandlerBase<BinaryReader, double>
+        internal class DoubleHandler : MemberSetterHandlerBase<ReaderState, double>
         {
             public DoubleHandler(MemberSetter<double> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override double HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsDouble(reader);
+            protected override double HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsDouble(reader);
         }
 
-        internal class ShortHandler : MemberSetterHandlerBase<BinaryReader, short>
+        internal class ShortHandler : MemberSetterHandlerBase<ReaderState, short>
         {
             public ShortHandler(MemberSetter<short> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override short HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsShort(reader);
+            protected override short HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsShort(reader);
         }
 
-        internal class IntHandler : MemberSetterHandlerBase<BinaryReader, int>
+        internal class IntHandler : MemberSetterHandlerBase<ReaderState, int>
         {
             public IntHandler(MemberSetter<int> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override int HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsInt(reader);
+            protected override int HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsInt(reader);
         }
 
-        internal class LongHandler : MemberSetterHandlerBase<BinaryReader, long>
+        internal class LongHandler : MemberSetterHandlerBase<ReaderState, long>
         {
             public LongHandler(MemberSetter<long> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override long HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsLong(reader);
+            protected override long HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsLong(reader);
         }
 
-        internal class SByteHandler : MemberSetterHandlerBase<BinaryReader, sbyte>
+        internal class SByteHandler : MemberSetterHandlerBase<ReaderState, sbyte>
         {
             public SByteHandler(MemberSetter<sbyte> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override sbyte HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsSByte(reader);
+            protected override sbyte HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsSByte(reader);
         }
 
-        internal class FloatHandler : MemberSetterHandlerBase<BinaryReader, float>
+        internal class FloatHandler : MemberSetterHandlerBase<ReaderState, float>
         {
             public FloatHandler(MemberSetter<float> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override float HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsFloat(reader);
+            protected override float HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsFloat(reader);
         }
 
-        internal class UShortHandler : MemberSetterHandlerBase<BinaryReader, ushort>
+        internal class UShortHandler : MemberSetterHandlerBase<ReaderState, ushort>
         {
             public UShortHandler(MemberSetter<ushort> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override ushort HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsUShort(reader);
+            protected override ushort HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsUShort(reader);
         }
 
-        internal class UIntHandler : MemberSetterHandlerBase<BinaryReader, uint>
+        internal class UIntHandler : MemberSetterHandlerBase<ReaderState, uint>
         {
             public UIntHandler(MemberSetter<uint> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override uint HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsUInt(reader);
+            protected override uint HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsUInt(reader);
         }
 
-        internal class ULongHandler : MemberSetterHandlerBase<BinaryReader, ulong>
+        internal class ULongHandler : MemberSetterHandlerBase<ReaderState, ulong>
         {
             public ULongHandler(MemberSetter<ulong> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override ulong HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsULong(reader);
+            protected override ulong HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsULong(reader);
         }
 
-        internal class StringHandler : MemberSetterHandlerBase<BinaryReader, string>
+        internal class StringHandler : MemberSetterHandlerBase<ReaderState, string>
         {
             public StringHandler(MemberSetter<string> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override string HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsString(reader);
+            protected override string HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsString(reader);
         }
 
-        internal class StructObjectHandler<T> : MemberSetterHandlerBase<BinaryReader, object> where T : struct
+        internal class StructObjectHandler<T> : MemberSetterHandlerBase<ReaderState, object> where T : struct
         {
             public StructObjectHandler(MemberSetter<object> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override object HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
+            protected override object HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
         }
 
-        internal class ClassObjectHandler<T> : MemberSetterHandlerBase<BinaryReader, object> where T : class
+        internal class ClassObjectHandler<T> : MemberSetterHandlerBase<ReaderState, object> where T : class
         {
             public ClassObjectHandler(MemberSetter<object> setter) : base(setter)
             {
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override object HandleInternal(BinaryReader reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
+            protected override object HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsObject<T>(reader);
         }
 
-        internal class ObjectHandler : MemberSetterHandlerBase<BinaryReader, object>
+        internal class ObjectHandler : MemberSetterHandlerBase<ReaderState, object>
         {
             private readonly IHandler handler;
 
@@ -191,19 +191,22 @@ namespace Binaron.Serializer.Accessors
             private interface IHandler
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                object Handle(BinaryReader reader);
+                object Handle(ReaderState reader);
             }
 
             private class Handler<T> : IHandler
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public object Handle(BinaryReader reader)
+                public object Handle(ReaderState reader)
                 {
                     var valueType = (SerializedType) reader.Read<byte>();
                     switch (valueType)
                     {
                         case SerializedType.Null:
                             return null;
+                        case SerializedType.CustomObject:
+                            var identifier = Deserializer.ReadValue(reader);
+                            return TypedDeserializer.ReadObject<T>(reader, identifier);
                         case SerializedType.Object:
                             return TypedDeserializer.ReadObject<T>(reader);
                         case SerializedType.Dictionary:
@@ -249,7 +252,7 @@ namespace Binaron.Serializer.Accessors
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override object HandleInternal(BinaryReader reader) => handler.Handle(reader);
+            protected override object HandleInternal(ReaderState reader) => handler.Handle(reader);
         }
     }
 }

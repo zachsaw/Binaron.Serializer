@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using Binaron.Serializer.CustomObject;
 
 namespace Binaron.Serializer.Infrastructure
 {
@@ -12,14 +15,16 @@ namespace Binaron.Serializer.Infrastructure
         {
             writer = new BinaryWriter(stream);
             SkipNullValues = options.SkipNullValues;
+            CustomObjectIdentifierProviders = options.CustomObjectIdentifierProviders?.ToDictionary(handler => handler.BaseType, handler => handler);
         }
-        
+
         ~WriterState()
         {
             Dispose();
         }
         
         public bool SkipNullValues { get; }
+        public Dictionary<Type, ICustomObjectIdentifierProvider> CustomObjectIdentifierProviders { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write<T>(T value) where T : unmanaged => writer.Write(value);

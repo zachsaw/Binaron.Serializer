@@ -25,7 +25,7 @@ namespace Binaron.Serializer.Infrastructure
             public static IGenericEnumerableWriter CreateWriter<T>()
             {
                 var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
-                if (elementType == null)
+                if (elementType == null || elementType == typeof(object))
                     return null;
 
                 return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType));
@@ -245,7 +245,7 @@ namespace Binaron.Serializer.Infrastructure
             public static IGenericListWriter CreateWriter<T>()
             {
                 var elementType = GenericType.GetICollectionGenericType<T>.Type;
-                if (elementType == null)
+                if (elementType == null || elementType == typeof(object))
                     return null;
 
                 return (IGenericListWriter) (typeof(T).IsArray
@@ -275,6 +275,7 @@ namespace Binaron.Serializer.Infrastructure
         public static bool WriteList<T>(WriterState writer, ICollection list)
         {
             var listType = typeof(T);
+
             var elementType = GenericType.GetICollectionGenericType<T>.Type;
             if (elementType == null)
                 return false;
@@ -460,11 +461,7 @@ namespace Binaron.Serializer.Infrastructure
 
         public static void WriteDictionary<T>(WriterState writer, T dictionary) => WriteDictionary(writer, dictionary, GenericType.GetIDictionaryWriterGenericTypes<T>.Types);
 
-        public static bool WriteDictionary(WriterState writer, object dictionary)
-        {
-            var types = GenericType.GetIDictionaryWriter(dictionary.GetType());
-            return WriteDictionary(writer, dictionary, types);
-        }
+        public static bool WriteDictionary(WriterState writer, object dictionary) => WriteDictionary(writer, dictionary, GenericType.GetIDictionaryWriter(dictionary.GetType()));
 
         private static bool WriteDictionary(WriterState writer, object dictionary, (Type KeyType, Type ValueType) types)
         {
@@ -474,7 +471,6 @@ namespace Binaron.Serializer.Infrastructure
             var writeAll = GetDictionaryWriter(types);
             writeAll(writer, dictionary);
             return true;
-
         }
 
         private static Action<WriterState, object> GetDictionaryWriter((Type KeyType, Type ValueType) types) => DictionaryAdders.GetOrAdd(types, _ =>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Binaron.Serializer.Infrastructure;
-using BinaryReader = Binaron.Serializer.Infrastructure.BinaryReader;
 
 namespace Binaron.Serializer
 {
@@ -9,13 +8,33 @@ namespace Binaron.Serializer
     {
         public static object Deserialize(Stream stream)
         {
-            using var reader = new BinaryReader(stream);
+            using var reader = new ReaderState(stream, new DeserializerOptions());
             return Deserializer.ReadValue(reader);
         }
 
         public static T Deserialize<T>(Stream stream)
         {
-            using var reader = new BinaryReader(stream);
+            using var reader = new ReaderState(stream, new DeserializerOptions());
+            var result = TypedDeserializer.ReadValue<T>(reader);
+            try
+            {
+                return (T) result;
+            }
+            catch (NullReferenceException) // faster than checking if result is null since most results won't be null
+            {
+                return default;
+            }
+        }
+
+        public static object Deserialize(Stream stream, DeserializerOptions options)
+        {
+            using var reader = new ReaderState(stream, options);
+            return Deserializer.ReadValue(reader);
+        }
+
+        public static T Deserialize<T>(Stream stream, DeserializerOptions options)
+        {
+            using var reader = new ReaderState(stream, options);
             var result = TypedDeserializer.ReadValue<T>(reader);
             try
             {

@@ -57,11 +57,77 @@ var dynamicBook = BinaronConvert.Deserialize(stream);
 // ...
 ```
 
+# Polymorphism support
+
+Binaron.Serializer can be configured to support serialization / deserialization of interfaces and abstract types.
+
+```C#
+
+public interface IPerson
+{
+    string FirstName { get; set; }
+    string LastName { get; set; }
+    DateTime BirthDate { get; set; }
+}
+
+public class Employee : IPerson
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public DateTime BirthDate { get; set; }
+
+    public string Department { get; set; }
+    public string JobTitle { get; set; }
+}
+
+public class Customer : IPerson
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public DateTime BirthDate { get; set; }
+
+    public string Email { get; set; }
+}
+
+public class PersonIdentifierProvider : CustomObjectIdentifierProvider<IPerson>
+{
+    public override object GetIdentifier(Type objectType) => objectType.Name;
+}
+
+public class PersonFactory : CustomObjectFactory<IPerson>
+{
+    public override object Create(object identifier)
+    {
+        return (identifier as string) switch
+        {
+            nameof(Employee) => new Employee(),
+            nameof(Customer) => new Customer(),
+            _ => null
+        };
+    }
+}
+
+```
+
+If you are using a service provider, you would use it in the `PersonFactory` to construct `Employee` and `Customer` instead.
+
+For serialization / deserialization, you'll need to provide the PersonIdentifierProvider as well as the PersonFactory as follows.
+
+```C#
+
+var identifiers = new ICustomObjectIdentifierProvider[] {new PersonIdentifierProvider()};
+BinaronConvert.Serialize(person, stream, new SerializerOptions {SkipNullValues = true, CustomObjectIdentifierProviders = identifiers});
+
+var factories = new ICustomObjectFactory[] {new PersonFactory()};
+var person = BinaronConvert.Deserialize<IPerson>(stream, new DeserializerOptions {CustomObjectFactories = factories});
+
+```
+
 ## Limitations
 
-Binary.Serializer currently only supports null value skipping in its serializer options. It does not support property ignore attributes yet. It also does not support deserialization of interfaces / abstract classes. These features will be implemented in the future.
+Binaron.Serializer currently only supports null value skipping in its serializer options. It does not support property ignore attributes yet. This will be implemented in the future (Feel free to contribute via Pull Requests).
 
-Binary.Serializer also uses and relies heavily on the newly released features of `.net standard 2.1` for maximum performance and thus is only compatible with `.net core app 3.0` and above.
+Binaron.Serializer also uses and relies heavily on the newly released features of `.net standard 2.1` for maximum performance and thus is only compatible with `.net core app 3.0` and above.
 
 ## High unit test coverage
 

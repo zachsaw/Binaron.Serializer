@@ -8,19 +8,22 @@ namespace Binaron.Serializer.Infrastructure
     internal static class SelfUpgradingReader
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadAsObject<T>(BinaryReader reader)
+        public static object ReadAsObject<T>(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsObject<T>(reader, valueType);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadAsObject<T>(BinaryReader reader, SerializedType valueType)
+        public static object ReadAsObject<T>(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
                 case SerializedType.Null:
                     return null;
+                case SerializedType.CustomObject:
+                    var identifier = Deserializer.ReadValue(reader);
+                    return TypedDeserializer.ReadObject<T>(reader, identifier);
                 case SerializedType.Object:
                     return TypedDeserializer.ReadObject<T>(reader);
                 case SerializedType.Dictionary:
@@ -35,7 +38,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object ReadAsMiscObject<T>(BinaryReader reader, SerializedType valueType)
+        private static object ReadAsMiscObject<T>(ReaderState reader, SerializedType valueType)
         {
             var result = Deserializer.ReadValue(reader, valueType);
             return typeof(T) == typeof(object) ? result : GetNullableOrDefault<T>(result);
@@ -150,14 +153,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ReadAsBool(BinaryReader reader)
+        public static bool ReadAsBool(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsBool(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool? ReadAsBool(BinaryReader reader, SerializedType valueType)
+        public static bool? ReadAsBool(ReaderState reader, SerializedType valueType)
         {
             if (valueType == SerializedType.Bool)
                 return Reader.ReadBool(reader);
@@ -167,14 +170,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte ReadAsByte(BinaryReader reader)
+        public static byte ReadAsByte(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsByte(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte? ReadAsByte(BinaryReader reader, SerializedType valueType)
+        public static byte? ReadAsByte(ReaderState reader, SerializedType valueType)
         {
             if (valueType == SerializedType.Byte)
                 return Reader.ReadByte(reader);
@@ -184,14 +187,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static char ReadAsChar(BinaryReader reader)
+        public static char ReadAsChar(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsChar(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static char? ReadAsChar(BinaryReader reader, SerializedType valueType)
+        public static char? ReadAsChar(ReaderState reader, SerializedType valueType)
         {
             if (valueType == SerializedType.Char)
                 return Reader.ReadChar(reader);
@@ -201,14 +204,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime ReadAsDateTime(BinaryReader reader)
+        public static DateTime ReadAsDateTime(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsDateTime(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime? ReadAsDateTime(BinaryReader reader, SerializedType valueType)
+        public static DateTime? ReadAsDateTime(ReaderState reader, SerializedType valueType)
         {
             if (valueType == SerializedType.DateTime)
                 return Reader.ReadDateTime(reader);
@@ -218,14 +221,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal ReadAsDecimal(BinaryReader reader)
+        public static decimal ReadAsDecimal(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsDecimal(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal? ReadAsDecimal(BinaryReader reader, SerializedType valueType)
+        public static decimal? ReadAsDecimal(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -254,14 +257,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double ReadAsDouble(BinaryReader reader)
+        public static double ReadAsDouble(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsDouble(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double? ReadAsDouble(BinaryReader reader, SerializedType valueType)
+        public static double? ReadAsDouble(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -292,14 +295,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static short ReadAsShort(BinaryReader reader)
+        public static short ReadAsShort(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsShort(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static short? ReadAsShort(BinaryReader reader, SerializedType valueType)
+        public static short? ReadAsShort(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -316,14 +319,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ReadAsInt(BinaryReader reader)
+        public static int ReadAsInt(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsInt(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int? ReadAsInt(BinaryReader reader, SerializedType valueType)
+        public static int? ReadAsInt(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -344,14 +347,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long ReadAsLong(BinaryReader reader)
+        public static long ReadAsLong(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsLong(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long? ReadAsLong(BinaryReader reader, SerializedType valueType)
+        public static long? ReadAsLong(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -376,14 +379,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static sbyte ReadAsSByte(BinaryReader reader)
+        public static sbyte ReadAsSByte(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsSByte(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static sbyte? ReadAsSByte(BinaryReader reader, SerializedType valueType)
+        public static sbyte? ReadAsSByte(ReaderState reader, SerializedType valueType)
         {
             if (valueType == SerializedType.SByte)
                 return Reader.ReadSByte(reader);
@@ -393,14 +396,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float ReadAsFloat(BinaryReader reader)
+        public static float ReadAsFloat(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsFloat(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float? ReadAsFloat(BinaryReader reader, SerializedType valueType)
+        public static float? ReadAsFloat(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -429,14 +432,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort ReadAsUShort(BinaryReader reader)
+        public static ushort ReadAsUShort(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsUShort(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort? ReadAsUShort(BinaryReader reader, SerializedType valueType)
+        public static ushort? ReadAsUShort(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -451,14 +454,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint ReadAsUInt(BinaryReader reader)
+        public static uint ReadAsUInt(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsUInt(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint? ReadAsUInt(BinaryReader reader, SerializedType valueType)
+        public static uint? ReadAsUInt(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -475,14 +478,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong ReadAsULong(BinaryReader reader)
+        public static ulong ReadAsULong(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsULong(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong? ReadAsULong(BinaryReader reader, SerializedType valueType)
+        public static ulong? ReadAsULong(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {
@@ -501,14 +504,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ReadAsString(BinaryReader reader)
+        public static string ReadAsString(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadAsString(reader, valueType);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ReadAsString(BinaryReader reader, SerializedType valueType)
+        public static string ReadAsString(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {

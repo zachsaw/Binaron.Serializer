@@ -12,7 +12,7 @@ namespace Binaron.Serializer
     internal static class Deserializer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDictionary<string, object> ReadObject(BinaryReader reader)
+        public static IDictionary<string, object> ReadObject(ReaderState reader)
         {
             var expandoObject = (IDictionary<string, object>) new ExpandoObject();
             while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -25,7 +25,7 @@ namespace Binaron.Serializer
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDictionary ReadDictionary(BinaryReader reader)
+        public static IDictionary ReadDictionary(ReaderState reader)
         {
             var count = reader.Read<int>();
             var result = new Dictionary<object, object>(ListCapacity.Clamp(count));
@@ -39,7 +39,7 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object[] ReadList(BinaryReader reader)
+        public static object[] ReadList(ReaderState reader)
         {
             var count = reader.Read<int>();
             var list = new List<object>(ListCapacity.Clamp(count));
@@ -50,7 +50,7 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ICollection<object> ReadEnumerable(BinaryReader reader)
+        public static ICollection<object> ReadEnumerable(ReaderState reader)
         {
             var result = new List<object>();
             while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem) 
@@ -58,14 +58,14 @@ namespace Binaron.Serializer
             return result;
         }
 
-        public static object ReadValue(BinaryReader reader)
+        public static object ReadValue(ReaderState reader)
         {
             var valueType = (SerializedType) reader.Read<byte>();
             return ReadValue(reader, valueType);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadValue(BinaryReader reader, SerializedType valueType)
+        public static object ReadValue(ReaderState reader, SerializedType valueType)
         {
             switch (valueType)
             {

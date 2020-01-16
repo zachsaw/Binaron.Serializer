@@ -10,22 +10,22 @@ namespace Binaron.Serializer.Infrastructure
 {
     internal static class GenericReader
     {
-        private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Func<BinaryReader, object, int, (bool Success, object Result)>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Func<BinaryReader, object, int, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, (bool Success, object Result)>> ObjectAsDictionaryAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, int, bool, (bool Success, object Result)>> ListEnumAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, int, bool, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<Type, Func<BinaryReader, object, bool, (bool Success, object Result)>> EnumerableEnumAdders = new ConcurrentDictionary<Type, Func<BinaryReader, object, bool, (bool Success, object Result)>>();
+        private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Func<ReaderState, object, int, (bool Success, object Result)>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Func<ReaderState, object, int, (bool Success, object Result)>>();
+        private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>> ObjectAsDictionaryAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>>();
+        private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, int, bool, (bool Success, object Result)>> ListEnumAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, int, bool, (bool Success, object Result)>>();
+        private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, bool, (bool Success, object Result)>> EnumerableEnumAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, bool, (bool Success, object Result)>>();
 
         private static readonly ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary>();
         private static readonly ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List> ListResultObjectCreators = new ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List>();
         private static readonly ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List> EnumerableResultObjectCreators = new ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List>();
 
-        private static void Discard(BinaryReader reader)
+        private static void Discard(ReaderState reader)
         {
             while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
                 TypedDeserializer.DiscardValue(reader);
         }
         
-        public static object ReadEnums(BinaryReader reader, Type parentType, Type type)
+        public static object ReadEnums(ReaderState reader, Type parentType, Type type)
         {
             var result = CreateResultObject(parentType, type);
             var addAll = GetEnumerableEnumAdder(type);
@@ -37,7 +37,7 @@ namespace Binaron.Serializer.Infrastructure
             return result;
         }
 
-        public static object ReadTypedEnumerable<T, TElement>(BinaryReader reader)
+        public static object ReadTypedEnumerable<T, TElement>(ReaderState reader)
         {
             var parentType = typeof(T);
             var type = typeof(TElement);
@@ -66,7 +66,7 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        private static object ReadTypedEnumerable(BinaryReader reader, Type parentType, Type type)
+        private static object ReadTypedEnumerable(ReaderState reader, Type parentType, Type type)
         {
             switch (Type.GetTypeCode(type))
             {
@@ -359,15 +359,15 @@ namespace Binaron.Serializer.Infrastructure
             return null;
         }
 
-        private static Func<BinaryReader, object, bool, (bool Success, object Result)> GetEnumerableEnumAdder(Type type) => EnumerableEnumAdders.GetOrAdd(type, _ =>
+        private static Func<ReaderState, object, bool, (bool Success, object Result)> GetEnumerableEnumAdder(Type type) => EnumerableEnumAdders.GetOrAdd(type, _ =>
         {
             var method = typeof(EnumerableAdder).GetMethod(nameof(EnumerableAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
-            return (Func<BinaryReader, object, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, bool, (bool Success, object Result)>), null, method);
+            return (Func<ReaderState, object, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, bool, (bool Success, object Result)>), null, method);
         });
 
         private static class EnumerableAdder
         {
-            public static (bool Success, object Result) AddEnums<T>(BinaryReader reader, object list, bool convertToArray) where T : struct
+            public static (bool Success, object Result) AddEnums<T>(ReaderState reader, object list, bool convertToArray) where T : struct
             {
                 if (!(list is ICollection<T> l)) 
                     return (false, list);
@@ -401,13 +401,13 @@ namespace Binaron.Serializer.Infrastructure
 
         private static object CreateResultObject(Type parentType, Type type) => GetEnumerableResultObjectCreator(parentType, type).Create();
 
-        private static void Discard(BinaryReader reader, int count)
+        private static void Discard(ReaderState reader, int count)
         {
             for (var i = 0; i < count; i++)
                 TypedDeserializer.DiscardValue(reader);
         }
         
-        public static object ReadEnums(BinaryReader reader, Type parentType, Type type, int count)
+        public static object ReadEnums(ReaderState reader, Type parentType, Type type, int count)
         {
             var result = CreateResultObject(parentType, type, count);
             var addAll = GetListEnumAdder(type);
@@ -419,7 +419,7 @@ namespace Binaron.Serializer.Infrastructure
             return result;
         }
 
-        public static object ReadTypedList<T, TElement>(BinaryReader reader, int count)
+        public static object ReadTypedList<T, TElement>(ReaderState reader, int count)
         {
             var parentType = typeof(T);
             var type = typeof(TElement);
@@ -448,7 +448,7 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        private static object ReadTypedList(BinaryReader reader, Type parentType, Type type, int count)
+        private static object ReadTypedList(ReaderState reader, Type parentType, Type type, int count)
         {
             switch (Type.GetTypeCode(type))
             {
@@ -741,15 +741,15 @@ namespace Binaron.Serializer.Infrastructure
             return null;
         }
 
-        private static Func<BinaryReader, object, int, bool, (bool Success, object Result)> GetListEnumAdder(Type type) => ListEnumAdders.GetOrAdd(type, _ =>
+        private static Func<ReaderState, object, int, bool, (bool Success, object Result)> GetListEnumAdder(Type type) => ListEnumAdders.GetOrAdd(type, _ =>
         {
             var method = typeof(ListAdder).GetMethod(nameof(ListAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
-            return (Func<BinaryReader, object, int, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, int, bool, (bool Success, object Result)>), null, method);
+            return (Func<ReaderState, object, int, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, int, bool, (bool Success, object Result)>), null, method);
         });
 
         private static class ListAdder
         {
-            public static (bool Success, object Result) AddEnums<T>(BinaryReader reader, object list, int count, bool convertToArray) where T : struct
+            public static (bool Success, object Result) AddEnums<T>(ReaderState reader, object list, int count, bool convertToArray) where T : struct
             {
                 if (!(list is ICollection<T> l)) 
                     return (false, list);
@@ -781,7 +781,7 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
         
-        private static T? ReadEnum<T>(BinaryReader reader) where T : struct
+        private static T? ReadEnum<T>(ReaderState reader) where T : struct
         {
             var valueType = (SerializedType) reader.Read<byte>();
             switch (valueType)
@@ -822,7 +822,7 @@ namespace Binaron.Serializer.Infrastructure
             return result.Length == list.Count ? result : l.ToArray();
         }
 
-        public static object ReadObjectAsDictionary(BinaryReader reader, Type parentType, Type type)
+        public static object ReadObjectAsDictionary(ReaderState reader, Type parentType, Type type)
         {
             var result = CreateResultObject(parentType, (typeof(string), type));
             var addAll = GetObjectAsDictionaryAdder(type);
@@ -838,15 +838,15 @@ namespace Binaron.Serializer.Infrastructure
             return result;
         }
 
-        private static Func<BinaryReader, object, (bool Success, object Result)> GetObjectAsDictionaryAdder(Type type) => ObjectAsDictionaryAdders.GetOrAdd(type, _ =>
+        private static Func<ReaderState, object, (bool Success, object Result)> GetObjectAsDictionaryAdder(Type type) => ObjectAsDictionaryAdders.GetOrAdd(type, _ =>
         {
             var method = typeof(ObjectAsDictionaryAdder).GetMethod(nameof(ObjectAsDictionaryAdder.AddAll))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
-            return (Func<BinaryReader, object, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, (bool Success, object Result)>), null, method);
+            return (Func<ReaderState, object, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, (bool Success, object Result)>), null, method);
         });
 
         private static class ObjectAsDictionaryAdder
         {
-            public static (bool Success, object Result) AddAll<TValue>(BinaryReader reader, object dictionary)
+            public static (bool Success, object Result) AddAll<TValue>(ReaderState reader, object dictionary)
             {
                 if (!(dictionary is ICollection<KeyValuePair<string, TValue>> d)) 
                     return (false, dictionary);
@@ -856,7 +856,7 @@ namespace Binaron.Serializer.Infrastructure
                 return (true, d);
             }
 
-            private static void Add<TValue>(BinaryReader reader, ICollection<KeyValuePair<string, TValue>> dictionary)
+            private static void Add<TValue>(ReaderState reader, ICollection<KeyValuePair<string, TValue>> dictionary)
             {
                 do
                 {
@@ -882,7 +882,7 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        public static object ReadDictionary(BinaryReader reader, Type parentType, (Type KeyType, Type ValueType) type, int count)
+        public static object ReadDictionary(ReaderState reader, Type parentType, (Type KeyType, Type ValueType) type, int count)
         {
             var result = CreateResultObject(parentType, type, count);
             var addAll = GetDictionaryAdder(type);
@@ -898,15 +898,15 @@ namespace Binaron.Serializer.Infrastructure
             return result;
         }
         
-        private static Func<BinaryReader, object, int, (bool Success, object Result)> GetDictionaryAdder((Type KeyType, Type ValueType) type) => DictionaryAdders.GetOrAdd(type, _ =>
+        private static Func<ReaderState, object, int, (bool Success, object Result)> GetDictionaryAdder((Type KeyType, Type ValueType) type) => DictionaryAdders.GetOrAdd(type, _ =>
         {
             var method = typeof(DictionaryAdder).GetMethod(nameof(DictionaryAdder.AddAll))?.MakeGenericMethod(type.KeyType, type.ValueType) ?? throw new MissingMethodException();
-            return (Func<BinaryReader, object, int, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<BinaryReader, object, int, (bool Success, object Result)>), null, method);
+            return (Func<ReaderState, object, int, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, int, (bool Success, object Result)>), null, method);
         });
 
         private static class DictionaryAdder
         {
-            public static (bool Success, object Result) AddAll<TKey, TValue>(BinaryReader reader, object dictionary, int count)
+            public static (bool Success, object Result) AddAll<TKey, TValue>(ReaderState reader, object dictionary, int count)
             {
                 if (!(dictionary is ICollection<KeyValuePair<TKey, TValue>> d)) 
                     return (false, dictionary);
@@ -916,7 +916,7 @@ namespace Binaron.Serializer.Infrastructure
                 return (true, d);
             }
 
-            private static void Add<TKey, TValue>(BinaryReader reader, int count, ICollection<KeyValuePair<TKey, TValue>> dictionary)
+            private static void Add<TKey, TValue>(ReaderState reader, int count, ICollection<KeyValuePair<TKey, TValue>> dictionary)
             {
                 var i = 0;
                 do
