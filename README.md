@@ -57,7 +57,7 @@ var dynamicBook = BinaronConvert.Deserialize(stream);
 // ...
 ```
 
-# Polymorphism support
+### Polymorphism support
 
 Binaron.Serializer can be configured to support serialization / deserialization of interfaces and abstract types.
 
@@ -123,7 +123,7 @@ var person = BinaronConvert.Deserialize<IPerson>(stream, new DeserializerOptions
 
 ```
 
-# Ignore Attributes
+### Ignore Attributes
 
 Binaron.Serializer supports the following ignore attributes: `System.NonSerializedAttribute` and `System.Runtime.Serialization.IgnoreDataMemberAttribute`.
 
