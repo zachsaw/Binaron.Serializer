@@ -167,12 +167,6 @@ JSON was created for consumption of the old web days where Javascript had limite
 
 JSON does have its merits such as human readability. But, does machine really care about human readability? At what cost are we sacrificing performance - thus infra cost, latencies and ultimately user experience? If we really care about human readability, we could simply have the endpoint support two different types of accept-headers - one for JSON, the other Binary. In a normal day to day operation, you would go binary. For debugging purposes, give it a JSON only accept-header and you would get JSON sent back to you. How many microservices are doing this though?
 
-### Binary serializers are brittle, aren't they?
-
-No. Only the .NET BinaryFormatter is brittle because it serializes the type's full name (including namespace). It encodes exact type names etc, making it useless for archiving data such as in a document format for an application for example.
-
-Binaron.Serializer has the same brittleness as JSON serializers.
-
 ### What about protobuf?
 
 Granted there are myriad of libraries that have tried to do binary serialization. The most popular is arguably protobuf. All of these libraries are fast but they lack the one key feature that JSON serializers offer - the ability to serialize from / de-serialize to any unstructured object.
@@ -180,6 +174,12 @@ Granted there are myriad of libraries that have tried to do binary serialization
 For example, protobuf requires a schema to be defined for the structure of the object - i.e. a .proto file. This itself is a massive burden on the developers to learn, create, debug and maintain. What do you do if you're storing data in a NoSQL manner where data is simply unstructured?
 
 Unfortunately, all the binary serializers for .NET have one fundamental flaw - they assume your data is structured, including [ZeroFormatter](https://github.com/neuecc/ZeroFormatter).
+
+### But... Binary serializers are brittle, aren't they?
+
+No. Only the .NET BinaryFormatter is brittle because it serializes the type's full name (including namespace). It encodes exact type names etc, making it useless for archiving data such as in a document format for an application for example.
+
+Binaron.Serializer has the same brittleness as JSON serializers.
 
 ### TL;DR
 
