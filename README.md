@@ -147,7 +147,7 @@ public class Person
 
 ## Limitations
 
-Binaron.Serializer also uses and relies heavily on the newly released features of `.net standard 2.1` for maximum performance and thus is only compatible with `.net core app 3.0` and above.
+Binaron.Serializer uses and relies heavily on the newly released features of `.net standard 2.1` for maximum performance and thus is only compatible with `.net core app 3.0` and above.
 
 ## High unit test coverage
 
@@ -166,6 +166,12 @@ JSON was created for consumption of the old web days where Javascript had limite
 ### But... JSON is human readable
 
 JSON does have its merits such as human readability. But, does machine really care about human readability? At what cost are we sacrificing performance - thus infra cost, latencies and ultimately user experience? If we really care about human readability, we could simply have the endpoint support two different types of accept-headers - one for JSON, the other Binary. In a normal day to day operation, you would go binary. For debugging purposes, give it a JSON only accept-header and you would get JSON sent back to you. How many microservices are doing this though?
+
+### Binary serializers are brittle, aren't they?
+
+No. Only the .NET BinaryFormatter is brittle because it serializes the type's full name (including namespace). It encodes exact type names etc, making it useless for archiving data such as in a document format for an application for example.
+
+Binaron.Serializer has the same brittleness as JSON serializers.
 
 ### What about protobuf?
 
