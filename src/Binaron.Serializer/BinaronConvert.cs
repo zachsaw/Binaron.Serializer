@@ -40,6 +40,18 @@ namespace Binaron.Serializer
             }
         }
 
+        public static void Populate<T>(T obj, Stream stream)
+        {
+            using var reader = new ReaderState(stream, new DeserializerOptions());
+            TypedDeserializer.Populate(obj, reader);
+        }
+
+        public static void Populate<T>(T obj, Stream stream, DeserializerOptions options)
+        {
+            using var reader = new ReaderState(stream, options);
+            TypedDeserializer.Populate(obj, reader);
+        }
+
         public static void Serialize(object obj, Stream stream)
         {
             using var writer = new WriterState(stream, new SerializerOptions());

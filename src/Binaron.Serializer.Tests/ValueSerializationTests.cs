@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using Binaron.Serializer.CustomObject;
 using Binaron.Serializer.Tests.Extensions;
 using NUnit.Framework;
 
@@ -218,6 +220,51 @@ namespace Binaron.Serializer.Tests
             var val = new TestStruct<int?>();
             var dest = Tester.TestRoundTrip<TestStruct<int?>?>(val);
             Assert.AreEqual(null, dest?.Value);
+        }
+
+        [Test]
+        public void ObjectActivatorTest()
+        {
+            const int testVal = 100;
+
+            var val = new TestClass<int?>();
+            using var stream = new MemoryStream();
+            BinaronConvert.Serialize(val, stream, new SerializerOptions {SkipNullValues = true});
+            stream.Seek(0, SeekOrigin.Begin);
+            var dest = BinaronConvert.Deserialize<TestClass<int?>>(stream, new DeserializerOptions {ObjectActivator = new MyObjectActivator(testVal)});
+            Assert.AreEqual(testVal, dest.Value);
+        }
+
+        [Test]
+        public void PopulateObjectTest()
+        {
+            const int testVal = 100;
+
+            var val = new TestClass<int?> {RootValue = DateTime.MinValue};
+            using var stream = new MemoryStream();
+            BinaronConvert.Serialize(val, stream, new SerializerOptions {SkipNullValues = true});
+            stream.Seek(0, SeekOrigin.Begin);
+            var dest = new TestClass<int?> {Value = 100};
+            BinaronConvert.Populate(dest, stream);
+            Assert.AreEqual(testVal, dest.Value);
+            Assert.AreEqual(DateTime.MinValue, dest.RootValue);
+        }
+
+        private class MyObjectActivator : IObjectActivator
+        {
+            private readonly int value;
+
+            public MyObjectActivator(int value)
+            {
+                this.value = value;
+            }
+
+            public object Create(Type type)
+            {
+                var result = (TestClass<int?>) Activator.CreateInstance(type);
+                result.Value = value;
+                return result;
+            }
         }
 
         private static object GetExpectation<TSource>(TSource source) => typeof(TSource).IsEnum ? GetEnumNumeric(source) : source;
