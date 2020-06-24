@@ -122,6 +122,31 @@ var person = BinaronConvert.Deserialize<IPerson>(stream, new DeserializerOptions
 
 ```
 
+### Object Activator / Dependency Injection (DI) Support
+
+Binaron.Serializer can also be configured to support DI frameworks or any custom object activators.
+
+```C#
+
+public class ServiceProviderActivator : IObjectActivator
+{
+    private readonly IServiceProvider serviceProvider;
+
+    public ServiceProviderActivator(IServiceProvider serviceProvider)
+    {
+        this.serviceProvider = serviceProvider;
+    }
+
+    public object Create(Type type)
+    {
+        return ActivatorUtilities.CreateInstance(serviceProvider, type);
+    }
+}
+
+var person = BinaronConvert.Deserialize<Person>(stream, new DeserializerOptions {ObjectActivator = new ServiceProviderActivator(serviceProvider)});
+
+```
+
 ### Ignore Attributes
 
 Binaron.Serializer supports the following ignore attributes: `System.NonSerializedAttribute` and `System.Runtime.Serialization.IgnoreDataMemberAttribute`.
