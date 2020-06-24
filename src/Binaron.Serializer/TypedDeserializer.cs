@@ -261,6 +261,8 @@ namespace Binaron.Serializer
 
         private static object CreateDictionaryResultObject(Type type, int count) => GetDictionaryResultObjectCreator(type).Create(ListCapacity.Clamp(count));
 
+        public static void Populate<T>(T obj, ReaderState reader) => ObjectReaders.Populate<T>(reader, obj);
+
         private static class ObjectReaders
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -302,23 +304,25 @@ namespace Binaron.Serializer
                 if (typeof(IDictionary).IsAssignableFrom(typeInfo.ActualType))
                     return new DictionaryReader(typeInfo.Activate);
 
-                return new ObjectReader(typeInfo.Activate, typeInfo.Setters);
+                return new ObjectReader(type, typeInfo.Activate, typeInfo.Setters);
             }
 
             private class ObjectReader : IObjectReader
             {
+                private readonly Type type;
                 private readonly Func<object> activate;
                 private readonly IDictionary<string, IMemberSetterHandler<ReaderState>> setterHandlers;
 
-                public ObjectReader(Func<object> activate, IDictionary<string, IMemberSetterHandler<ReaderState>> setterHandlers)
+                public ObjectReader(Type type, Func<object> activate, IDictionary<string, IMemberSetterHandler<ReaderState>> setterHandlers)
                 {
+                    this.type = type;
                     this.activate = activate;
                     this.setterHandlers = setterHandlers;
                 }
 
                 public object Read(ReaderState reader)
                 {
-                    var result = activate();
+                    var result = reader.ObjectActivator?.Create(type) ?? activate();
                     Populate(result, reader, setterHandlers);
                     return result;
                 }

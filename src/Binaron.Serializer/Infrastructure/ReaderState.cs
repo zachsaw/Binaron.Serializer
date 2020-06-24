@@ -17,9 +17,12 @@ namespace Binaron.Serializer.Infrastructure
             var factories = options.CustomObjectFactories?.ToDictionary(handler => handler.BaseType, handler => handler);
             if (factories?.Any() == true)
                 CustomObjectFactories = factories;
+
+            ObjectActivator = options.ObjectActivator;
         }
 
         public Dictionary<Type, ICustomObjectFactory> CustomObjectFactories { get; }
+        public IObjectActivator ObjectActivator { get; }
 
         ~ReaderState()
         {
