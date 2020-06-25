@@ -519,6 +519,32 @@ namespace Binaron.Serializer.Infrastructure
                     return Reader.ReadString(reader);
                 case SerializedType.Char:
                     return new string(Reader.ReadChar(reader), 1);
+                case SerializedType.ULong:
+                    return Reader.ReadULong(reader).ToString(reader.CultureInfo);
+                case SerializedType.UInt:
+                    return Reader.ReadUInt(reader).ToString(reader.CultureInfo);
+                case SerializedType.UShort:
+                    return Reader.ReadUShort(reader).ToString(reader.CultureInfo);
+                case SerializedType.Byte:
+                    return Reader.ReadByte(reader).ToString(reader.CultureInfo);
+                case SerializedType.Long:
+                    return Reader.ReadLong(reader).ToString(reader.CultureInfo);
+                case SerializedType.Int:
+                    return Reader.ReadInt(reader).ToString(reader.CultureInfo);
+                case SerializedType.Short:
+                    return Reader.ReadShort(reader).ToString(reader.CultureInfo);
+                case SerializedType.SByte:
+                    return Reader.ReadSByte(reader).ToString(reader.CultureInfo);
+                case SerializedType.Decimal:
+                    return Reader.ReadDecimal(reader).ToString(reader.CultureInfo);
+                case SerializedType.Bool:
+                    return Reader.ReadBool(reader).ToString(reader.CultureInfo);
+                case SerializedType.Float:
+                    return Reader.ReadFloat(reader).ToString(reader.CultureInfo);
+                case SerializedType.Double:
+                    return Reader.ReadDouble(reader).ToString(reader.CultureInfo);
+                case SerializedType.DateTime:
+                    return Reader.ReadDateTime(reader).ToString(reader.CultureInfo);
                 default:
                     TypedDeserializer.DiscardValue(reader, valueType);
                     return null;

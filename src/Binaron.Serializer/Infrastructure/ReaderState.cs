@@ -19,10 +19,12 @@ namespace Binaron.Serializer.Infrastructure
                 CustomObjectFactories = factories;
 
             ObjectActivator = options.ObjectActivator;
+            CultureInfo = options.CultureInfo;
         }
 
         public Dictionary<Type, ICustomObjectFactory> CustomObjectFactories { get; }
         public IObjectActivator ObjectActivator { get; }
+        public IFormatProvider CultureInfo { get; }
 
         ~ReaderState()
         {
