@@ -23,7 +23,8 @@ namespace Binaron.Serializer.Creators
             {
                 var constructorInfo = type.GetConstructor(Type.EmptyTypes);
                 if (constructorInfo == null)
-                    throw new ArgumentException($"No parameterless constructor was found for type '{type.FullName}'", nameof(type));
+                    return null;
+
                 il.Emit(OpCodes.Newobj, constructorInfo);
                 il.Emit(OpCodes.Ret);
             }

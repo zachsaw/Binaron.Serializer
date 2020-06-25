@@ -302,7 +302,7 @@ namespace Binaron.Serializer
                     return new GenericDictionaryReader(type, valueType);
 
                 if (typeof(IDictionary).IsAssignableFrom(typeInfo.ActualType))
-                    return new DictionaryReader(typeInfo.Activate);
+                    return new DictionaryReader(type, typeInfo.Activate);
 
                 return new ObjectReader(type, typeInfo.Activate, typeInfo.Setters);
             }
@@ -322,7 +322,8 @@ namespace Binaron.Serializer
 
                 public object Read(ReaderState reader)
                 {
-                    var result = reader.ObjectActivator?.Create(type) ?? activate();
+                    var activator = reader.ObjectActivator;
+                    var result = activator == null ? (activate ?? throw NoParamlessCtorException(type))() : activator.Create(type);
                     Populate(result, reader, setterHandlers);
                     return result;
                 }
@@ -332,9 +333,9 @@ namespace Binaron.Serializer
             {
                 private readonly Func<object> activate;
 
-                public DictionaryReader(Func<object> activate)
+                public DictionaryReader(Type type, Func<object> activate)
                 {
-                    this.activate = activate;
+                    this.activate = activate ?? throw NoParamlessCtorException(type);
                 }
 
                 public object Read(ReaderState reader)
@@ -348,6 +349,11 @@ namespace Binaron.Serializer
                     }
                     return result;
                 }
+            }
+
+            private static Exception NoParamlessCtorException(Type type)
+            {
+                return new ArgumentException($"No parameterless constructor was found for type '{type.FullName}'", nameof(type));
             }
 
             private class GenericDictionaryReader : IObjectReader
