@@ -11,4 +11,5 @@ RUN dotnet test -c Release -v n
 RUN dotnet publish -c Release
 
 WORKDIR /opt/src/Binaron.Serializer/bin/Release
+RUN cp *.snupkg /artifacts/
 RUN cp *.nupkg /artifacts/
