@@ -84,6 +84,11 @@ namespace Binaron.Serializer
                 case ICollection list:
                     WriteList(writer, list);
                     break;
+                case IReadOnlyDictionary<string, object> roDictAsObj: // treat IReadOnlyDictionary<string, object> as Object type
+                    WriteReadOnlyDictionaryAsObject(writer, roDictAsObj);
+                    break;
+                case IEnumerable _ when GenericWriter.WriteReadOnlyDictionary(writer, val):
+                    break;
                 case IEnumerable enumerable:
                     WriteEnumerable(writer, enumerable);
                     break;
@@ -127,6 +132,21 @@ namespace Binaron.Serializer
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteDictionaryAsObject(WriterState writer, IDictionary<string, object> dictionary)
+        {
+            writer.Write((byte) SerializedType.Object);
+
+            foreach (var (key, value) in dictionary.Keys.Zip(dictionary.Values))
+            {
+                writer.Write((byte) EnumerableType.HasItem);
+                writer.WriteString(key);
+                WriteValue(writer, value);
+            }
+
+            writer.Write((byte) EnumerableType.End);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteReadOnlyDictionaryAsObject(WriterState writer, IReadOnlyDictionary<string, object> dictionary)
         {
             writer.Write((byte) SerializedType.Object);
 
@@ -284,14 +304,11 @@ namespace Binaron.Serializer
         {
             public static INonPrimitiveWriter<T> CreateWriter<T>()
             {
-                var types = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
-                if (types.KeyType != null)
-                {
-                    if (types.KeyType == typeof(string) && types.ValueType == typeof(object))
-                        return new DictionaryAsObjectWriter<T>();
+                if (TryCreateIDictionaryWriter(out INonPrimitiveWriter<T> writer1))
+                    return writer1;
 
-                    return new GenericDictionaryWriter<T>();
-                }
+                if (TryCreateIReadOnlyDictionaryWriter(out INonPrimitiveWriter<T> writer2))
+                    return writer2;
 
                 if (typeof(IDictionary).IsAssignableFrom(typeof(T)))
                     return (INonPrimitiveWriter<T>) Activator.CreateInstance(typeof(DictionaryWriter<>).MakeGenericType(typeof(T)));
@@ -305,16 +322,62 @@ namespace Binaron.Serializer
                 return new ObjectWriter<T>();
             }
 
+            private static bool TryCreateIDictionaryWriter<T>(out INonPrimitiveWriter<T> writer)
+            {
+                var (keyType, valueType) = GenericType.GetIDictionaryWriterGenericTypes<T>.Types;
+                if (keyType != null)
+                {
+                    if (keyType == typeof(string) && valueType == typeof(object))
+                        writer = new DictionaryAsObjectWriter<T>();
+                    else
+                        writer = new GenericDictionaryWriter<T>();
+                    
+                    return true;
+                }
+                
+                writer = null;
+                return false;
+            }
+
+            private static bool TryCreateIReadOnlyDictionaryWriter<T>(out INonPrimitiveWriter<T> writer)
+            {
+                var (keyType, valueType) = GenericType.GetIReadOnlyDictionaryWriterGenericTypes<T>.Types;
+                if (keyType != null)
+                {
+                    if (keyType == typeof(string) && valueType == typeof(object))
+                        writer = new ReadOnlyDictionaryAsObjectWriter<T>();
+                    else
+                        writer = new GenericReadOnlyDictionaryWriter<T>();
+                    
+                    return true;
+                }
+                
+                writer = null;
+                return false;
+            }
+
             private class DictionaryAsObjectWriter<T> : INonPrimitiveWriter<T>
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => WriteDictionaryAsObject(writer, (IDictionary<string, object>) val);
             }
 
+            private class ReadOnlyDictionaryAsObjectWriter<T> : INonPrimitiveWriter<T>
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => WriteReadOnlyDictionaryAsObject(writer, (IReadOnlyDictionary<string, object>) val);
+            }
+
             private class GenericDictionaryWriter<T> : INonPrimitiveWriter<T>
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Write(WriterState writer, T val) => GenericWriter.WriteDictionary(writer, val);
+            }
+
+            private class GenericReadOnlyDictionaryWriter<T> : INonPrimitiveWriter<T>
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Write(WriterState writer, T val) => GenericWriter.WriteReadOnlyDictionary(writer, val);
             }
 
             private class DictionaryWriter<T> : INonPrimitiveWriter<T> where T : IDictionary

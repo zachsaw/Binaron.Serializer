@@ -9,6 +9,7 @@ namespace Binaron.Serializer.Infrastructure
     internal static class GenericWriter
     {
         private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>>();
+        private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>> ReadOnlyDictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Action<WriterState, object>>();
 
         private interface IGenericEnumerableWriter
         {
@@ -459,10 +460,30 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
+        public static void WriteReadOnlyDictionary<T>(WriterState writer, T dictionary) => WriteReadOnlyDictionary(writer, dictionary, GenericType.GetIReadOnlyDictionaryWriterGenericTypes<T>.Types);
+
         public static void WriteDictionary<T>(WriterState writer, T dictionary) => WriteDictionary(writer, dictionary, GenericType.GetIDictionaryWriterGenericTypes<T>.Types);
+
+        public static bool WriteReadOnlyDictionary(WriterState writer, object dictionary) => WriteReadOnlyDictionary(writer, dictionary, GenericType.GetIReadOnlyDictionaryWriter(dictionary.GetType()));
 
         public static bool WriteDictionary(WriterState writer, object dictionary) => WriteDictionary(writer, dictionary, GenericType.GetIDictionaryWriter(dictionary.GetType()));
 
+        private static bool WriteReadOnlyDictionary(WriterState writer, object dictionary, (Type KeyType, Type ValueType) types)
+        {
+            if (types.KeyType == null) 
+                return false;
+            
+            var writeAll = GetReadOnlyDictionaryWriter(types);
+            writeAll(writer, dictionary);
+            return true;
+        }
+
+        private static Action<WriterState, object> GetReadOnlyDictionaryWriter((Type KeyType, Type ValueType) types) => ReadOnlyDictionaryAdders.GetOrAdd(types, _ =>
+        {
+            var method = typeof(DictionaryWriter).GetMethod(nameof(DictionaryWriter.WriteAllReadOnly))?.MakeGenericMethod(types.KeyType, types.ValueType) ?? throw new MissingMethodException();
+            return (Action<WriterState, object>) Delegate.CreateDelegate(typeof(Action<WriterState, object>), null, method);
+        });
+        
         private static bool WriteDictionary(WriterState writer, object dictionary, (Type KeyType, Type ValueType) types)
         {
             if (types.KeyType == null) 
@@ -481,6 +502,18 @@ namespace Binaron.Serializer.Infrastructure
 
         private static class DictionaryWriter
         {
+            public static void WriteAllReadOnly<TKey, TValue>(WriterState writer, object obj)
+            {
+                var dictionary = (IReadOnlyDictionary<TKey, TValue>) obj;
+                writer.Write((byte) SerializedType.Dictionary);
+                writer.Write(dictionary.Count);
+                foreach (var (key, value) in dictionary)
+                {
+                    Serializer.WriteValue(writer, key);
+                    Serializer.WriteValue(writer, value);
+                }
+            }
+            
             public static void WriteAll<TKey, TValue>(WriterState writer, object obj)
             {
                 var dictionary = (IDictionary<TKey, TValue>) obj;

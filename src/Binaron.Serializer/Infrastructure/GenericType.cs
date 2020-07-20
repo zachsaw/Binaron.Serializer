@@ -13,6 +13,7 @@ namespace Binaron.Serializer.Infrastructure
         private static readonly ConcurrentDictionary<Type, Type> EnumerableGenericTypeLookup = new ConcurrentDictionary<Type, Type>();
         private static readonly ConcurrentDictionary<Type, (Type KeyType, Type ValueType)> ReaderDictionaryGenericTypeLookup = new ConcurrentDictionary<Type, (Type KeyType, Type ValueType)>();
         private static readonly ConcurrentDictionary<Type, (Type KeyType, Type ValueType)> WriterDictionaryGenericTypeLookup = new ConcurrentDictionary<Type, (Type KeyType, Type ValueType)>();
+        private static readonly ConcurrentDictionary<Type, (Type KeyType, Type ValueType)> WriterReadOnlyDictionaryGenericTypeLookup = new ConcurrentDictionary<Type, (Type KeyType, Type ValueType)>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Type GetICollection(Type listType) => CollectionGenericTypeLookup.GetOrAdd(listType,
@@ -43,6 +44,14 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (Type KeyType, Type ValueType) GetIReadOnlyDictionaryWriter(Type dictionaryType) => WriterReadOnlyDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIReadOnlyDictionary(dictionaryType));
+
+        public static class GetIReadOnlyDictionaryWriterGenericTypes<T>
+        {
+            public static readonly (Type KeyType, Type ValueType) Types = GetIReadOnlyDictionaryWriter(typeof(T));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Type KeyType, Type ValueType) GetIDictionaryWriter(Type dictionaryType) => WriterDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIDictionary(dictionaryType));
 
         public static class GetIDictionaryWriterGenericTypes<T>
@@ -57,6 +66,15 @@ namespace Binaron.Serializer.Infrastructure
         {
             var results = dictionaryType.GetInterfaces().Concat(dictionaryType.Yield().Where(t => t.IsInterface))
                 .FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))?
+                .GenericTypeArguments;
+
+            return (results?[0], results?[1]);
+        }
+
+        private static (Type KeyType, Type ValueType) GetIReadOnlyDictionary(Type dictionaryType)
+        {
+            var results = dictionaryType.GetInterfaces().Concat(dictionaryType.Yield().Where(t => t.IsInterface))
+                .FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>))?
                 .GenericTypeArguments;
 
             return (results?[0], results?[1]);
