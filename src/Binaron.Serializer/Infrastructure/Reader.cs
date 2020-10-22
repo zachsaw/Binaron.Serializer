@@ -27,7 +27,8 @@ namespace Binaron.Serializer.Infrastructure
         public static DateTime ReadDateTime(ReaderState reader)
         {
             var ticks = reader.Read<long>();
-            return new DateTime(ticks, DateTimeKind.Utc);
+            var result = new DateTime(ticks, DateTimeKind.Utc);
+            return reader.TimeZoneInfo == null ? result : TimeZoneInfo.ConvertTimeFromUtc(result, reader.TimeZoneInfo);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
