@@ -237,6 +237,17 @@ namespace Binaron.Serializer.Tests
             Assert.AreEqual(testVal, dest.Value);
         }
 
+        [Test]
+        public void DeserializeToDateTimeLocal()
+        {
+            var dt = DateTime.Now;
+            using var stream = new MemoryStream();
+            BinaronConvert.Serialize(dt, stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            var dest = BinaronConvert.Deserialize<DateTime>(stream, new DeserializerOptions {TimeZoneInfo = TimeZoneInfo.Local});
+            Assert.AreEqual(dt, dest);
+        }
+
         public class BaseConfig
         {
             public string Name { get; set; } = "base name";

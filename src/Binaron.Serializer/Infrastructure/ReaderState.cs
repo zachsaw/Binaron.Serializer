@@ -20,11 +20,13 @@ namespace Binaron.Serializer.Infrastructure
 
             ObjectActivator = options.ObjectActivator;
             CultureInfo = options.CultureInfo;
+            TimeZoneInfo = options.TimeZoneInfo;
         }
 
         public Dictionary<Type, ICustomObjectFactory> CustomObjectFactories { get; }
         public IObjectActivator ObjectActivator { get; }
         public IFormatProvider CultureInfo { get; }
+        public TimeZoneInfo TimeZoneInfo { get; }
 
         ~ReaderState()
         {

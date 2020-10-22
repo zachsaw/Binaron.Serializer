@@ -9,5 +9,6 @@ namespace Binaron.Serializer
         public List<ICustomObjectFactory> CustomObjectFactories { get; set; } = new List<ICustomObjectFactory>();
         public IObjectActivator ObjectActivator { get; set; }
         public IFormatProvider CultureInfo { get; set; } = System.Globalization.CultureInfo.InvariantCulture;
+        public TimeZoneInfo TimeZoneInfo { get; set; }
     }
 }
