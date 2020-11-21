@@ -29,6 +29,9 @@ namespace Binaron.Serializer.Infrastructure
         public Dictionary<Type, ICustomObjectIdentifierProvider> CustomObjectIdentifierProviders { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Span<byte> Reserve(int length) => writer.Reserve(length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write<T>(T value) where T : unmanaged => writer.Write(value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Binaron.Serializer.Enums;
+using Binaron.Serializer.Extensions;
+using TypeCode = Binaron.Serializer.Enums.TypeCode;
 
 namespace Binaron.Serializer.Infrastructure
 {
@@ -88,67 +90,25 @@ namespace Binaron.Serializer.Infrastructure
         {
             public static object Upgrade<TFrom, TTo>(object val)
             {
-                switch (Type.GetTypeCode(typeof(TFrom)))
+                return TypeOf<TFrom>.TypeCode switch
                 {
-                    case TypeCode.Boolean:
-                    {
-                        return As<TTo>((bool) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Byte:
-                    {
-                        return As<TTo>((byte) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Char:
-                    {
-                        return As<TTo>((char) val, out var result) ? result : null;
-                    }
-                    case TypeCode.DateTime:
-                    {
-                        return As<TTo>((DateTime) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Decimal:
-                    {
-                        return As<TTo>((decimal) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Double:
-                    {
-                        return As<TTo>((double) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Int16:
-                    {
-                        return As<TTo>((short) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Int32:
-                    {
-                        return As<TTo>((int) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Int64:
-                    {
-                        return As<TTo>((long) val, out var result) ? result : null;
-                    }
-                    case TypeCode.SByte:
-                    {
-                        return As<TTo>((sbyte) val, out var result) ? result : null;
-                    }
-                    case TypeCode.Single:
-                    {
-                        return As<TTo>((float) val, out var result) ? result : null;
-                    }
-                    case TypeCode.UInt16:
-                    {
-                        return As<TTo>((ushort) val, out var result) ? result : null;
-                    }
-                    case TypeCode.UInt32:
-                    {
-                        return As<TTo>((uint) val, out var result) ? result : null;
-                    }
-                    case TypeCode.UInt64:
-                    {
-                        return As<TTo>((ulong) val, out var result) ? result : null;
-                    }
-                    default:
-                        return null;
-                }
+                    TypeCode.Boolean => As<TTo>((bool) val, out var result) ? result : null,
+                    TypeCode.Byte => As<TTo>((byte) val, out var result) ? result : null,
+                    TypeCode.Char => As<TTo>((char) val, out var result) ? result : null,
+                    TypeCode.DateTime => As<TTo>((DateTime) val, out var result) ? result : null,
+                    TypeCode.Guid => As<TTo>((Guid) val, out var result) ? result : null,
+                    TypeCode.Decimal => As<TTo>((decimal) val, out var result) ? result : null,
+                    TypeCode.Double => As<TTo>((double) val, out var result) ? result : null,
+                    TypeCode.Int16 => As<TTo>((short) val, out var result) ? result : null,
+                    TypeCode.Int32 => As<TTo>((int) val, out var result) ? result : null,
+                    TypeCode.Int64 => As<TTo>((long) val, out var result) ? result : null,
+                    TypeCode.SByte => As<TTo>((sbyte) val, out var result) ? result : null,
+                    TypeCode.Single => As<TTo>((float) val, out var result) ? result : null,
+                    TypeCode.UInt16 => As<TTo>((ushort) val, out var result) ? result : null,
+                    TypeCode.UInt32 => As<TTo>((uint) val, out var result) ? result : null,
+                    TypeCode.UInt64 => As<TTo>((ulong) val, out var result) ? result : null,
+                    _ => null
+                };
             }
         }
 
@@ -211,10 +171,27 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Guid ReadAsGuid(ReaderState reader)
+        {
+            var valueType = (SerializedType) reader.Read<byte>();
+            return ReadAsGuid(reader, valueType) ?? default;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime? ReadAsDateTime(ReaderState reader, SerializedType valueType)
         {
             if (valueType == SerializedType.DateTime)
                 return Reader.ReadDateTime(reader);
+
+            TypedDeserializer.DiscardValue(reader, valueType);
+            return null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Guid? ReadAsGuid(ReaderState reader, SerializedType valueType)
+        {
+            if (valueType == SerializedType.Guid)
+                return Reader.ReadGuid(reader);
 
             TypedDeserializer.DiscardValue(reader, valueType);
             return null;
@@ -545,6 +522,8 @@ namespace Binaron.Serializer.Infrastructure
                     return Reader.ReadDouble(reader).ToString(reader.CultureInfo);
                 case SerializedType.DateTime:
                     return Reader.ReadDateTime(reader).ToString(reader.CultureInfo);
+                case SerializedType.Guid:
+                    return Reader.ReadGuid(reader).ToString();
                 default:
                     TypedDeserializer.DiscardValue(reader, valueType);
                     return null;
@@ -554,7 +533,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(byte val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.Byte:
                 {
@@ -615,7 +594,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(sbyte val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.SByte:
                     result = val;
@@ -647,7 +626,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(ushort val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.UInt16:
                     result = val;
@@ -682,7 +661,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(short val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.Int16:
                     result = val;
@@ -711,7 +690,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(uint val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.UInt32:
                     result = val;
@@ -760,6 +739,19 @@ namespace Binaron.Serializer.Infrastructure
         private static bool As<T>(DateTime val, out object result)
         {
             if (typeof(T) == typeof(DateTime))
+            {
+                result = val;
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool As<T>(Guid val, out object result)
+        {
+            if (typeof(T) == typeof(Guid))
             {
                 result = val;
                 return true;
@@ -830,7 +822,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(long val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.Int64:
                     result = val;
@@ -853,7 +845,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(ulong val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.UInt64:
                     result = val;
@@ -876,7 +868,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool As<T>(int val, out object result)
         {
-            switch (Type.GetTypeCode(typeof(T)))
+            switch (TypeOf<T>.TypeCode)
             {
                 case TypeCode.Int32:
                     result = val;

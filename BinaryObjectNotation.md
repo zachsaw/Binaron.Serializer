@@ -27,7 +27,8 @@ Float      = 64 + 9,
 Double     = 64 + 10,
 Decimal    = 64 + 11,
 Bool       = 64 + 12,
-DateTime   = 64 + 13
+DateTime   = 64 + 13,
+Guid       = 64 + 14
 ```
 
 EnumerableType (byte) is defined as follows and is used for Object and Enumerable types:
@@ -156,6 +157,11 @@ Unsigned 64-bit integer value representing the number of 100-nanosecond interval
 |--:|:-------:|:-------:|
 |Min|0|1 Jan 0001 12:00:00 AM|
 |Max|3,155,378,975,999,999,999|(31 Dec 9999 11:59:59 PM)|
+
+### Guid
+`[Guid]`
+
+128-bit little-endian value representing a GUID
 
 ## Type Promotions
 

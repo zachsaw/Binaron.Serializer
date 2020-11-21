@@ -38,6 +38,21 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe ReadOnlySpan<byte> ReadBytes(int length)
+        {
+            if (bufferOffset + length > bufferLength)
+            {
+                Fill();
+                if (length > bufferLength)
+                    throw new EndOfStreamException();
+            }
+
+            var val = new ReadOnlySpan<byte>(buffer.Data + bufferOffset, length);
+            bufferOffset += length;
+            return val;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe T Read<T>() where T : unmanaged
         {
             if (bufferOffset + sizeof(T) > bufferLength)

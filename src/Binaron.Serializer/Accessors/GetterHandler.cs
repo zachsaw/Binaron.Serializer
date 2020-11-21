@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Binaron.Serializer.Extensions;
 using Binaron.Serializer.Infrastructure;
+using TypeCode = Binaron.Serializer.Enums.TypeCode;
 
 namespace Binaron.Serializer.Accessors
 {
@@ -37,7 +38,7 @@ namespace Binaron.Serializer.Accessors
             var memberType = handler.MemberInfo.GetMemberType();
             if (handler.MemberInfo is FieldInfo fi)
             {
-                switch (Type.GetTypeCode(memberType))
+                switch (memberType.GetTypeCode())
                 {
                     case TypeCode.Object:
                         return int.MaxValue;
@@ -46,7 +47,7 @@ namespace Binaron.Serializer.Accessors
                 }
             }
 
-            switch (Type.GetTypeCode(memberType))
+            switch (memberType.GetTypeCode())
             {
                 case TypeCode.Object:
                     return int.MaxValue;
@@ -59,7 +60,7 @@ namespace Binaron.Serializer.Accessors
         {
             var memberType = member.GetMemberType();
 
-            switch (Type.GetTypeCode(memberType))
+            switch (memberType.GetTypeCode())
             {
                 case TypeCode.Boolean:
                     return CreateHandlerForBool(type, member);
@@ -69,6 +70,8 @@ namespace Binaron.Serializer.Accessors
                     return CreateHandlerForChar(type, member);
                 case TypeCode.DateTime:
                     return CreateHandlerForDateTime(type, member);
+                case TypeCode.Guid:
+                    return CreateHandlerForGuid(type, member);
                 case TypeCode.Decimal:
                     return CreateHandlerForDecimal(type, member);
                 case TypeCode.Double:
@@ -118,6 +121,12 @@ namespace Binaron.Serializer.Accessors
         {
             var getter = new MemberGetter<DateTime>(type, prop.Name);
             return !getter.IsValid ? null : new MemberGetterHandlers.DateTimeHandler(getter);
+        }
+
+        private static IMemberGetterHandler<WriterState> CreateHandlerForGuid(Type type, MemberInfo prop)
+        {
+            var getter = new MemberGetter<Guid>(type, prop.Name);
+            return !getter.IsValid ? null : new MemberGetterHandlers.GuidHandler(getter);
         }
 
         private static IMemberGetterHandler<WriterState> CreateHandlerForDecimal(Type type, MemberInfo prop)

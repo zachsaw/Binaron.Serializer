@@ -15,7 +15,20 @@ namespace Binaron.Serializer.Tests
             using var stream = new MemoryStream();
             BinaronConvert.Serialize(source, stream);
             stream.Seek(0, SeekOrigin.Begin);
-            Assert.Throws<NotSupportedException>(() => Converter.Deserialize(destType, stream));
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                try
+                {
+                    Converter.Deserialize(destType, stream);
+                }
+                catch (TypeInitializationException ex)
+                {
+                    if (ex.InnerException is NotSupportedException)
+                        throw ex.InnerException;
+                    
+                    throw;
+                }
+            });
         }
 
         private static IEnumerable<TestCaseData> TestCases()

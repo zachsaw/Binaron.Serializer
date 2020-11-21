@@ -63,6 +63,20 @@ namespace Binaron.Serializer.Accessors
             }
         }
 
+        internal class GuidHandler : MemberGetterHandlerBase<WriterState, Guid>
+        {
+            public GuidHandler(MemberGetter<Guid> getter) : base(getter)
+            {
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            protected override void HandleInternal(WriterState writer, Guid val)
+            {
+                WriteMemberName(writer, MemberName);
+                Writer.Write(writer, val);
+            }
+        }
+
         internal class DecimalHandler : MemberGetterHandlerBase<WriterState, decimal>
         {
             public DecimalHandler(MemberGetter<decimal> getter) : base(getter)

@@ -65,6 +65,10 @@ namespace Binaron.Serializer.Tests
             yield return new TestCaseData(now, now);
             yield return new TestCaseData(now, 0);
 
+            var guid = Guid.NewGuid();
+            yield return new TestCaseData(guid, guid);
+            yield return new TestCaseData(guid, 0);
+
             yield return new TestCaseData(TestByteEnum.Max, TestByteEnum.Max);
             yield return new TestCaseData("Invalid", TestByteEnum.Min);
 

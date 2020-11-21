@@ -44,6 +44,17 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe Span<byte> Reserve(int length)
+        {
+            if (bufferOffset + length > buffer.Length)
+                Flush();
+
+            var result = buffer.Data + bufferOffset;
+            bufferOffset += length;
+            return new Span<byte>(result, length);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void Write<T>(T value) where T : unmanaged
         {
             if (bufferOffset + sizeof(T) > buffer.Length)

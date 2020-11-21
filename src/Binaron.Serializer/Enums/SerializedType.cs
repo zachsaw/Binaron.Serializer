@@ -22,6 +22,7 @@ namespace Binaron.Serializer.Enums
         Double       = 64 + 10,
         Decimal      = 64 + 11,
         Bool         = 64 + 12,
-        DateTime     = 64 + 13
+        DateTime     = 64 + 13,
+        Guid         = 64 + 14
     }
 }
