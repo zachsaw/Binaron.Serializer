@@ -5,6 +5,7 @@ using System.Linq;
 using Binaron.Serializer.Creators;
 using Binaron.Serializer.Enums;
 using Binaron.Serializer.Extensions;
+using TypeCode = Binaron.Serializer.Enums.TypeCode;
 
 namespace Binaron.Serializer.Infrastructure
 {
@@ -12,12 +13,7 @@ namespace Binaron.Serializer.Infrastructure
     {
         private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Func<ReaderState, object, int, (bool Success, object Result)>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Func<ReaderState, object, int, (bool Success, object Result)>>();
         private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>> ObjectAsDictionaryAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, int, bool, (bool Success, object Result)>> ListEnumAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, int, bool, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, bool, (bool Success, object Result)>> EnumerableEnumAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, bool, (bool Success, object Result)>>();
-
         private static readonly ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary>();
-        private static readonly ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List> ListResultObjectCreators = new ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List>();
-        private static readonly ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List> EnumerableResultObjectCreators = new ConcurrentDictionary<(Type ParentType, Type Type), GenericResultObjectCreator.List>();
 
         private static void Discard(ReaderState reader)
         {
@@ -25,11 +21,11 @@ namespace Binaron.Serializer.Infrastructure
                 TypedDeserializer.DiscardValue(reader);
         }
         
-        public static object ReadEnums(ReaderState reader, Type parentType, Type type)
+        public static object ReadEnums<T, TElement>(ReaderState reader)
         {
-            var result = CreateResultObject(parentType, type);
-            var addAll = GetEnumerableEnumAdder(type);
-            var (success, addedResult) = addAll(reader, result, parentType.IsArray);
+            var result = CreateResultObject<T, TElement>();
+            var addAll = EnumerableEnumAdder<TElement>.Adder;
+            var (success, addedResult) = addAll(reader, result, typeof(T).IsArray);
             if (success)
                 return addedResult;
 
@@ -39,13 +35,11 @@ namespace Binaron.Serializer.Infrastructure
 
         public static object ReadTypedEnumerable<T, TElement>(ReaderState reader)
         {
-            var parentType = typeof(T);
-            var type = typeof(TElement);
-            switch (Type.GetTypeCode(type))
+            switch (TypeOf<TElement>.TypeCode)
             {
                 case TypeCode.Object:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<TElement> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -55,24 +49,15 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add((TElement) v);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
                     return result;
                 }
-                default:
-                    return ReadTypedEnumerable(reader, parentType, type);
-            }
-        }
-
-        private static object ReadTypedEnumerable(ReaderState reader, Type parentType, Type type)
-        {
-            switch (Type.GetTypeCode(type))
-            {
                 case TypeCode.Boolean:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<bool> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -83,7 +68,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -91,7 +76,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Byte:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<byte> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -102,7 +87,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -110,7 +95,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Char:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<char> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -121,7 +106,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -129,7 +114,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.DateTime:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<DateTime> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -140,7 +125,26 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discard(reader);
+                    return result;
+                }
+                case TypeCode.Guid:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<Guid> l)
+                    {
+                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        {
+                            var valueType = (SerializedType) reader.Read<byte>();
+                            var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
+                            if (v.HasValue)
+                                l.Add(v.Value);
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -148,7 +152,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Decimal:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<decimal> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -159,7 +163,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -167,7 +171,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Double:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<double> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -178,7 +182,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -186,7 +190,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Int16:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<short> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -197,7 +201,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -205,7 +209,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Int32:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<int> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -216,7 +220,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -224,7 +228,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Int64:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<long> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -235,7 +239,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -243,7 +247,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.SByte:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<sbyte> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -254,7 +258,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -262,7 +266,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Single:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<float> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -273,7 +277,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -281,7 +285,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.String:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<string> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -291,7 +295,7 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add(v);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -299,7 +303,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.UInt16:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<ushort> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -310,7 +314,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -318,7 +322,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.UInt32:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<uint> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -329,7 +333,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -337,7 +341,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.UInt64:
                 {
-                    var result = CreateResultObject(parentType, type);
+                    var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<ulong> l)
                     {
                         while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
@@ -348,7 +352,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader);
@@ -359,11 +363,16 @@ namespace Binaron.Serializer.Infrastructure
             return null;
         }
 
-        private static Func<ReaderState, object, bool, (bool Success, object Result)> GetEnumerableEnumAdder(Type type) => EnumerableEnumAdders.GetOrAdd(type, _ =>
+        private static class EnumerableEnumAdder<T>
+        {
+            public static readonly Func<ReaderState, object, bool, (bool Success, object Result)> Adder = CreateAdder(typeof(T));
+        }
+
+        private static Func<ReaderState,object,bool,(bool Success, object Result)> CreateAdder(Type type)
         {
             var method = typeof(EnumerableAdder).GetMethod(nameof(EnumerableAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
             return (Func<ReaderState, object, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, bool, (bool Success, object Result)>), null, method);
-        });
+        }
 
         private static class EnumerableAdder
         {
@@ -396,10 +405,12 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        private static GenericResultObjectCreator.List GetEnumerableResultObjectCreator(Type parentType, Type type) => 
-            EnumerableResultObjectCreators.GetOrAdd((parentType, type), _ => new GenericResultObjectCreator.List(parentType, type));
+        private static class EnumerableResultObjectCreator<T, TElement>
+        {
+            public static readonly GenericResultObjectCreator.List Creator = new GenericResultObjectCreator.List(typeof(T), typeof(TElement));
+        }
 
-        private static object CreateResultObject(Type parentType, Type type) => GetEnumerableResultObjectCreator(parentType, type).Create();
+        private static object CreateResultObject<T, TElement>() => EnumerableResultObjectCreator<T, TElement>.Creator.Create();
 
         private static void Discard(ReaderState reader, int count)
         {
@@ -407,11 +418,11 @@ namespace Binaron.Serializer.Infrastructure
                 TypedDeserializer.DiscardValue(reader);
         }
         
-        public static object ReadEnums(ReaderState reader, Type parentType, Type type, int count)
+        public static object ReadEnums<T, TElement>(ReaderState reader, int count)
         {
-            var result = CreateResultObject(parentType, type, count);
-            var addAll = GetListEnumAdder(type);
-            var (success, addedResult) = addAll(reader, result, count, parentType.IsArray);
+            var result = CreateResultObject<T, TElement>(count);
+            var addAll = ListEnumAdder<TElement>.Adder;
+            var (success, addedResult) = addAll(reader, result, count, typeof(T).IsArray);
             if (success)
                 return addedResult;
 
@@ -421,13 +432,11 @@ namespace Binaron.Serializer.Infrastructure
 
         public static object ReadTypedList<T, TElement>(ReaderState reader, int count)
         {
-            var parentType = typeof(T);
-            var type = typeof(TElement);
-            switch (Type.GetTypeCode(type))
+            switch (TypeOf<TElement>.TypeCode)
             {
                 case TypeCode.Object:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<TElement> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -437,24 +446,15 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add((TElement) v);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
                     return result;
                 }
-                default:
-                    return ReadTypedList(reader, parentType, type, count);
-            }
-        }
-
-        private static object ReadTypedList(ReaderState reader, Type parentType, Type type, int count)
-        {
-            switch (Type.GetTypeCode(type))
-            {
                 case TypeCode.Boolean:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<bool> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -465,7 +465,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -473,7 +473,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Byte:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<byte> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -484,7 +484,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -492,7 +492,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Char:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<char> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -503,7 +503,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -511,7 +511,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.DateTime:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<DateTime> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -522,7 +522,26 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discard(reader, count);
+                    return result;
+                }
+                case TypeCode.Guid:
+                {
+                    var result = CreateResultObject<T, TElement>(count);
+                    if (result is ICollection<Guid> l)
+                    {
+                        for (var i = 0; i < count; i++)
+                        {
+                            var valueType = (SerializedType) reader.Read<byte>();
+                            var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
+                            if (v.HasValue)
+                                l.Add(v.Value);
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -530,7 +549,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Decimal:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<decimal> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -541,7 +560,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -549,7 +568,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Double:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<double> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -560,7 +579,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -568,7 +587,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Int16:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<short> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -579,7 +598,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -587,7 +606,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Int32:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<int> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -598,7 +617,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -606,7 +625,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Int64:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<long> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -617,7 +636,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -625,7 +644,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.SByte:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<sbyte> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -636,7 +655,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -644,7 +663,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.Single:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<float> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -655,7 +674,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -663,7 +682,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.String:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<string> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -673,7 +692,7 @@ namespace Binaron.Serializer.Infrastructure
                             l.Add(v);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -681,7 +700,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.UInt16:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<ushort> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -692,7 +711,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -700,7 +719,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.UInt32:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<uint> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -711,7 +730,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -719,7 +738,7 @@ namespace Binaron.Serializer.Infrastructure
                 }
                 case TypeCode.UInt64:
                 {
-                    var result = CreateResultObject(parentType, type, count);
+                    var result = CreateResultObject<T, TElement>(count);
                     if (result is ICollection<ulong> l)
                     {
                         for (var i = 0; i < count; i++)
@@ -730,7 +749,7 @@ namespace Binaron.Serializer.Infrastructure
                                 l.Add(v.Value);
                         }
 
-                        return parentType.IsArray ? ToArray(l) : result;
+                        return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
                     Discard(reader, count);
@@ -741,11 +760,16 @@ namespace Binaron.Serializer.Infrastructure
             return null;
         }
 
-        private static Func<ReaderState, object, int, bool, (bool Success, object Result)> GetListEnumAdder(Type type) => ListEnumAdders.GetOrAdd(type, _ =>
+        private static class ListEnumAdder<T>
+        {
+            public static Func<ReaderState, object, int, bool, (bool Success, object Result)> Adder = CreateEnumAdder(typeof(T));
+        }
+
+        private static Func<ReaderState, object, int, bool, (bool Success, object Result)> CreateEnumAdder(Type type)
         {
             var method = typeof(ListAdder).GetMethod(nameof(ListAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
             return (Func<ReaderState, object, int, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, int, bool, (bool Success, object Result)>), null, method);
-        });
+        }
 
         private static class ListAdder
         {
@@ -807,11 +831,13 @@ namespace Binaron.Serializer.Infrastructure
                     return null;
             }
         }
+        
+        private static class ListResultObjectCreator<T, TElement>
+        {
+            public static readonly GenericResultObjectCreator.List Creator = new GenericResultObjectCreator.List(typeof(T), typeof(TElement));
+        }
 
-        private static GenericResultObjectCreator.List GetListResultObjectCreator(Type parentType, Type type) => 
-            ListResultObjectCreators.GetOrAdd((parentType, type), _ => new GenericResultObjectCreator.List(parentType, type));
-
-        private static object CreateResultObject(Type parentType, Type type, int count) => GetListResultObjectCreator(parentType, type).Create(ListCapacity.Clamp(count));
+        private static object CreateResultObject<T, TElement>(int count) => ListResultObjectCreator<T, TElement>.Creator.Create(ListCapacity.Clamp(count));
 
         private static T[] ToArray<T>(ICollection<T> list)
         {

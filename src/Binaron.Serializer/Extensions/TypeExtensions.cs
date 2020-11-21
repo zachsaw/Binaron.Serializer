@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using TypeCode = Binaron.Serializer.Enums.TypeCode;
 
 namespace Binaron.Serializer.Extensions
 {
@@ -24,5 +26,20 @@ namespace Binaron.Serializer.Extensions
         {
             return targetType.GetFields(BindingFlags.NonPublic | BindingAttr).FirstOrDefault(x => x.Name == $"<{memberName}>k__BackingField");
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TypeCode GetTypeCode(this Type type)
+        {
+            var result = Type.GetTypeCode(type);
+            if (result != System.TypeCode.Object)
+                return (TypeCode) result;
+            
+            return type == typeof(Guid) ? TypeCode.Guid : TypeCode.Object;
+        }
+    }
+
+    internal static class TypeOf<T>
+    {
+        public static readonly TypeCode TypeCode = typeof(T).GetTypeCode();
     }
 }

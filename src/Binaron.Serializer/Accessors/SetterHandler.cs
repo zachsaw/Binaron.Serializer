@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using Binaron.Serializer.Extensions;
 using Binaron.Serializer.Infrastructure;
 using Activator = Binaron.Serializer.Creators.Activator;
+using TypeCode = Binaron.Serializer.Enums.TypeCode;
 
 namespace Binaron.Serializer.Accessors
 {
@@ -66,41 +67,26 @@ namespace Binaron.Serializer.Accessors
         private static IMemberSetterHandler<ReaderState> CreateSetterHandler(Type type, MemberInfo member)
         {
             var memberType = member.GetMemberType();
-            switch (Type.GetTypeCode(memberType))
+            return memberType.GetTypeCode() switch
             {
-                case TypeCode.Boolean:
-                    return CreateHandlerForBool(type, member);
-                case TypeCode.Byte:
-                    return CreateHandlerForByte(type, member);
-                case TypeCode.Char:
-                    return CreateHandlerForChar(type, member);
-                case TypeCode.DateTime:
-                    return CreateHandlerForDateTime(type, member);
-                case TypeCode.Decimal:
-                    return CreateHandlerForDecimal(type, member);
-                case TypeCode.Double:
-                    return CreateHandlerForDouble(type, member);
-                case TypeCode.Int16:
-                    return CreateHandlerForShort(type, member);
-                case TypeCode.Int32:
-                    return CreateHandlerForInt(type, member);
-                case TypeCode.Int64:
-                    return CreateHandlerForLong(type, member);
-                case TypeCode.SByte:
-                    return CreateHandlerForSByte(type, member);
-                case TypeCode.Single:
-                    return CreateHandlerForFloat(type, member);
-                case TypeCode.String:
-                    return CreateHandlerForString(type, member);
-                case TypeCode.UInt16:
-                    return CreateHandlerForUShort(type, member);
-                case TypeCode.UInt32:
-                    return CreateHandlerForUInt(type, member);
-                case TypeCode.UInt64:
-                    return CreateHandlerForULong(type, member);
-                default:
-                    return CreateHandlerForObject(type, member);
-            }
+                TypeCode.Boolean => CreateHandlerForBool(type, member),
+                TypeCode.Byte => CreateHandlerForByte(type, member),
+                TypeCode.Char => CreateHandlerForChar(type, member),
+                TypeCode.DateTime => CreateHandlerForDateTime(type, member),
+                TypeCode.Guid => CreateHandlerForGuid(type, member),
+                TypeCode.Decimal => CreateHandlerForDecimal(type, member),
+                TypeCode.Double => CreateHandlerForDouble(type, member),
+                TypeCode.Int16 => CreateHandlerForShort(type, member),
+                TypeCode.Int32 => CreateHandlerForInt(type, member),
+                TypeCode.Int64 => CreateHandlerForLong(type, member),
+                TypeCode.SByte => CreateHandlerForSByte(type, member),
+                TypeCode.Single => CreateHandlerForFloat(type, member),
+                TypeCode.String => CreateHandlerForString(type, member),
+                TypeCode.UInt16 => CreateHandlerForUShort(type, member),
+                TypeCode.UInt32 => CreateHandlerForUInt(type, member),
+                TypeCode.UInt64 => CreateHandlerForULong(type, member),
+                _ => CreateHandlerForObject(type, member)
+            };
         }
 
         private static IMemberSetterHandler<ReaderState> CreateHandlerForBool(Type type, MemberInfo prop)
@@ -125,6 +111,12 @@ namespace Binaron.Serializer.Accessors
         {
             var setter = new MemberSetter<DateTime>(type, prop.Name);
             return !setter.IsValid ? null : new MemberSetterHandlers.DateTimeHandler(setter);
+        }
+
+        private static IMemberSetterHandler<ReaderState> CreateHandlerForGuid(Type type, MemberInfo prop)
+        {
+            var setter = new MemberSetter<Guid>(type, prop.Name);
+            return !setter.IsValid ? null : new MemberSetterHandlers.GuidHandler(setter);
         }
 
         private static IMemberSetterHandler<ReaderState> CreateHandlerForDecimal(Type type, MemberInfo prop)

@@ -34,6 +34,9 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<byte> ReadBytes(int length) => reader.ReadBytes(length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Read<T>() where T : unmanaged => reader.Read<T>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

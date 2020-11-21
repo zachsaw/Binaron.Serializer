@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Binaron.Serializer.Enums;
+using TypeCode = Binaron.Serializer.Enums.TypeCode;
 
 namespace Binaron.Serializer.Infrastructure
 {
@@ -26,10 +27,10 @@ namespace Binaron.Serializer.Infrastructure
             public static IGenericEnumerableWriter CreateWriter<T>()
             {
                 var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
-                if (elementType == null || elementType == typeof(object))
+                if (elementType.Type == null || elementType.Type == typeof(object))
                     return null;
 
-                return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType));
+                return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType.Type));
             }
 
             private class GenericEnumerableWriter<T> : IGenericEnumerableWriter
@@ -49,13 +50,13 @@ namespace Binaron.Serializer.Infrastructure
         public static bool WriteEnumerable<T>(WriterState writer, IEnumerable enumerable)
         {
             var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
-            if (elementType == null)
+            if (elementType.Type == null)
                 return false;
 
-            if (elementType.IsEnum != true)
+            if (elementType.Type.IsEnum != true)
             {
                 // ReSharper disable once PossibleMultipleEnumeration
-                if (WriteEnumerable(writer, enumerable, elementType))
+                if (WriteEnumerable(writer, enumerable, elementType.Code))
                     return true;
 
                 var genericWriter = GetGenericEnumerableWriter<T>.Writer;
@@ -67,26 +68,26 @@ namespace Binaron.Serializer.Infrastructure
                 return true;
             }
 
-            WriteEnums(writer, enumerable, elementType);
+            WriteEnums(writer, enumerable, elementType.Code);
             return true;
         }
 
         public static bool WriteEnumerable(WriterState writer, IEnumerable enumerable)
         {
             var elementType = GenericType.GetIEnumerable(enumerable.GetType());
-            if (elementType == null)
+            if (elementType.Type == null)
                 return false;
 
-            if (elementType.IsEnum != true)
-                return WriteEnumerable(writer, enumerable, elementType);
+            if (elementType.Type.IsEnum != true)
+                return WriteEnumerable(writer, enumerable, elementType.Code);
 
-            WriteEnums(writer, enumerable, elementType);
+            WriteEnums(writer, enumerable, elementType.Code);
             return true;
         }
 
-        private static bool WriteEnumerable(WriterState writer, IEnumerable enumerable, Type elementType)
+        private static bool WriteEnumerable(WriterState writer, IEnumerable enumerable, TypeCode elementTypeCode)
         {
-            switch (Type.GetTypeCode(elementType))
+            switch (elementTypeCode)
             {
                 case TypeCode.String:
                     foreach (var item in (IEnumerable<string>) enumerable)
@@ -129,6 +130,15 @@ namespace Binaron.Serializer.Infrastructure
                     return true;
                 case TypeCode.DateTime:
                     foreach (var item in (IEnumerable<DateTime>) enumerable)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Writer.Write(writer, item);
+                    }
+
+                    writer.Write((byte) EnumerableType.End);
+                    return true;
+                case TypeCode.Guid:
+                    foreach (var item in (IEnumerable<Guid>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
                         Writer.Write(writer, item);
@@ -246,12 +256,12 @@ namespace Binaron.Serializer.Infrastructure
             public static IGenericListWriter CreateWriter<T>()
             {
                 var elementType = GenericType.GetICollectionGenericType<T>.Type;
-                if (elementType == null || elementType == typeof(object))
+                if (elementType.Type == null || elementType.Type == typeof(object))
                     return null;
 
                 return (IGenericListWriter) (typeof(T).IsArray
-                    ? Activator.CreateInstance(typeof(GenericArrayWriter<>).MakeGenericType(elementType)) 
-                    : Activator.CreateInstance(typeof(GenericListWriter<>).MakeGenericType(elementType)));
+                    ? Activator.CreateInstance(typeof(GenericArrayWriter<>).MakeGenericType(elementType.Type)) 
+                    : Activator.CreateInstance(typeof(GenericListWriter<>).MakeGenericType(elementType.Type)));
             }
 
             private class GenericArrayWriter<T> : IGenericListWriter
@@ -278,12 +288,12 @@ namespace Binaron.Serializer.Infrastructure
             var listType = typeof(T);
 
             var elementType = GenericType.GetICollectionGenericType<T>.Type;
-            if (elementType == null)
+            if (elementType.Type == null)
                 return false;
 
-            if (elementType.IsEnum != true)
+            if (elementType.Type.IsEnum != true)
             {
-                if (listType.IsArray ? WriteArray(writer, list, elementType) : WriteList(writer, list, elementType))
+                if (listType.IsArray ? WriteArray(writer, list, elementType.Code) : WriteList(writer, list, elementType.Code))
                     return true;
 
                 var genericWriter = GetGenericListWriter<T>.Writer;
@@ -294,7 +304,7 @@ namespace Binaron.Serializer.Infrastructure
                 return true;
             }
 
-            WriteEnums(writer, list, elementType);
+            WriteEnums(writer, list, elementType.Code);
             return true;
         }
 
@@ -302,19 +312,19 @@ namespace Binaron.Serializer.Infrastructure
         {
             var listType = list.GetType();
             var elementType = GenericType.GetICollection(listType);
-            if (elementType == null)
+            if (elementType.Type == null)
                 return false;
 
-            if (elementType.IsEnum != true)
-                return listType.IsArray ? WriteArray(writer, list, elementType) : WriteList(writer, list, elementType);
+            if (elementType.Type.IsEnum != true)
+                return listType.IsArray ? WriteArray(writer, list, elementType.Code) : WriteList(writer, list, elementType.Code);
 
-            WriteEnums(writer, list, elementType);
+            WriteEnums(writer, list, elementType.Code);
             return true;
         }
 
-        private static bool WriteArray(WriterState writer, ICollection list, Type elementType)
+        private static bool WriteArray(WriterState writer, ICollection list, TypeCode elementTypeCode)
         {
-            switch (Type.GetTypeCode(elementType))
+            switch (elementTypeCode)
             {
                 case TypeCode.String:
                     foreach (var item in (string[]) list)
@@ -339,6 +349,10 @@ namespace Binaron.Serializer.Infrastructure
                     return true;
                 case TypeCode.DateTime:
                     foreach (var item in (DateTime[]) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Guid:
+                    foreach (var item in (Guid[]) list)
                         Writer.Write(writer, item);
                     return true;
                 case TypeCode.Decimal:
@@ -386,9 +400,9 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        private static bool WriteList(WriterState writer, ICollection list, Type elementType)
+        private static bool WriteList(WriterState writer, ICollection list, TypeCode elementTypeCode)
         {
-            switch (Type.GetTypeCode(elementType))
+            switch (elementTypeCode)
             {
                 case TypeCode.String:
                     foreach (var item in (ICollection<string>) list)
@@ -413,6 +427,10 @@ namespace Binaron.Serializer.Infrastructure
                     return true;
                 case TypeCode.DateTime:
                     foreach (var item in (ICollection<DateTime>) list)
+                        Writer.Write(writer, item);
+                    return true;
+                case TypeCode.Guid:
+                    foreach (var item in (ICollection<Guid>) list)
                         Writer.Write(writer, item);
                     return true;
                 case TypeCode.Decimal:
@@ -527,9 +545,9 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        private static void WriteEnums(WriterState writer, ICollection list, Type elementType)
+        private static void WriteEnums(WriterState writer, ICollection list, TypeCode elementTypeCode)
         {
-            switch (Type.GetTypeCode(elementType))
+            switch (elementTypeCode)
             {
                 case TypeCode.Byte:
                     foreach (var item in list)
@@ -568,9 +586,9 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        private static void WriteEnums(WriterState writer, IEnumerable enumerable, Type elementType)
+        private static void WriteEnums(WriterState writer, IEnumerable enumerable, TypeCode elementTypeCode)
         {
-            switch (Type.GetTypeCode(elementType))
+            switch (elementTypeCode)
             {
                 case TypeCode.Byte:
                     foreach (var item in enumerable)

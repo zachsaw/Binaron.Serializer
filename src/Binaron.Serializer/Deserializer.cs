@@ -108,6 +108,8 @@ namespace Binaron.Serializer
                     return Reader.ReadDecimal(reader);
                 case SerializedType.DateTime:
                     return Reader.ReadDateTime(reader);
+                case SerializedType.Guid:
+                    return Reader.ReadGuid(reader);
                 case SerializedType.Char:
                     return Reader.ReadChar(reader);
                 case SerializedType.Null:

@@ -6,6 +6,7 @@ using Binaron.Serializer.Accessors;
 using Binaron.Serializer.Enums;
 using Binaron.Serializer.Extensions;
 using Binaron.Serializer.Infrastructure;
+using TypeCode = Binaron.Serializer.Enums.TypeCode;
 
 namespace Binaron.Serializer
 {
@@ -248,7 +249,7 @@ namespace Binaron.Serializer
         {
             var type = value.GetType();
 
-            switch (Type.GetTypeCode(type))
+            switch (type.GetTypeCode())
             {
                 case TypeCode.String:
                     Writer.Write(writer, (string) value);
@@ -291,6 +292,9 @@ namespace Binaron.Serializer
                     return true;
                 case TypeCode.DateTime:
                     Writer.Write(writer, (DateTime) value);
+                    return true;
+                case TypeCode.Guid:
+                    Writer.Write(writer, (Guid) value);
                     return true;
                 case TypeCode.Char:
                     Writer.Write(writer, (char) value);

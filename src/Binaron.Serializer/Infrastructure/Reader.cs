@@ -32,6 +32,12 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe Guid ReadGuid(ReaderState reader)
+        {
+            return new Guid(reader.ReadBytes(sizeof(Guid)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadString(ReaderState reader)
         {
             return reader.ReadString();

@@ -48,6 +48,16 @@ namespace Binaron.Serializer.Accessors
             protected override DateTime HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsDateTime(reader);
         }
 
+        internal class GuidHandler : MemberSetterHandlerBase<ReaderState, Guid>
+        {
+            public GuidHandler(MemberSetter<Guid> setter) : base(setter)
+            {
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            protected override Guid HandleInternal(ReaderState reader) => SelfUpgradingReader.ReadAsGuid(reader);
+        }
+
         internal class DecimalHandler : MemberSetterHandlerBase<ReaderState, decimal>
         {
             public DecimalHandler(MemberSetter<decimal> setter) : base(setter)
@@ -245,6 +255,8 @@ namespace Binaron.Serializer.Accessors
                             return Reader.ReadBool(reader);
                         case SerializedType.DateTime:
                             return Reader.ReadDateTime(reader);
+                        case SerializedType.Guid:
+                            return Reader.ReadGuid(reader);
                         default:
                             throw new ArgumentOutOfRangeException();
                     }

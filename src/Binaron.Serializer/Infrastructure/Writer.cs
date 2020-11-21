@@ -89,6 +89,13 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void Write(WriterState writer, Guid val)
+        {
+            writer.Write((byte) SerializedType.Guid);
+            val.TryWriteBytes(writer.Reserve(sizeof(Guid)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(WriterState writer, ushort val)
         {
             writer.Write((byte) SerializedType.UShort);
