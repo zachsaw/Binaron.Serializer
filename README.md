@@ -6,6 +6,8 @@
 
 In this repository, you'll find 2 benchmarks using BenchmarkDotNet comparing Binaron.Serializer to Newtonsoft.JSON.
 
+Note that these benchmarks were run on .net core 3.1. To get the full benefit of the serializer's performance, .net 5.0 is recommended. 
+
 The first one showcases best case scenario vs a JSON serializer, where we serialize an array of double with 128k items. In reality, this could be your typical weights from a CNN model. More importantly, Binaron.Serializer also serializes doubles in a 64-bit lossless format unlike JSON which requires workarounds such as converting the raw 64-bit into byte array.
 
 ## Benchmark 1
