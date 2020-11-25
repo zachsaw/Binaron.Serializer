@@ -15,12 +15,6 @@ namespace Binaron.Serializer.Infrastructure
         private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>> ObjectAsDictionaryAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>>();
         private static readonly ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary>();
 
-        private static void Discard(ReaderState reader)
-        {
-            while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
-                TypedDeserializer.DiscardValue(reader);
-        }
-        
         public static object ReadEnums<T, TElement>(ReaderState reader)
         {
             var result = CreateResultObject<T, TElement>();
@@ -29,8 +23,479 @@ namespace Binaron.Serializer.Infrastructure
             if (success)
                 return addedResult;
 
-            Discard(reader);
+            Discarder.Discard(reader);
             return result;
+        }
+
+        public static object ReadHEnums<T, TElement>(ReaderState reader)
+        {
+            var result = CreateResultObject<T, TElement>();
+            var valueType = Reader.ReadSerializedType(reader);
+            var addAll = HEnumerableEnumAdder<TElement>.Adder;
+            var (success, addedResult) = addAll(reader, result, valueType, typeof(T).IsArray);
+            if (success)
+                return addedResult;
+
+            Discarder.Discard(reader);
+            return result;
+        }
+
+        public static object ReadHEnumerable<T, TElement>(ReaderState reader)
+        {
+            switch (TypeOf<TElement>.TypeCode)
+            {
+                case TypeCode.Object:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<TElement> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        {
+                            var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
+                            l.Add((TElement) v);
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Boolean:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<bool> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Bool)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadBool(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsBool(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Byte:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<byte> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Byte)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadByte(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsByte(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Char:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<char> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Char)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadChar(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsChar(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.DateTime:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<DateTime> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.DateTime)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadDateTime(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsDateTime(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Guid:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<Guid> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Guid)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadGuid(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Decimal:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<decimal> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Decimal)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadDecimal(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsDecimal(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Double:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<double> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Double)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadDouble(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsDouble(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Int16:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<short> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Short)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadShort(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsShort(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Int32:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<int> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Int)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadInt(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Int64:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<long> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Long)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadLong(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsLong(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.SByte:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<sbyte> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.SByte)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadSByte(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsSByte(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.Single:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<float> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.Float)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadFloat(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsFloat(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.String:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<string> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.String)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadString(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsString(reader, valueType);
+                                l.Add(v);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.UInt16:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<ushort> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.UShort)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadUShort(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.UInt32:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<uint> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.UInt)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadUInt(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsUInt(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+                case TypeCode.UInt64:
+                {
+                    var result = CreateResultObject<T, TElement>();
+                    if (result is ICollection<ulong> l)
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        if (valueType == SerializedType.ULong)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                l.Add(Reader.ReadULong(reader));
+                        }
+                        else
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsULong(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader);
+                    return result;
+                }
+            }
+
+            return null;
         }
 
         public static object ReadTypedEnumerable<T, TElement>(ReaderState reader)
@@ -42,9 +507,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<TElement> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
                             l.Add((TElement) v);
                         }
@@ -52,7 +517,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Boolean:
@@ -60,9 +525,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<bool> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsBool(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -71,7 +536,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Byte:
@@ -79,9 +544,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<byte> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsByte(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -90,7 +555,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Char:
@@ -98,9 +563,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<char> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsChar(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -109,7 +574,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.DateTime:
@@ -117,9 +582,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<DateTime> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsDateTime(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -128,7 +593,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Guid:
@@ -136,9 +601,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<Guid> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -147,7 +612,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Decimal:
@@ -155,9 +620,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<decimal> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsDecimal(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -166,7 +631,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Double:
@@ -174,9 +639,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<double> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsDouble(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -185,7 +650,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Int16:
@@ -193,9 +658,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<short> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsShort(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -204,7 +669,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Int32:
@@ -212,9 +677,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<int> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -223,7 +688,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Int64:
@@ -231,9 +696,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<long> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsLong(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -242,7 +707,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.SByte:
@@ -250,9 +715,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<sbyte> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsSByte(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -261,7 +726,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.Single:
@@ -269,9 +734,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<float> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsFloat(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -280,7 +745,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.String:
@@ -288,9 +753,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<string> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsString(reader, valueType);
                             l.Add(v);
                         }
@@ -298,7 +763,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.UInt16:
@@ -306,9 +771,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<ushort> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -317,7 +782,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.UInt32:
@@ -325,9 +790,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<uint> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsUInt(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -336,7 +801,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
                 case TypeCode.UInt64:
@@ -344,9 +809,9 @@ namespace Binaron.Serializer.Infrastructure
                     var result = CreateResultObject<T, TElement>();
                     if (result is ICollection<ulong> l)
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsULong(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -355,12 +820,91 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader);
+                    Discarder.Discard(reader);
                     return result;
                 }
             }
 
             return null;
+        }
+
+        private static class HEnumerableEnumAdder<T>
+        {
+            public static readonly Func<ReaderState, object, SerializedType, bool, (bool Success, object Result)> Adder = CreateHAdder(typeof(T));
+        }
+
+        private static Func<ReaderState, object, SerializedType, bool, (bool Success, object Result)> CreateHAdder(Type type)
+        {
+            var method = typeof(HEnumerableAdder).GetMethod(nameof(HEnumerableAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
+            return (Func<ReaderState, object, SerializedType, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, SerializedType, bool, (bool Success, object Result)>), null, method);
+        }
+
+        private static class HEnumerableAdder
+        {
+            public static (bool Success, object Result) AddEnums<T>(ReaderState reader, object list, SerializedType elementType, bool convertToArray) where T : struct
+            {
+                if (!(list is ICollection<T> l)) 
+                    return (false, list);
+
+                do
+                {
+                    try
+                    {
+                        ReadEnumsIntoList(reader, elementType, l);
+                        break;
+                    }
+                    catch (InvalidCastException)
+                    {
+                    }
+                    catch (OverflowException)
+                    {
+                    }
+                } while (true);
+            
+                return (true, convertToArray ? ToArray(l) : l);
+            }
+        }
+
+        private static void ReadEnumsIntoList<T>(ReaderState reader, SerializedType valueType, ICollection<T> l) where T : struct
+        {
+            switch (valueType)
+            {
+                case SerializedType.Byte:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadByte(reader)));
+                    break;
+                case SerializedType.SByte:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadSByte(reader)));
+                    break;
+                case SerializedType.UShort:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadUShort(reader)));
+                    break;
+                case SerializedType.Short:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadShort(reader)));
+                    break;
+                case SerializedType.UInt:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadUInt(reader)));
+                    break;
+                case SerializedType.Int:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadInt(reader)));
+                    break;
+                case SerializedType.ULong:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadULong(reader)));
+                    break;
+                case SerializedType.Long:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadLong(reader)));
+                    break;
+                default:
+                    Discarder.DiscardValues(reader, valueType);
+                    break;
+            }
         }
 
         private static class EnumerableEnumAdder<T>
@@ -385,7 +929,7 @@ namespace Binaron.Serializer.Infrastructure
                 {
                     try
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
                             var val = ReadEnum<T>(reader);
                             if (val.HasValue)
@@ -412,10 +956,16 @@ namespace Binaron.Serializer.Infrastructure
 
         private static object CreateResultObject<T, TElement>() => EnumerableResultObjectCreator<T, TElement>.Creator.Create();
 
-        private static void Discard(ReaderState reader, int count)
+        public static object ReadHEnums<T, TElement>(ReaderState reader, int count, SerializedType elementType)
         {
-            for (var i = 0; i < count; i++)
-                TypedDeserializer.DiscardValue(reader);
+            var result = CreateResultObject<T, TElement>(count);
+            var addAll = HListEnumAdder<TElement>.Adder;
+            var (success, addedResult) = addAll(reader, result, count, elementType, typeof(T).IsArray);
+            if (success)
+                return addedResult;
+
+            Discarder.Discard(reader, count);
+            return result;
         }
         
         public static object ReadEnums<T, TElement>(ReaderState reader, int count)
@@ -426,11 +976,437 @@ namespace Binaron.Serializer.Infrastructure
             if (success)
                 return addedResult;
 
-            Discard(reader, count);
+            Discarder.Discard(reader, count);
             return result;
         }
 
-        public static object ReadTypedList<T, TElement>(ReaderState reader, int count)
+        public static object ReadHList<T, TElement>(ReaderState reader, int count)
+        {
+            var result = CreateResultObject<T, TElement>(count);
+            var valueType = Reader.ReadSerializedType(reader);
+            switch (TypeOf<TElement>.TypeCode)
+            {
+                case TypeCode.Object:
+                {
+                    if (result is ICollection<TElement> l)
+                    {
+                        for (var i = 0; i < count; i++)
+                        {
+                            var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
+                            l.Add((TElement) v);
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.Discard(reader, count);
+                    return result;
+                }
+                case TypeCode.Boolean:
+                {
+                    if (result is ICollection<bool> l)
+                    {
+                        if (valueType == SerializedType.Bool)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadBool(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsBool(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardBools(reader, count);
+                    return result;
+                }
+                case TypeCode.Char:
+                {
+                    if (result is ICollection<char> l)
+                    {
+                        if (valueType == SerializedType.Char)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadChar(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsChar(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardChars(reader, count);
+                    return result;
+                }
+                case TypeCode.SByte:
+                {
+                    if (result is ICollection<sbyte> l)
+                    {
+                        if (valueType == SerializedType.SByte)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadSByte(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsSByte(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardSBytes(reader, count);
+                    return result;
+                }
+                case TypeCode.Byte:
+                {
+                    if (result is ICollection<byte> l)
+                    {
+                        if (valueType == SerializedType.Byte)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadByte(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsByte(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardBytes(reader, count);
+                    return result;
+                }
+                case TypeCode.Int16:
+                {
+                    if (result is ICollection<short> l)
+                    {
+                        if (valueType == SerializedType.Short)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadShort(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsShort(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardShorts(reader, count);
+                    return result;
+                }
+                case TypeCode.UInt16:
+                {
+                    if (result is ICollection<ushort> l)
+                    {
+                        if (valueType == SerializedType.UShort)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadUShort(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardUShorts(reader, count);
+                    return result;
+                }
+                case TypeCode.Int32:
+                {
+                    if (result is ICollection<int> l)
+                    {
+                        if (valueType == SerializedType.Int)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadInt(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardInts(reader, count);
+                    return result;
+                }
+                case TypeCode.UInt32:
+                {
+                    if (result is ICollection<uint> l)
+                    {
+                        if (valueType == SerializedType.UInt)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadUInt(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsUInt(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardUInts(reader, count);
+                    return result;
+                }
+                case TypeCode.Int64:
+                {
+                    if (result is ICollection<long> l)
+                    {
+                        if (valueType == SerializedType.Long)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadLong(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsLong(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardLongs(reader, count);
+                    return result;
+                }
+                case TypeCode.UInt64:
+                {
+                    if (result is ICollection<ulong> l)
+                    {
+                        if (valueType == SerializedType.ULong)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadULong(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsULong(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardULongs(reader, count);
+                    return result;
+                }
+                case TypeCode.Single:
+                {
+                    if (result is ICollection<float> l)
+                    {
+                        if (valueType == SerializedType.Float)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadFloat(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsFloat(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardFloats(reader, count);
+                    return result;
+                }
+                case TypeCode.Double:
+                {
+                    if (result is ICollection<double> l)
+                    {
+                        if (valueType == SerializedType.Double)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadDouble(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsDouble(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardDoubles(reader, count);
+                    return result;
+                }
+                case TypeCode.Decimal:
+                {
+                    if (result is ICollection<decimal> l)
+                    {
+                        if (valueType == SerializedType.Decimal)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadDecimal(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsDecimal(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardDecimals(reader, count);
+                    return result;
+                }
+                case TypeCode.DateTime:
+                {
+                    if (result is ICollection<DateTime> l)
+                    {
+                        if (valueType == SerializedType.DateTime)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadDateTime(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsDateTime(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardDateTimes(reader, count);
+                    return result;
+                }
+                case TypeCode.Guid:
+                {
+                    if (result is ICollection<Guid> l)
+                    {
+                        if (valueType == SerializedType.Guid)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadGuid(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardGuids(reader, count);
+                    return result;
+                }
+                case TypeCode.String:
+                {
+                    if (result is ICollection<string> l)
+                    {
+                        if (valueType == SerializedType.Double)
+                        {
+                            for (var i = 0; i < count; i++)
+                                l.Add(Reader.ReadString(reader));
+                        }
+                        else
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var v = SelfUpgradingReader.ReadAsString(reader, valueType);
+                                l.Add(v);
+                            }
+                        }
+
+                        return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    Discarder.DiscardStrings(reader, count);
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        public static object ReadList<T, TElement>(ReaderState reader, int count)
         {
             switch (TypeOf<TElement>.TypeCode)
             {
@@ -441,7 +1417,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
                             l.Add((TElement) v);
                         }
@@ -449,7 +1425,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Boolean:
@@ -459,7 +1435,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsBool(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -468,7 +1444,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Byte:
@@ -478,7 +1454,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsByte(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -487,7 +1463,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Char:
@@ -497,7 +1473,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsChar(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -506,7 +1482,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.DateTime:
@@ -516,7 +1492,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsDateTime(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -525,7 +1501,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Guid:
@@ -535,7 +1511,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -544,7 +1520,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Decimal:
@@ -554,7 +1530,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsDecimal(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -563,7 +1539,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Double:
@@ -573,7 +1549,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsDouble(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -582,7 +1558,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Int16:
@@ -592,7 +1568,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsShort(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -601,7 +1577,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Int32:
@@ -611,7 +1587,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -620,7 +1596,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Int64:
@@ -630,7 +1606,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsLong(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -639,7 +1615,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.SByte:
@@ -649,7 +1625,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsSByte(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -658,7 +1634,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.Single:
@@ -668,7 +1644,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsFloat(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -677,7 +1653,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.String:
@@ -687,7 +1663,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsString(reader, valueType);
                             l.Add(v);
                         }
@@ -695,7 +1671,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.UInt16:
@@ -705,7 +1681,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -714,7 +1690,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.UInt32:
@@ -724,7 +1700,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsUInt(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -733,7 +1709,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
                 case TypeCode.UInt64:
@@ -743,7 +1719,7 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var v = SelfUpgradingReader.ReadAsULong(reader, valueType);
                             if (v.HasValue)
                                 l.Add(v.Value);
@@ -752,7 +1728,7 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
-                    Discard(reader, count);
+                    Discarder.Discard(reader, count);
                     return result;
                 }
             }
@@ -760,15 +1736,55 @@ namespace Binaron.Serializer.Infrastructure
             return null;
         }
 
+        private static class HListEnumAdder<T>
+        {
+            public static readonly Func<ReaderState, object, int, SerializedType, bool, (bool Success, object Result)> Adder = CreateHEnumAdder(typeof(T));
+        }
+
+        private static Func<ReaderState, object, int, SerializedType, bool, (bool Success, object Result)> CreateHEnumAdder(Type type)
+        {
+            var method = typeof(HListAdder).GetMethod(nameof(HListAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
+            return (Func<ReaderState, object, int, SerializedType, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, int, SerializedType, bool, (bool Success, object Result)>), null, method);
+        }
+        
         private static class ListEnumAdder<T>
         {
-            public static Func<ReaderState, object, int, bool, (bool Success, object Result)> Adder = CreateEnumAdder(typeof(T));
+            public static readonly Func<ReaderState, object, int, bool, (bool Success, object Result)> Adder = CreateEnumAdder(typeof(T));
         }
 
         private static Func<ReaderState, object, int, bool, (bool Success, object Result)> CreateEnumAdder(Type type)
         {
             var method = typeof(ListAdder).GetMethod(nameof(ListAdder.AddEnums))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
             return (Func<ReaderState, object, int, bool, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, int, bool, (bool Success, object Result)>), null, method);
+        }
+
+        private static class HListAdder
+        {
+            public static (bool Success, object Result) AddEnums<T>(ReaderState reader, object list, int count, SerializedType elementType, bool convertToArray) where T : struct
+            {
+                if (!(list is ICollection<T> l)) 
+                    return (false, list);
+
+                var i = 0;
+                do
+                {
+                    try
+                    {
+                        ReadEnumsIntoList(reader, elementType, i, count, l);
+                        break;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        ++i;
+                    }
+                    catch (OverflowException)
+                    {
+                        ++i;
+                    }
+                } while (true);
+            
+                return (true, convertToArray ? ToArray(l) : l);
+            }
         }
 
         private static class ListAdder
@@ -805,9 +1821,51 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
         
+        private static void ReadEnumsIntoList<T>(ReaderState reader, SerializedType valueType, int startIndex, int count, ICollection<T> l) where T : struct
+        {
+            switch (valueType)
+            {
+                case SerializedType.Byte:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadByte(reader)));
+                    break;
+                case SerializedType.SByte:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadSByte(reader)));
+                    break;
+                case SerializedType.UShort:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadUShort(reader)));
+                    break;
+                case SerializedType.Short:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadShort(reader)));
+                    break;
+                case SerializedType.UInt:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadUInt(reader)));
+                    break;
+                case SerializedType.Int:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadInt(reader)));
+                    break;
+                case SerializedType.ULong:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadULong(reader)));
+                    break;
+                case SerializedType.Long:
+                    for (var i = startIndex; i < count; i++)
+                        l.Add((T) Enum.ToObject(typeof(T), Reader.ReadLong(reader)));
+                    break;
+                default:
+                    Discarder.DiscardValues(reader, count - startIndex, valueType);
+                    break;
+            }
+        }
+        
         private static T? ReadEnum<T>(ReaderState reader) where T : struct
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             switch (valueType)
             {
                 case SerializedType.Byte:
@@ -827,7 +1885,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.Long:
                     return (T) Enum.ToObject(typeof(T), Reader.ReadLong(reader));
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -845,7 +1903,7 @@ namespace Binaron.Serializer.Infrastructure
                 return list.ToArray();
 
             var result = l.GetInternalArray();
-            return result.Length == list.Count ? result : l.ToArray();
+            return result.Length == l.Count ? result : l.ToArray();
         }
 
         public static object ReadObjectAsDictionary(ReaderState reader, Type parentType, Type type)
@@ -856,10 +1914,10 @@ namespace Binaron.Serializer.Infrastructure
             if (success)
                 return addedResult;
             
-            while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
             {
                 reader.ReadString(); // key
-                TypedDeserializer.DiscardValue(reader); // value
+                Discarder.DiscardValue(reader); // value
             }
             return result;
         }
@@ -888,10 +1946,10 @@ namespace Binaron.Serializer.Infrastructure
                 {
                     try
                     {
-                        while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                         {
                             var key = reader.ReadString();
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var value = valueType != SerializedType.Null ? (TValue) TypedDeserializer.ReadValue<TValue>(reader, valueType) : default;
                             if (key != null) 
                                 dictionary.Add(new KeyValuePair<string, TValue>(key, value));
@@ -918,8 +1976,8 @@ namespace Binaron.Serializer.Infrastructure
             
             for (var i = 0; i < count; i++)
             {
-                TypedDeserializer.DiscardValue(reader); // key
-                TypedDeserializer.DiscardValue(reader); // value
+                Discarder.DiscardValue(reader); // key
+                Discarder.DiscardValue(reader); // value
             }
             return result;
         }
@@ -951,9 +2009,9 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         for (; i < count; i++)
                         {
-                            var keyType = (SerializedType) reader.Read<byte>();
+                            var keyType = Reader.ReadSerializedType(reader);
                             var key = TypedDeserializer.ReadValue<TKey>(reader, keyType);
-                            var valueType = (SerializedType) reader.Read<byte>();
+                            var valueType = Reader.ReadSerializedType(reader);
                             var value = valueType != SerializedType.Null ? (TValue) TypedDeserializer.ReadValue<TValue>(reader, valueType) : default;
                             if (key != null)
                                 dictionary.Add(new KeyValuePair<TKey, TValue>((TKey) key, value));

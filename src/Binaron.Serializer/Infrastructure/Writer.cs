@@ -122,5 +122,105 @@ namespace Binaron.Serializer.Infrastructure
             writer.Write((byte) SerializedType.String);
             writer.WriteString(val);
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, int val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, long val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, short val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, double val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, float val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, decimal val)
+        {
+            // Decimals are stored as IEEE 754-2008 Decimal128 format https://en.wikipedia.org/wiki/Decimal128_floating-point_format
+            // The IEEE version has higher precision than .net's decimal implementation and is compatible with other platforms
+            var d = new Decimal128(val);
+            writer.Write(d.GetIeeeHighBits());
+            writer.Write(d.GetIeeeLowBits());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, bool val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, byte val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, sbyte val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, char val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, DateTime val)
+        {
+            writer.Write(val.ToUniversalTime().Ticks);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void WriteValue(WriterState writer, Guid val)
+        {
+            val.TryWriteBytes(writer.Reserve(sizeof(Guid)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, ushort val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, uint val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, ulong val)
+        {
+            writer.Write(val);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteValue(WriterState writer, string val)
+        {
+            writer.WriteString(val);
+        }
     }
 }

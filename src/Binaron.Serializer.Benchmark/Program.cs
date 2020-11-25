@@ -6,6 +6,7 @@ using BenchmarkDotNet.Running;
 using Binaron.Serializer;
 using BinSerializerTest.DtoSamples;
 using Newtonsoft.Json;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace BinSerializerTest
 {
@@ -13,7 +14,7 @@ namespace BinSerializerTest
     {
         public class BinaronVsJsonTrainedWeights
         {
-            private const int Loop = 5;
+            private const int Loop = 50;
             private readonly TrainedWeights trainedWeights = TrainedWeights.Create();
             
             [GlobalSetup]
@@ -25,21 +26,21 @@ namespace BinSerializerTest
             }
             
             [Benchmark]
-            public void Json_Serialize() => NewtonsoftJsonTest_Serialize(trainedWeights, Loop);
-
-            [Benchmark]
             public void Binaron_Serialize() => BinaronTest_Serialize(trainedWeights, Loop);
 
             [Benchmark]
-            public void Json_Deserialize() => NewtonsoftJsonTest_Deserialize(trainedWeights, Loop);
+            public void Binaron_Deserialize() => BinaronTest_Deserialize(trainedWeights, Loop);
 
             [Benchmark]
-            public void Binaron_Deserialize() => BinaronTest_Deserialize(trainedWeights, Loop);
+            public void Json_Serialize() => NewtonsoftJsonTest_Serialize(trainedWeights, Loop);
+
+            [Benchmark]
+            public void Json_Deserialize() => NewtonsoftJsonTest_Deserialize(trainedWeights, Loop);
         }
 
         public class BinaronVsJsonBook
         {
-            private const int Loop = 200;
+            private const int Loop = 50;
             private readonly Book book = Book.Create();
 
             [GlobalSetup]
@@ -54,16 +55,16 @@ namespace BinSerializerTest
             }
 
             [Benchmark]
-            public void Json_Serialize() => NewtonsoftJsonTest_Serialize(book, Loop);
-
-            [Benchmark]
             public void Binaron_Serialize() => BinaronTest_Serialize(book, Loop);
 
             [Benchmark]
-            public void Json_Deserialize() => NewtonsoftJsonTest_Deserialize(book, Loop);
+            public void Binaron_Deserialize() => BinaronTest_Deserialize(book, Loop);
 
             [Benchmark]
-            public void Binaron_Deserialize() => BinaronTest_Deserialize(book, Loop);
+            public void Json_Serialize() => NewtonsoftJsonTest_Serialize(book, Loop);
+
+            [Benchmark]
+            public void Json_Deserialize() => NewtonsoftJsonTest_Deserialize(book, Loop);
         }
 
         public static void Main()
@@ -74,18 +75,20 @@ namespace BinSerializerTest
 
         private static void BinaronTest_Serialize<T>(T input, int loop)
         {
+            var serializerOptions = new SerializerOptions {SkipNullValues = true};
             using var stream = new MemoryStream();
             for (var i = 0; i < loop; i++)
             {
-                BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
+                BinaronConvert.Serialize(input, stream, serializerOptions);
                 stream.Position = 0;
             }
         }
 
         private static void BinaronTest_Deserialize<T>(T input, int loop)
         {
+            var serializerOptions = new SerializerOptions {SkipNullValues = true};
             using var stream = new MemoryStream();
-            BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
+            BinaronConvert.Serialize(input, stream, serializerOptions);
             stream.Position = 0;
 
             for (var i = 0; i < loop; i++)
@@ -97,8 +100,9 @@ namespace BinSerializerTest
 
         private static void BinaronTest_Validate<T>(T input, Action<T> validate)
         {
+            var serializerOptions = new SerializerOptions {SkipNullValues = true};
             using var stream = new MemoryStream();
-            BinaronConvert.Serialize(input, stream, new SerializerOptions {SkipNullValues = true});
+            BinaronConvert.Serialize(input, stream, serializerOptions);
             stream.Position = 0;
 
             var value = BinaronConvert.Deserialize<T>(stream);

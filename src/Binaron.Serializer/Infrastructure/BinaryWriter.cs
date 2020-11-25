@@ -6,7 +6,7 @@ namespace Binaron.Serializer.Infrastructure
 {
     internal class BinaryWriter : IDisposable
     {
-        private const int BufferSize = 64 * 1024; // 64KB
+        private const int BufferSize = 32 * 1024; // 32KB
         private readonly UnmanagedMemory<byte> buffer = new UnmanagedMemory<byte>(BufferSize);
         private readonly Stream stream;
         private int bufferOffset;
@@ -67,6 +67,12 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void WriteString(string value)
         {
+            if (value == null)
+            {
+                Write(-1);
+                return;
+            }
+            
             var strLength = value.Length;
             Write(strLength);
             

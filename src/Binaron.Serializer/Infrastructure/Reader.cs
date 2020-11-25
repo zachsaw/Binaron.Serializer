@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Binaron.Serializer.Enums;
 using Binaron.Serializer.IeeeDecimal;
 
 namespace Binaron.Serializer.Infrastructure
@@ -107,6 +108,18 @@ namespace Binaron.Serializer.Infrastructure
         public static bool ReadBool(ReaderState reader)
         {
             return reader.Read<bool>();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedType ReadSerializedType(ReaderState reader)
+        {
+            return (SerializedType) reader.Read<byte>();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EnumerableType ReadEnumerableType(ReaderState reader)
+        {
+            return (EnumerableType) reader.Read<byte>();
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Binaron.Serializer
         public static IDictionary<string, object> ReadObject(ReaderState reader)
         {
             var expandoObject = (IDictionary<string, object>) new ExpandoObject();
-            while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem)
+            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
             {
                 var key = reader.ReadString();
                 expandoObject[key] = ReadValue(reader);
@@ -50,17 +50,101 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object[] ReadHList(ReaderState reader)
+        {
+            var count = reader.Read<int>();
+            var elementType = Reader.ReadSerializedType(reader);
+            var list = new List<object>(ListCapacity.Clamp(count));
+            ReadValuesIntoList(reader, count, elementType, list);
+            var result = list.GetInternalArray();
+            return result.Length == list.Count ? result : list.ToArray();
+        }
+
+        public static void ReadValuesIntoList<T>(ReaderState reader, int count, SerializedType elementType, T list) where T : IList
+        {
+            switch (elementType)
+            {
+                case SerializedType.String:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadString(reader));
+                    break;
+                case SerializedType.Char:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadChar(reader));
+                    break;
+                case SerializedType.Byte:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadByte(reader));
+                    break;
+                case SerializedType.SByte:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadSByte(reader));
+                    break;
+                case SerializedType.UShort:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadUShort(reader));
+                    break;
+                case SerializedType.Short:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadShort(reader));
+                    break;
+                case SerializedType.UInt:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadUInt(reader));
+                    break;
+                case SerializedType.Int:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadInt(reader));
+                    break;
+                case SerializedType.ULong:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadULong(reader));
+                    break;
+                case SerializedType.Long:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadLong(reader));
+                    break;
+                case SerializedType.Float:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadFloat(reader));
+                    break;
+                case SerializedType.Double:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadDouble(reader));
+                    break;
+                case SerializedType.Decimal:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadDecimal(reader));
+                    break;
+                case SerializedType.Bool:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadBool(reader));
+                    break;
+                case SerializedType.DateTime:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadDateTime(reader));
+                    break;
+                case SerializedType.Guid:
+                    for (var i = 0; i < count; i++)
+                        list.Add(Reader.ReadGuid(reader));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ICollection<object> ReadEnumerable(ReaderState reader)
         {
             var result = new List<object>();
-            while ((EnumerableType) reader.Read<byte>() == EnumerableType.HasItem) 
+            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
                 result.Add(ReadValue(reader));
             return result;
         }
 
         public static object ReadValue(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadValue(reader, valueType);
         }
 
@@ -78,8 +162,12 @@ namespace Binaron.Serializer
                     return ReadDictionary(reader);
                 case SerializedType.List:
                     return ReadList(reader);
+                case SerializedType.HList:
+                    return ReadHList(reader);
                 case SerializedType.Enumerable:
                     return ReadEnumerable(reader);
+                case SerializedType.HEnumerable:
+                    return ReadHEnumerable(reader);
                 case SerializedType.String:
                     return Reader.ReadString(reader);
                 case SerializedType.Byte:
@@ -116,6 +204,88 @@ namespace Binaron.Serializer
                     return null;
                 default:
                     throw new NotSupportedException($"SerializedType '{valueType}' is not supported");
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ICollection<object> ReadHEnumerable(ReaderState reader)
+        {
+            var elementType = Reader.ReadSerializedType(reader);
+            var result = new List<object>();
+            ReadValuesIntoList(reader, elementType, result);
+            return result;
+        }
+        
+        public static void ReadValuesIntoList<T>(ReaderState reader, SerializedType elementType, T list) where T : IList
+        {
+            switch (elementType)
+            {
+                case SerializedType.String:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadString(reader));
+                    break;
+                case SerializedType.Char:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadChar(reader));
+                    break;
+                case SerializedType.Byte:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadByte(reader));
+                    break;
+                case SerializedType.SByte:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadSByte(reader));
+                    break;
+                case SerializedType.UShort:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadUShort(reader));
+                    break;
+                case SerializedType.Short:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadShort(reader));
+                    break;
+                case SerializedType.UInt:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadUInt(reader));
+                    break;
+                case SerializedType.Int:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadInt(reader));
+                    break;
+                case SerializedType.ULong:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadULong(reader));
+                    break;
+                case SerializedType.Long:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadLong(reader));
+                    break;
+                case SerializedType.Float:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadFloat(reader));
+                    break;
+                case SerializedType.Double:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadDouble(reader));
+                    break;
+                case SerializedType.Decimal:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadDecimal(reader));
+                    break;
+                case SerializedType.Bool:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadBool(reader));
+                    break;
+                case SerializedType.DateTime:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadDateTime(reader));
+                    break;
+                case SerializedType.Guid:
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem) 
+                        list.Add(Reader.ReadGuid(reader));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }

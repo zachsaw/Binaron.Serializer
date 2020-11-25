@@ -72,7 +72,7 @@ namespace Binaron.Serializer.Tests
             // Single
             {
                 using var stream = new MemoryStream();
-                BinaronConvert.Serialize(new[] {new TType{Value=1}}, stream);
+                BinaronConvert.Serialize(new[] {new TType {Value = 1}}, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = BinaronConvert.Deserialize<TType[]>(stream);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -85,7 +85,7 @@ namespace Binaron.Serializer.Tests
             // Multi
             {
                 using var stream = new MemoryStream();
-                BinaronConvert.Serialize(new[] {new TType{Value=1}, new TType{Value=2}, new TType{Value=3}}, stream);
+                BinaronConvert.Serialize(new[] {new TType {Value = 1}, new TType {Value = 2}, new TType {Value = 3}}, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 var dest = BinaronConvert.Deserialize<TType[]>(stream);
                 Assert.AreEqual(3, dest.Length);
@@ -105,27 +105,66 @@ namespace Binaron.Serializer.Tests
             }
         }
 
+        private static IEnumerable<T> EnumerateRangeSigned<T>() => Enumerable.Range(0, 2).Select(i => (T) ((sbyte) i).DynamicCast(typeof(T)));
+        private static IEnumerable<T> EnumerateRangeUnsigned<T>() => Enumerable.Range(0, 2).Select(i => (T) ((byte) i).DynamicCast(typeof(T)));
+
+        [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.EnumSignedTypeValues))]
+        public void SignedToEnumArrayTest<T>(T _)
+        {
+            var dest = Tester.TestRoundTrip<TestByteEnum[]>(EnumerateRangeSigned<T>().ToArray());
+            Assert.AreEqual(new[] {TestByteEnum.Min, TestByteEnum.Max}, dest);
+        }
+
+        [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.EnumUnsignedTypeValues))]
+        public void UnsignedToEnumArrayTest<T>(T _)
+        {
+            var dest = Tester.TestRoundTrip<TestByteEnum[]>(EnumerateRangeUnsigned<T>().ToArray());
+            Assert.AreEqual(new[] {TestByteEnum.Min, TestByteEnum.Max}, dest);
+        }
+
+        [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.EnumSignedTypeValues))]
+        public void SignedToEnumEnumerableTest<T>(T _)
+        {
+            var dest = Tester.TestRoundTrip<IEnumerable<TestByteEnum>>(EnumerateRangeSigned<T>());
+            Assert.AreEqual(new[] {TestByteEnum.Min, TestByteEnum.Max}, dest);
+        }
+
+        [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.EnumUnsignedTypeValues))]
+        public void UnsignedToEnumEnumerableTest<T>(T _)
+        {
+            var dest = Tester.TestRoundTrip<IEnumerable<TestByteEnum>>(EnumerateRangeUnsigned<T>());
+            Assert.AreEqual(new[] {TestByteEnum.Min, TestByteEnum.Max}, dest);
+        }
+
+        [Test]
+        public void MixedNullsInStringArrayTest()
+        {
+            var val = new[] {"val1", null, "val2", null, null};
+            var dest = Tester.TestRoundTrip(val);
+            Assert.AreEqual(val, dest);
+        }
+
         [Test]
         public void IntToNullableIntTest()
         {
             const int val = int.MinValue;
-            var dest = Tester.TestRoundTrip<IList<int?>>(new []{val});
+            var dest = Tester.TestRoundTrip<IList<int?>>(new[] {val});
             Assert.AreEqual(val, dest.Single());
         }
-        
+
         [Test]
         public void EnumToNullableEnumTest()
         {
             const TestByteEnum val = TestByteEnum.Min;
-            var dest = Tester.TestRoundTrip<IList<TestByteEnum?>>(new []{val});
+            var dest = Tester.TestRoundTrip<IList<TestByteEnum?>>(new[] {val});
             Assert.AreEqual(val, dest.Single());
         }
-        
+
         [Test]
         public void NullableStructTest()
         {
             var val = new Tester.TestStruct {Value = 1, NullableValue = 2};
-            var dest = Tester.TestRoundTrip<IList<Tester.TestStruct?>>(new []{val});
+            var dest = Tester.TestRoundTrip<IList<Tester.TestStruct?>>(new[] {val});
             Assert.AreEqual(val.Value, dest.SingleOrDefault()?.Value);
             Assert.AreEqual(val.NullableValue, dest.SingleOrDefault()?.NullableValue);
         }
@@ -144,7 +183,7 @@ namespace Binaron.Serializer.Tests
 
         [Test]
         public void ObjectToIEnumerableTest() => TestFromObject<IEnumerable>();
-        
+
         [Test]
         public void ObjectToICollectionTest() => TestFromObject<ICollection>();
 
@@ -201,7 +240,7 @@ namespace Binaron.Serializer.Tests
                 return AddItem(source, sourceItem);
 
             return enumerableType == typeof(IEnumerable)
-                ? AddItem((IEnumerable) source, sourceItem) 
+                ? AddItem((IEnumerable) source, sourceItem)
                 : AddItem((IEnumerable<TSourceItem>) source, sourceItem);
         }
 

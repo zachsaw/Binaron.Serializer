@@ -209,7 +209,7 @@ namespace Binaron.Serializer.Accessors
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public object Handle(ReaderState reader)
                 {
-                    var valueType = (SerializedType) reader.Read<byte>();
+                    var valueType = Reader.ReadSerializedType(reader);
                     switch (valueType)
                     {
                         case SerializedType.Null:
@@ -223,8 +223,12 @@ namespace Binaron.Serializer.Accessors
                             return TypedDeserializer.ReadDictionary<T>(reader);
                         case SerializedType.List:
                             return TypedDeserializer.ReadList<T>(reader);
+                        case SerializedType.HList:
+                            return TypedDeserializer.ReadHList<T>(reader);
                         case SerializedType.Enumerable:
                             return TypedDeserializer.ReadEnumerable<T>(reader);
+                        case SerializedType.HEnumerable:
+                            return TypedDeserializer.ReadHEnumerable<T>(reader);
                         case SerializedType.String:
                             return Reader.ReadString(reader);
                         case SerializedType.Char:
