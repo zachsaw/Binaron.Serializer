@@ -71,6 +71,9 @@ namespace Binaron.Serializer.Infrastructure
         public unsafe string ReadString()
         {
             var len = Read<int>() * sizeof(char);
+            if (len < 0)
+                return null;
+            
             if (len == 0)
                 return string.Empty;
 

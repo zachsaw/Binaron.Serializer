@@ -47,13 +47,13 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        public static bool WriteEnumerable<T>(WriterState writer, IEnumerable enumerable)
+        public static bool WriteEnumerable<T>(WriterState writer, T enumerable) where T : IEnumerable
         {
             var elementType = GenericType.GetIEnumerableGenericType<T>.Type;
             if (elementType.Type == null)
                 return false;
 
-            if (elementType.Type.IsEnum != true)
+            if (!elementType.Type.IsEnum)
             {
                 // ReSharper disable once PossibleMultipleEnumeration
                 if (WriteEnumerable(writer, enumerable, elementType.Code))
@@ -64,10 +64,12 @@ namespace Binaron.Serializer.Infrastructure
                     return false;
 
                 // ReSharper disable once PossibleMultipleEnumeration
+                writer.Write((byte) SerializedType.Enumerable);
                 genericWriter.Write(writer, enumerable);
                 return true;
             }
 
+            writer.Write((byte) SerializedType.Enumerable);
             WriteEnums(writer, enumerable, elementType.Code);
             return true;
         }
@@ -78,9 +80,10 @@ namespace Binaron.Serializer.Infrastructure
             if (elementType.Type == null)
                 return false;
 
-            if (elementType.Type.IsEnum != true)
+            if (!elementType.Type.IsEnum)
                 return WriteEnumerable(writer, enumerable, elementType.Code);
 
+            writer.Write((byte) SerializedType.Enumerable);
             WriteEnums(writer, enumerable, elementType.Code);
             return true;
         }
@@ -90,11 +93,13 @@ namespace Binaron.Serializer.Infrastructure
             switch (elementTypeCode)
             {
                 case TypeCode.String:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.String);
                     foreach (var item in (IEnumerable<string>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
                         if (item != null)
-                            Writer.Write(writer, item);
+                            Writer.WriteValue(writer, item);
                         else
                             writer.Write((byte) SerializedType.Null);
                     }
@@ -102,136 +107,166 @@ namespace Binaron.Serializer.Infrastructure
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Boolean:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Bool);
                     foreach (var item in (IEnumerable<bool>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Byte:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Byte);
                     foreach (var item in (IEnumerable<byte>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Char:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Char);
                     foreach (var item in (IEnumerable<char>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.DateTime:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.DateTime);
                     foreach (var item in (IEnumerable<DateTime>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Guid:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Guid);
                     foreach (var item in (IEnumerable<Guid>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Decimal:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Decimal);
                     foreach (var item in (IEnumerable<decimal>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Double:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Double);
                     foreach (var item in (IEnumerable<double>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Int16:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Short);
                     foreach (var item in (IEnumerable<short>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Int32:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Int);
                     foreach (var item in (IEnumerable<int>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Int64:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Long);
                     foreach (var item in (IEnumerable<long>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.SByte:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.SByte);
                     foreach (var item in (IEnumerable<sbyte>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.Single:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.Float);
                     foreach (var item in (IEnumerable<float>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.UInt16:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.UShort);
                     foreach (var item in (IEnumerable<ushort>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.UInt32:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.UInt);
                     foreach (var item in (IEnumerable<uint>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
                     return true;
                 case TypeCode.UInt64:
+                    writer.Write((byte) SerializedType.HEnumerable);
+                    writer.Write((byte) SerializedType.ULong);
                     foreach (var item in (IEnumerable<ulong>) enumerable)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     }
 
                     writer.Write((byte) EnumerableType.End);
@@ -283,27 +318,29 @@ namespace Binaron.Serializer.Infrastructure
             }
         }
 
-        public static bool WriteList<T>(WriterState writer, ICollection list)
+        public static bool WriteList<T>(WriterState writer, T list) where T : ICollection
         {
-            var listType = typeof(T);
-
             var elementType = GenericType.GetICollectionGenericType<T>.Type;
             if (elementType.Type == null)
                 return false;
 
-            if (elementType.Type.IsEnum != true)
+            if (!elementType.Type.IsEnum)
             {
-                if (listType.IsArray ? WriteArray(writer, list, elementType.Code) : WriteList(writer, list, elementType.Code))
+                if (typeof(T).IsArray ? WriteArray(writer, list, elementType.Code) : WriteList(writer, list, elementType.Code))
                     return true;
 
                 var genericWriter = GetGenericListWriter<T>.Writer;
                 if (genericWriter == null)
                     return false;
 
+                writer.Write((byte) SerializedType.List);
+                writer.Write(list.Count);
                 genericWriter.Write(writer, list);
                 return true;
             }
 
+            writer.Write((byte) SerializedType.List);
+            writer.Write(list.Count);
             WriteEnums(writer, list, elementType.Code);
             return true;
         }
@@ -315,9 +352,11 @@ namespace Binaron.Serializer.Infrastructure
             if (elementType.Type == null)
                 return false;
 
-            if (elementType.Type.IsEnum != true)
+            if (!elementType.Type.IsEnum)
                 return listType.IsArray ? WriteArray(writer, list, elementType.Code) : WriteList(writer, list, elementType.Code);
 
+            writer.Write((byte) SerializedType.List);
+            writer.Write(list.Count);
             WriteEnums(writer, list, elementType.Code);
             return true;
         }
@@ -327,73 +366,116 @@ namespace Binaron.Serializer.Infrastructure
             switch (elementTypeCode)
             {
                 case TypeCode.String:
-                    foreach (var item in (string[]) list)
-                    {
-                        if (item != null)
-                            Writer.Write(writer, item);
-                        else
-                            writer.Write((byte) SerializedType.Null);
-                    }
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.String);
+                    foreach (var item in (string[]) list) 
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Boolean:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Bool);
                     foreach (var item in (bool[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Byte:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Byte);
                     foreach (var item in (byte[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Char:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Char);
                     foreach (var item in (char[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.DateTime:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.DateTime);
                     foreach (var item in (DateTime[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Guid:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Guid);
                     foreach (var item in (Guid[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Decimal:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Decimal);
                     foreach (var item in (decimal[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Double:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Double);
                     foreach (var item in (double[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Int16:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Short);
                     foreach (var item in (short[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Int32:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Int);
                     foreach (var item in (int[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Int64:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Long);
                     foreach (var item in (long[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.SByte:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.SByte);
                     foreach (var item in (sbyte[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Single:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Float);
                     foreach (var item in (float[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.UInt16:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.UShort);
                     foreach (var item in (ushort[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.UInt32:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.UInt);
                     foreach (var item in (uint[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.UInt64:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.ULong);
                     foreach (var item in (ulong[]) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 default:
                     return false;
@@ -405,73 +487,116 @@ namespace Binaron.Serializer.Infrastructure
             switch (elementTypeCode)
             {
                 case TypeCode.String:
-                    foreach (var item in (ICollection<string>) list)
-                    {
-                        if (item != null)
-                            Writer.Write(writer, item);
-                        else
-                            writer.Write((byte) SerializedType.Null);
-                    }
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.String);
+                    foreach (var item in (ICollection<string>) list) 
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Boolean:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Bool);
                     foreach (var item in (ICollection<bool>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Byte:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Byte);
                     foreach (var item in (ICollection<byte>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Char:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Char);
                     foreach (var item in (ICollection<char>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.DateTime:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.DateTime);
                     foreach (var item in (ICollection<DateTime>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Guid:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Guid);
                     foreach (var item in (ICollection<Guid>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Decimal:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Decimal);
                     foreach (var item in (ICollection<decimal>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Double:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Double);
                     foreach (var item in (ICollection<double>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Int16:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Short);
                     foreach (var item in (ICollection<short>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Int32:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Int);
                     foreach (var item in (ICollection<int>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Int64:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Long);
                     foreach (var item in (ICollection<long>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.SByte:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.SByte);
                     foreach (var item in (ICollection<sbyte>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.Single:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.Float);
                     foreach (var item in (ICollection<float>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.UInt16:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.UShort);
                     foreach (var item in (ICollection<ushort>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.UInt32:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.UInt);
                     foreach (var item in (ICollection<uint>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 case TypeCode.UInt64:
+                    writer.Write((byte) SerializedType.HList);
+                    writer.Write(list.Count);
+                    writer.Write((byte) SerializedType.ULong);
                     foreach (var item in (ICollection<ulong>) list)
-                        Writer.Write(writer, item);
+                        Writer.WriteValue(writer, item);
                     return true;
                 default:
                     return false;

@@ -18,6 +18,22 @@ namespace Binaron.Serializer.Tests
 
     public static class AllTestCases
     {
+        public static dynamic[] EnumSignedTypeValues => new dynamic[]
+        {
+            sbyte.MinValue,
+            short.MinValue,
+            int.MinValue,
+            long.MinValue
+        };
+        
+        public static dynamic[] EnumUnsignedTypeValues => new dynamic[]
+        {
+            byte.MinValue,
+            ushort.MinValue,
+            uint.MinValue,
+            ulong.MinValue
+        };
+
         private static dynamic[] TestValues => new dynamic[]
         {
             decimal.MinValue,
@@ -46,11 +62,12 @@ namespace Binaron.Serializer.Tests
             TestULongEnum.Max
         };
 
+        private static readonly Guid Guid = Guid.NewGuid();
         private static readonly DateTime Now = DateTime.UtcNow;
         private const char C = '®';
         private const string Str = "A string with unicode surrogate character: 🌉";
 
-        private static dynamic[] MiscValues => new dynamic[] {Now, C, Str};
+        private static dynamic[] MiscValues => new dynamic[] {Now, C, Str, Guid};
 
         public static IEnumerable<TestCaseData> TestCaseOfEnums() => EnumValues.Select(v => new TestCaseData(v));
 

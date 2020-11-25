@@ -36,7 +36,7 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteNonNullValue<T>(WriterState writer, T val)
+        private static void WriteNonNullValue<T>(WriterState writer, T val)
         {
             if (WritePrimitive(writer, val))
                 return;
@@ -174,11 +174,9 @@ namespace Binaron.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void WriteList<T>(WriterState writer, ICollection list)
+        private static void WriteList<T>(WriterState writer, T list) where T : ICollection
         {
-            writer.Write((byte) SerializedType.List);
-            writer.Write(list.Count);
-            if (GenericWriter.WriteList<T>(writer, list))
+            if (GenericWriter.WriteList(writer, list))
                 return;
 
             // fallback to non-generic version
@@ -188,8 +186,6 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteList(WriterState writer, ICollection list)
         {
-            writer.Write((byte) SerializedType.List);
-            writer.Write(list.Count);
             if (GenericWriter.WriteList(writer, list))
                 return;
 
@@ -200,35 +196,35 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteListFallback(WriterState writer, ICollection list)
         {
+            writer.Write((byte) SerializedType.List);
+            writer.Write(list.Count);
             foreach (var item in list)
                 WriteValue(writer, item);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void WriteEnumerable<T>(WriterState writer, IEnumerable enumerable)
+        private static void WriteEnumerable<T>(WriterState writer, T enumerable) where T : IEnumerable
         {
-            writer.Write((byte) SerializedType.Enumerable);
-
-            // ReSharper disable once PossibleMultipleEnumeration
-            if (GenericWriter.WriteEnumerable<T>(writer, enumerable))
-                return;
-
-            // fallback to non-generic version (we are not enumerating twice)
-            // ReSharper disable once PossibleMultipleEnumeration
-            WriteEnumerableFallback(writer, enumerable);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void WriteEnumerable(WriterState writer, IEnumerable enumerable)
-        {
-            writer.Write((byte) SerializedType.Enumerable);
-
             // ReSharper disable once PossibleMultipleEnumeration
             if (GenericWriter.WriteEnumerable(writer, enumerable))
                 return;
 
             // fallback to non-generic version (we are not enumerating twice)
             // ReSharper disable once PossibleMultipleEnumeration
+            writer.Write((byte) SerializedType.Enumerable);
+            WriteEnumerableFallback(writer, enumerable);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void WriteEnumerable(WriterState writer, IEnumerable enumerable)
+        {
+            // ReSharper disable once PossibleMultipleEnumeration
+            if (GenericWriter.WriteEnumerable(writer, enumerable))
+                return;
+
+            // fallback to non-generic version (we are not enumerating twice)
+            // ReSharper disable once PossibleMultipleEnumeration
+            writer.Write((byte) SerializedType.Enumerable);
             WriteEnumerableFallback(writer, enumerable);
         }
 
@@ -247,63 +243,73 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WritePrimitive(WriterState writer, object value)
         {
-            var type = value.GetType();
+            return WritePrimitive(writer, value.GetType().GetTypeCode(), value);
+        }
 
-            switch (type.GetTypeCode())
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool WritePrimitive<T>(WriterState writer, T value)
+        {
+            return WritePrimitive(writer, TypeOf<T>.TypeCode, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool WritePrimitive<T>(WriterState writer, TypeCode typeCode, T value)
+        {
+            switch (typeCode)
             {
                 case TypeCode.String:
-                    Writer.Write(writer, (string) value);
+                    Writer.Write(writer, (string) (object) value);
                     return true;
                 case TypeCode.UInt32:
-                    Writer.Write(writer, (uint) value);
+                    Writer.Write(writer, (uint) (object) value);
                     return true;
                 case TypeCode.Int32:
-                    Writer.Write(writer, (int) value);
+                    Writer.Write(writer, (int) (object) value);
                     return true;
                 case TypeCode.Byte:
-                    Writer.Write(writer, (byte) value);
+                    Writer.Write(writer, (byte) (object) value);
                     return true;
                 case TypeCode.SByte:
-                    Writer.Write(writer, (sbyte) value);
+                    Writer.Write(writer, (sbyte) (object) value);
                     return true;
                 case TypeCode.UInt16:
-                    Writer.Write(writer, (ushort) value);
+                    Writer.Write(writer, (ushort) (object) value);
                     return true;
                 case TypeCode.Int16:
-                    Writer.Write(writer, (short) value);
+                    Writer.Write(writer, (short) (object) value);
                     return true;
                 case TypeCode.Int64:
-                    Writer.Write(writer, (long) value);
+                    Writer.Write(writer, (long) (object) value);
                     return true;
                 case TypeCode.UInt64:
-                    Writer.Write(writer, (ulong) value);
+                    Writer.Write(writer, (ulong) (object) value);
                     return true;
                 case TypeCode.Single:
-                    Writer.Write(writer, (float) value);
+                    Writer.Write(writer, (float) (object) value);
                     return true;
                 case TypeCode.Double:
-                    Writer.Write(writer, (double) value);
+                    Writer.Write(writer, (double) (object) value);
                     return true;
                 case TypeCode.Decimal:
-                    Writer.Write(writer, (decimal) value);
+                    Writer.Write(writer, (decimal) (object) value);
                     return true;
                 case TypeCode.Boolean:
-                    Writer.Write(writer, (bool) value);
+                    Writer.Write(writer, (bool) (object) value);
                     return true;
                 case TypeCode.DateTime:
-                    Writer.Write(writer, (DateTime) value);
+                    Writer.Write(writer, (DateTime) (object) value);
                     return true;
                 case TypeCode.Guid:
-                    Writer.Write(writer, (Guid) value);
+                    Writer.Write(writer, (Guid) (object) value);
                     return true;
                 case TypeCode.Char:
-                    Writer.Write(writer, (char) value);
+                    Writer.Write(writer, (char) (object) value);
                     return true;
                 default:
                     return false;
             }
         }
-
+        
         private static class NonPrimitiveWriters
         {
             public static INonPrimitiveWriter<T> CreateWriter<T>()
@@ -393,13 +399,13 @@ namespace Binaron.Serializer
             private class ListWriter<T> : INonPrimitiveWriter<T> where T : ICollection
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void Write(WriterState writer, T val) => WriteList<T>(writer, val);
+                public void Write(WriterState writer, T val) => WriteList(writer, val);
             }
 
             private class EnumerableWriter<T> : INonPrimitiveWriter<T> where T : IEnumerable
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void Write(WriterState writer, T val) => WriteEnumerable<T>(writer, val);
+                public void Write(WriterState writer, T val) => WriteEnumerable(writer, val);
             }
 
             private class ObjectWriter<T> : INonPrimitiveWriter<T>

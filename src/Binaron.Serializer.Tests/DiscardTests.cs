@@ -78,17 +78,24 @@ namespace Binaron.Serializer.Tests
             Assert.AreEqual(0, dest);
         }
 
-        [Test]
-        public void DiscardListOfListTest()
+        [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
+        public void DiscardListOfListTest<T>(T element)
         {
-            var dest = Tester.TestRoundTrip<int[]>(new[] {new[] {1}});
+            var dest = Tester.TestRoundTrip<int[]>(new[] {new[] {element}});
+            Assert.AreEqual(0, dest.Length);
+        }
+
+        [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
+        public void DiscardListOfEnumerableTest<T>(T element)
+        {
+            var dest = Tester.TestRoundTrip<int[]>(new[] {GetEnumerable(new[] {element})});
             Assert.AreEqual(0, dest.Length);
         }
 
         [Test]
-        public void DiscardListOfEnumerableTest()
+        public void DiscardListOfListOfClassesTest()
         {
-            var dest = Tester.TestRoundTrip<int[]>(new[] {GetEnumerable(new[] {1})});
+            var dest = Tester.TestRoundTrip<int[]>(new[] {new[] {new TestClass<int>()}});
             Assert.AreEqual(0, dest.Length);
         }
 

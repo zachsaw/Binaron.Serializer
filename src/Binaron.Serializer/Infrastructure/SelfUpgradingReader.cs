@@ -12,7 +12,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object ReadAsObject<T>(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsObject<T>(reader, valueType);
         }
 
@@ -32,8 +32,12 @@ namespace Binaron.Serializer.Infrastructure
                     return TypedDeserializer.ReadDictionary<T>(reader);
                 case SerializedType.List:
                     return TypedDeserializer.ReadList<T>(reader);
+                case SerializedType.HList:
+                    return TypedDeserializer.ReadHList<T>(reader);
                 case SerializedType.Enumerable:
                     return TypedDeserializer.ReadEnumerable<T>(reader);
+                case SerializedType.HEnumerable:
+                    return TypedDeserializer.ReadHEnumerable<T>(reader);
                 default:
                     return ReadAsMiscObject<T>(reader, valueType);
             }
@@ -115,7 +119,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool ReadAsBool(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsBool(reader, valueType) ?? default;
         }
 
@@ -125,14 +129,14 @@ namespace Binaron.Serializer.Infrastructure
             if (valueType == SerializedType.Bool)
                 return Reader.ReadBool(reader);
 
-            TypedDeserializer.DiscardValue(reader, valueType);
+            Discarder.DiscardValue(reader, valueType);
             return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ReadAsByte(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsByte(reader, valueType) ?? default;
         }
 
@@ -142,14 +146,14 @@ namespace Binaron.Serializer.Infrastructure
             if (valueType == SerializedType.Byte)
                 return Reader.ReadByte(reader);
 
-            TypedDeserializer.DiscardValue(reader, valueType);
+            Discarder.DiscardValue(reader, valueType);
             return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static char ReadAsChar(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsChar(reader, valueType) ?? default;
         }
 
@@ -159,21 +163,21 @@ namespace Binaron.Serializer.Infrastructure
             if (valueType == SerializedType.Char)
                 return Reader.ReadChar(reader);
 
-            TypedDeserializer.DiscardValue(reader, valueType);
+            Discarder.DiscardValue(reader, valueType);
             return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime ReadAsDateTime(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsDateTime(reader, valueType) ?? default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Guid ReadAsGuid(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsGuid(reader, valueType) ?? default;
         }
 
@@ -183,7 +187,7 @@ namespace Binaron.Serializer.Infrastructure
             if (valueType == SerializedType.DateTime)
                 return Reader.ReadDateTime(reader);
 
-            TypedDeserializer.DiscardValue(reader, valueType);
+            Discarder.DiscardValue(reader, valueType);
             return null;
         }
 
@@ -193,14 +197,14 @@ namespace Binaron.Serializer.Infrastructure
             if (valueType == SerializedType.Guid)
                 return Reader.ReadGuid(reader);
 
-            TypedDeserializer.DiscardValue(reader, valueType);
+            Discarder.DiscardValue(reader, valueType);
             return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal ReadAsDecimal(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsDecimal(reader, valueType) ?? default;
         }
 
@@ -228,7 +232,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.Decimal:
                     return Reader.ReadDecimal(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -236,7 +240,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ReadAsDouble(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsDouble(reader, valueType) ?? default;
         }
 
@@ -266,7 +270,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.SByte:
                     return Reader.ReadSByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -274,7 +278,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short ReadAsShort(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsShort(reader, valueType) ?? default;
         }
 
@@ -290,7 +294,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.SByte:
                     return Reader.ReadSByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -298,7 +302,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ReadAsInt(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsInt(reader, valueType) ?? default;
         }
 
@@ -318,7 +322,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.SByte:
                     return Reader.ReadSByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -326,7 +330,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long ReadAsLong(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsLong(reader, valueType) ?? default;
         }
 
@@ -350,7 +354,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.SByte:
                     return Reader.ReadSByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -358,7 +362,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static sbyte ReadAsSByte(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsSByte(reader, valueType) ?? default;
         }
 
@@ -368,14 +372,14 @@ namespace Binaron.Serializer.Infrastructure
             if (valueType == SerializedType.SByte)
                 return Reader.ReadSByte(reader);
 
-            TypedDeserializer.DiscardValue(reader, valueType);
+            Discarder.DiscardValue(reader, valueType);
             return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ReadAsFloat(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsFloat(reader, valueType) ?? default;
         }
 
@@ -403,7 +407,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.SByte:
                     return Reader.ReadSByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -411,7 +415,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ReadAsUShort(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsUShort(reader, valueType) ?? default;
         }
 
@@ -425,7 +429,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.Byte:
                     return Reader.ReadByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -433,7 +437,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ReadAsUInt(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsUInt(reader, valueType) ?? default;
         }
 
@@ -449,7 +453,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.Byte:
                     return Reader.ReadByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -457,7 +461,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong ReadAsULong(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsULong(reader, valueType) ?? default;
         }
 
@@ -475,7 +479,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.Byte:
                     return Reader.ReadByte(reader);
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
@@ -483,7 +487,7 @@ namespace Binaron.Serializer.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadAsString(ReaderState reader)
         {
-            var valueType = (SerializedType) reader.Read<byte>();
+            var valueType = Reader.ReadSerializedType(reader);
             return ReadAsString(reader, valueType);
         }
 
@@ -525,7 +529,7 @@ namespace Binaron.Serializer.Infrastructure
                 case SerializedType.Guid:
                     return Reader.ReadGuid(reader).ToString();
                 default:
-                    TypedDeserializer.DiscardValue(reader, valueType);
+                    Discarder.DiscardValue(reader, valueType);
                     return null;
             }
         }
