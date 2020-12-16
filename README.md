@@ -4,7 +4,7 @@
 
 **A *really* fast serializer for modern programming languages with an open source [binary object notation format](BinaryObjectNotation.md).**
 
-In this repository, you'll find 2 benchmarks using BenchmarkDotNet comparing Binaron.Serializer to Newtonsoft.JSON. System.Text.Json's JsonSerializer unfortunately failed validation, which is why it is not included in the benchmark.
+In this repository, you'll find 2 benchmarks using BenchmarkDotNet comparing Binaron.Serializer to Newtonsoft.JSON. System.Text.Json's JsonSerializer unfortunately failed validation, which is why it is not included in the benchmark. Functionally, System.Text.Json.JsonSerializer is also missing basic features such as [polymorphism support](https://github.com/dotnet/runtime/issues/29937) and is not a replacement for Newtonsoft.JSON.
 
 Note that these benchmarks were run on .net 5.0.
 
