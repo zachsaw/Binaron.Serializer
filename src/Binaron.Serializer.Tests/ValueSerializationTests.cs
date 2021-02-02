@@ -394,6 +394,68 @@ namespace Binaron.Serializer.Tests
             }
         }
 
+        [TestCase(1)]
+        [TestCase(null)]
+        public void NullableTest1(int? value)
+        {
+            using (var ms1 = new MemoryStream())
+            {
+                BinaronConvert.Serialize<int?>(value, ms1);
+                using (var ms2 = new MemoryStream(ms1.ToArray()))
+                {
+                    Assert.AreEqual(value, BinaronConvert.Deserialize<int?>(ms2));
+                    
+                }
+            }
+        }
+
+        [TestCase(1, "a")]
+        [TestCase(null, null)]
+        [TestCase(1, null)]
+        [TestCase(null, "abcd")]
+
+        public void MemberSetterNullableType1(int? v1, string v2)
+        {
+            TestClass1 tc1 = new TestClass1() { IntValue = v1, StringValue = v2 };
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaronConvert.Serialize(tc1, ms);
+                using (MemoryStream ms1 = new MemoryStream(ms.ToArray()))
+                {
+                    var tc2 = BinaronConvert.Deserialize<TestClass1>(ms1);
+                    Assert.AreEqual(v1, tc2.IntValue);
+                    Assert.AreEqual(v2, tc2.StringValue);
+                }
+            }
+        }
+
+        [TestCase(1, "a")]
+        [TestCase(null, null)]
+        [TestCase(1, null)]
+        [TestCase(null, "abcd")]
+
+        public void MemberSetterNullableType2(int? v1, string v2)
+        {
+            List<TestClass1> tc1 = new List<TestClass1>() { new TestClass1() { IntValue = v1, StringValue = v2 } };
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaronConvert.Serialize(tc1, ms);
+                using (MemoryStream ms1 = new MemoryStream(ms.ToArray()))
+                {
+                    var tc2 = BinaronConvert.Deserialize<List<TestClass1>>(ms1);
+                    Assert.AreEqual(1, tc2.Count);
+                    Assert.AreEqual(v1, tc2[0].IntValue);
+                    Assert.AreEqual(v2, tc2[0].StringValue);
+                }
+            }
+        }
+
+        private class TestClass1
+        {
+            public int? IntValue { get; set; }
+            public string StringValue { get; set; }
+        }
+
         private class TestClass<T>
         {
             public DateTime RootValue { get; set; }

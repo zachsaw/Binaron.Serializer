@@ -102,22 +102,30 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteObject<T>(WriterState writer, T val)
         {
-            var type = val.GetType();
-            if (writer.CustomObjectIdentifierProviders == null || !writer.CustomObjectIdentifierProviders.TryGetValue(typeof(T), out var customObjectIdentifierProvider))
+            if (val == null)
             {
-                writer.Write((byte) SerializedType.Object);
+                writer.Write((byte)SerializedType.Null);
             }
             else
             {
-                writer.Write((byte) SerializedType.CustomObject);
-                WriteValue(writer, customObjectIdentifierProvider.GetIdentifier(type));
+                var type = val.GetType();
+                if (writer.CustomObjectIdentifierProviders == null || !writer.CustomObjectIdentifierProviders.TryGetValue(typeof(T), out var customObjectIdentifierProvider))
+                {
+                    writer.Write((byte)SerializedType.Object);
+                }
+                else
+                {
+                    writer.Write((byte)SerializedType.CustomObject);
+                    WriteValue(writer, customObjectIdentifierProvider.GetIdentifier(type));
+                }
+
+
+                var getters = type == typeof(T) ? GetterHandler.GetterHandlers<T>.Getters : GetterHandler.GetGetterHandlers(type);
+                foreach (var getter in getters)
+                    getter.Handle(writer, val);
+                writer.Write((byte)EnumerableType.End);
             }
-
-            var getters = type == typeof(T) ? GetterHandler.GetterHandlers<T>.Getters : GetterHandler.GetGetterHandlers(type);
-            foreach (var getter in getters)
-                getter.Handle(writer, val);
-
-            writer.Write((byte) EnumerableType.End);
+            
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -243,13 +251,23 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WritePrimitive(WriterState writer, object value)
         {
-            return WritePrimitive(writer, value.GetType().GetTypeCode(), value);
+            var type = value.GetType();
+            var type1 = Nullable.GetUnderlyingType(type);
+            if (type1 != null && type1 != type)
+                type = type1;
+
+            return WritePrimitive(writer, type.GetTypeCode(), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WritePrimitive<T>(WriterState writer, T value)
         {
-            return WritePrimitive(writer, TypeOf<T>.TypeCode, value);
+            var type = typeof(T);
+            var type1 = Nullable.GetUnderlyingType(type);
+            if (type1 != null && type1 != type)
+                type = type1;
+
+            return WritePrimitive(writer, type.GetTypeCode(), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
