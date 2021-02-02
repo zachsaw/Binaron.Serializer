@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -264,6 +264,61 @@ namespace Binaron.Serializer.Tests
                 default:
                     throw new NotSupportedException();
             }
+        }
+
+        [Test]
+        public void CustomCollectionIntTest()
+        {
+            CustomTestCollection<int> collection = new CustomTestCollection<int>()
+            {
+                0, 1, 2, 3, 4
+            };
+
+            var dest = Tester.TestRoundTrip<CustomTestCollection<int>>(collection);
+            Assert.AreEqual(5, dest.Count);
+            Assert.AreEqual(0, dest[0]);
+            Assert.AreEqual(1, dest[1]);
+            Assert.AreEqual(2, dest[2]);
+            Assert.AreEqual(3, dest[3]);
+            Assert.AreEqual(4, dest[4]);
+        }
+
+        [Test]
+        public void CustomCollectionStringTest()
+        {
+            CustomTestCollection<string> collection = new CustomTestCollection<string>()
+            {
+                "0", "1", "2", "3", "4"
+            };
+
+            var dest = Tester.TestRoundTrip<CustomTestCollection<string>>(collection);
+            Assert.AreEqual(5, dest.Count);
+            Assert.AreEqual("0", dest[0]);
+            Assert.AreEqual("1", dest[1]);
+            Assert.AreEqual("2", dest[2]);
+            Assert.AreEqual("3", dest[3]);
+            Assert.AreEqual("4", dest[4]);
+        }
+
+        [Test]
+        public void CustomCollectionObjectTest()
+        {
+            CustomTestCollection<CustomTestCollection<int>.TestCollectionObject> collection = new CustomTestCollection<CustomTestCollection<int>.TestCollectionObject>()
+            {
+                new CustomTestCollection<int>.TestCollectionObject(0),
+                new CustomTestCollection<int>.TestCollectionObject(1),
+                new CustomTestCollection<int>.TestCollectionObject(2),
+                new CustomTestCollection<int>.TestCollectionObject(3),
+                new CustomTestCollection<int>.TestCollectionObject(4),
+            };
+
+            var dest = Tester.TestRoundTrip(collection);
+            Assert.AreEqual(5, dest.Count);
+            Assert.AreEqual(0, dest[0].A);
+            Assert.AreEqual(1, dest[1].A);
+            Assert.AreEqual(2, dest[2].A);
+            Assert.AreEqual(3, dest[3].A);
+            Assert.AreEqual(4, dest[4].A);
         }
     }
 }
