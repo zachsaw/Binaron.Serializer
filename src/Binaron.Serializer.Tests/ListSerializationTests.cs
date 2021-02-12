@@ -283,22 +283,19 @@ namespace Binaron.Serializer.Tests
             Assert.AreEqual(4, dest[4]);
         }
 
-        [Test]
-        public void CustomCollectionStringTest()
+        [TestCaseSource(typeof(AllTestCases), nameof(AllTestCases.TestCaseOfValues))]
+        public void CustomCollectionOfTypeTest<TSource>(TSource v)
         {
-            CustomTestCollection<string> collection = new CustomTestCollection<string>()
+            CustomTestCollection<TSource> collection = new CustomTestCollection<TSource>()
             {
-                "0", "1", "2", "3", "4"
+                v
             };
 
-            var dest = Tester.TestRoundTrip<CustomTestCollection<string>>(collection);
-            Assert.AreEqual(5, dest.Count);
-            Assert.AreEqual("0", dest[0]);
-            Assert.AreEqual("1", dest[1]);
-            Assert.AreEqual("2", dest[2]);
-            Assert.AreEqual("3", dest[3]);
-            Assert.AreEqual("4", dest[4]);
+            var dest = Tester.TestRoundTrip<CustomTestCollection<TSource>>(collection);
+            Assert.AreEqual(1, dest.Count);
+            Assert.AreEqual(v, dest[0]);
         }
+
 
         [Test]
         public void CustomCollectionObjectTest()
@@ -319,6 +316,64 @@ namespace Binaron.Serializer.Tests
             Assert.AreEqual(2, dest[2].A);
             Assert.AreEqual(3, dest[3].A);
             Assert.AreEqual(4, dest[4].A);
+        }
+
+        [Test]
+        public void TestListWithNullInside()
+        {
+            CustomTestCollection<CustomTestCollection<int>.TestCollectionObject> collection = new CustomTestCollection<CustomTestCollection<int>.TestCollectionObject>()
+            {
+                new CustomTestCollection<int>.TestCollectionObject(0),
+                new CustomTestCollection<int>.TestCollectionObject(1),
+                null,
+                new CustomTestCollection<int>.TestCollectionObject(3),
+                new CustomTestCollection<int>.TestCollectionObject(4),
+            };
+
+            var dest = Tester.TestRoundTrip(collection);
+            Assert.AreEqual(5, dest.Count);
+            Assert.AreEqual(0, dest[0].A);
+            Assert.AreEqual(1, dest[1].A);
+            Assert.AreEqual(null, dest[2]);
+            Assert.AreEqual(3, dest[3].A);
+            Assert.AreEqual(4, dest[4].A);
+        }
+
+        [Test]
+        public void TestListOfNullables1()
+        {
+            var collection = new CustomTestCollection<int?>() { 1, null, 2 };
+            using (var ms1 = new MemoryStream())
+            {
+                var so = new SerializerOptions();
+                BinaronConvert.Serialize(collection, ms1, so);
+                using (var ms2 = new MemoryStream(ms1.ToArray()))
+                {
+                    var cr2 = BinaronConvert.Deserialize<CustomTestCollection<int?>>(ms2);
+                    Assert.AreEqual(3, cr2.Count);
+                    Assert.AreEqual(1, cr2[0]);
+                    Assert.AreEqual(null, cr2[1]);
+                    Assert.AreEqual(2, cr2[2]);
+                }
+            }
+        }
+        [Test]
+        public void TestListOfNullables2()
+        {
+            var collection = new List<int?>() { 1, null, 2 };
+            using (var ms1 = new MemoryStream())
+            {
+                var so = new SerializerOptions();
+                BinaronConvert.Serialize(collection, ms1, so);
+                using (var ms2 = new MemoryStream(ms1.ToArray()))
+                {
+                    var cr2 = BinaronConvert.Deserialize<List<int?>>(ms2);
+                    Assert.AreEqual(3, cr2.Count);
+                    Assert.AreEqual(1, cr2[0]);
+                    Assert.AreEqual(null, cr2[1]);
+                    Assert.AreEqual(2, cr2[2]);
+                }
+            }
         }
     }
 }

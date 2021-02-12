@@ -49,5 +49,6 @@ namespace Binaron.Serializer.Tests
                 set { }
             }
         }
+       
     }
 }

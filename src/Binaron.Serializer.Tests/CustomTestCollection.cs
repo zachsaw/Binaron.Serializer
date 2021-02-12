@@ -9,18 +9,18 @@ namespace Binaron.Serializer.Tests
 {
     public class CustomTestCollection<T> : IEnumerable<T>
     {
-        private List<T> mList = new List<T>();
+        private List<T> List = new List<T>();
 
-        public T this[int index] => mList[index];
+        public T this[int index] => List[index];
 
-        public int Count => mList.Count;
+        public int Count => List.Count;
 
-        public void Add(T value) => mList.Add(value);
+        public void Add(T value) => List.Add(value);
 
 
-        public IEnumerator<T> GetEnumerator() => mList.GetEnumerator();
+        public IEnumerator<T> GetEnumerator() => List.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => mList.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => List.GetEnumerator();
 
         public class TestCollectionObject
         {

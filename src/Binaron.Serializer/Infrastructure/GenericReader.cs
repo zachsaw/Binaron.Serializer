@@ -58,8 +58,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<TElement> l1)
+                        else if (result is IEnumerable<TElement> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<TElement>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
@@ -96,8 +97,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<bool> l1)
+                        else if (result is IEnumerable<bool> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<bool>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Bool)
                             {
@@ -143,8 +145,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<byte> l1)
+                        else if (result is IEnumerable<byte> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<byte>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Byte)
                             {
@@ -189,8 +192,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<char> l1)
+                        else if (result is IEnumerable<char> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<char>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Char)
                             {
@@ -236,8 +240,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<DateTime> l1)
+                        else if (result is IEnumerable<DateTime> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<DateTime>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.DateTime)
                             {
@@ -283,8 +288,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<Guid> l1)
+                        else if (result is IEnumerable<Guid> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<Guid>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Guid)
                             {
@@ -330,8 +336,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<decimal> l1)
+                        else if (result is IEnumerable<decimal> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<decimal>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Decimal)
                             {
@@ -377,8 +384,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<double> l1)
+                        else if (result is IEnumerable<double> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<double>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Double)
                             {
@@ -424,8 +432,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<short> l1)
+                        else if (result is IEnumerable<short> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<short>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Short)
                             {
@@ -471,8 +480,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<int> l1)
+                        else if (result is IEnumerable<int> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<int>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Int)
                             {
@@ -518,8 +528,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<long> l1)
+                        else if (result is IEnumerable<long> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<long>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Long)
                             {
@@ -565,8 +576,9 @@ namespace Binaron.Serializer.Infrastructure
 
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
-                    else if (result is IEnumerable<sbyte> l1)
+                    else if (result is IEnumerable<sbyte> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<sbyte>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.SByte)
                             {
@@ -612,8 +624,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<float> l1)
+                        else if (result is IEnumerable<float> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<float>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.Float)
                             {
@@ -658,8 +671,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<string> l1)
+                        else if (result is IEnumerable<string> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<string>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.String)
                             {
@@ -704,8 +718,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<ushort> l1)
+                        else if (result is IEnumerable<ushort> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<ushort>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.UShort)
                             {
@@ -751,8 +766,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<uint> l1)
+                        else if (result is IEnumerable<uint> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<uint>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.UInt)
                             {
@@ -799,8 +815,9 @@ namespace Binaron.Serializer.Infrastructure
                             return typeof(T).IsArray ? ToArray(l) : result;
 
                         }
-                        else if (result is IEnumerable<ulong> l1)
+                        else if (result is IEnumerable<ulong> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<ulong>(e1);
                             var valueType = Reader.ReadSerializedType(reader);
                             if (valueType == SerializedType.ULong)
                             {
@@ -847,8 +864,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<TElement> l1)
+                        else if (result is IEnumerable<TElement> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<TElement>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -877,8 +895,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<bool> l1)
+                        else if (result is IEnumerable<bool> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<bool>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -908,8 +927,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<byte> l1)
+                        else if (result is IEnumerable<byte> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<byte>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -939,8 +959,9 @@ namespace Binaron.Serializer.Infrastructure
 
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
-                    else if (result is IEnumerable<char> l1)
+                    else if (result is IEnumerable<char> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<char>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -970,8 +991,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<DateTime> l1)
+                        else if (result is IEnumerable<DateTime> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<DateTime>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1001,8 +1023,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<Guid> l1)
+                        else if (result is IEnumerable<Guid> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<Guid>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1032,8 +1055,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<decimal> l1)
+                        else if (result is IEnumerable<decimal> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<decimal>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1063,8 +1087,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<double> l1)
+                        else if (result is IEnumerable<double> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<double>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1094,8 +1119,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<short> l1)
+                        else if (result is IEnumerable<short> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<short>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1111,22 +1137,23 @@ namespace Binaron.Serializer.Infrastructure
                         return result;
                     }
                 case TypeCode.Int32:
-                {
-                    var result = CreateResultObject<T, TElement>();
-                    if (result is ICollection<int> l)
                     {
-                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        var result = CreateResultObject<T, TElement>();
+                        if (result is ICollection<int> l)
                         {
-                            var valueType = Reader.ReadSerializedType(reader);
-                            var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
-                            if (v.HasValue)
-                                l.Add(v.Value);
-                        }
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
 
-                        return typeof(T).IsArray ? ToArray(l) : result;
-                    }
-                    else if (result is IEnumerable<int> l1)
+                            return typeof(T).IsArray ? ToArray(l) : result;
+                        }
+                        else if (result is IEnumerable<int> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<int>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1139,8 +1166,8 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         Discarder.Discard(reader);
-                    return result;
-                }
+                        return result;
+                    }
                 case TypeCode.Int64:
                 {
                     var result = CreateResultObject<T, TElement>();
@@ -1156,8 +1183,9 @@ namespace Binaron.Serializer.Infrastructure
 
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
-                    else if (result is IEnumerable<long> l1)
+                    else if (result is IEnumerable<long> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<long>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1187,8 +1215,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<sbyte> l1)
+                        else if (result is IEnumerable<sbyte> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<sbyte>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1218,8 +1247,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<float> l1)
+                        else if (result is IEnumerable<float> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<float>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1235,21 +1265,22 @@ namespace Binaron.Serializer.Infrastructure
                         return result;
                     }
                 case TypeCode.String:
-                {
-                    var result = CreateResultObject<T, TElement>();
-                    if (result is ICollection<string> l)
                     {
-                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                        var result = CreateResultObject<T, TElement>();
+                        if (result is ICollection<string> l)
                         {
-                            var valueType = Reader.ReadSerializedType(reader);
-                            var v = SelfUpgradingReader.ReadAsString(reader, valueType);
-                            l.Add(v);
-                        }
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsString(reader, valueType);
+                                l.Add(v);
+                            }
 
-                        return typeof(T).IsArray ? ToArray(l) : result;
-                    }
-                        else if (result is IEnumerable<string> l1)
+                            return typeof(T).IsArray ? ToArray(l) : result;
+                        }
+                        else if (result is IEnumerable<string> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<string>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1261,25 +1292,26 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         Discarder.Discard(reader);
-                    return result;
-                }
-                case TypeCode.UInt16:
-                {
-                    var result = CreateResultObject<T, TElement>();
-                    if (result is ICollection<ushort> l)
-                    {
-                        while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
-                        {
-                            var valueType = Reader.ReadSerializedType(reader);
-                            var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
-                            if (v.HasValue)
-                                l.Add(v.Value);
-                        }
-
-                        return typeof(T).IsArray ? ToArray(l) : result;
+                        return result;
                     }
-                        else if (result is IEnumerable<ushort> l1)
+                case TypeCode.UInt16:
+                    {
+                        var result = CreateResultObject<T, TElement>();
+                        if (result is ICollection<ushort> l)
                         {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
+                                if (v.HasValue)
+                                    l.Add(v.Value);
+                            }
+
+                            return typeof(T).IsArray ? ToArray(l) : result;
+                        }
+                        else if (result is IEnumerable<ushort> e1)
+                        {
+                            var l1 = new EnumerableWrapperWithAdd<ushort>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1292,8 +1324,8 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         Discarder.Discard(reader);
-                    return result;
-                }
+                        return result;
+                    }
                 case TypeCode.UInt32:
                 {
                     var result = CreateResultObject<T, TElement>();
@@ -1309,8 +1341,9 @@ namespace Binaron.Serializer.Infrastructure
 
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
-                    else if (result is IEnumerable<uint> l1)
+                    else if (result is IEnumerable<uint> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<uint>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1340,8 +1373,9 @@ namespace Binaron.Serializer.Infrastructure
 
                             return typeof(T).IsArray ? ToArray(l) : result;
                         }
-                        else if (result is IEnumerable<ulong> l1)
+                        else if (result is IEnumerable<ulong> e1)
                         {
+                            var l1 = new EnumerableWrapperWithAdd<ulong>(e1);
                             while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
                             {
                                 var valueType = Reader.ReadSerializedType(reader);
@@ -1455,8 +1489,36 @@ namespace Binaron.Serializer.Infrastructure
         {
             public static (bool Success, object Result) AddEnums<T>(ReaderState reader, object list, bool convertToArray) where T : struct
             {
-                if (!(list is ICollection<T> l)) 
-                    return (false, list);
+                if (!(list is ICollection<T> l))
+                {
+                    if (!(list is IEnumerable<T> e))
+                        return (false, list);
+
+                    EnumerableWrapperWithAdd<T> adder = new EnumerableWrapperWithAdd<T>(e);
+                    if (!adder.HasAddAction)
+                        return (false, list);
+
+                    do
+                    {
+                        try
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var val = ReadEnum<T>(reader);
+                                if (val.HasValue)
+                                    adder.Add(val.Value);
+                            }
+                            break;
+                        }
+                        catch (InvalidCastException)
+                        {
+                        }
+                        catch (OverflowException)
+                        {
+                        }
+                    } while (true);
+                    return (true, list);
+                }
 
                 do
                 {
