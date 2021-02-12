@@ -40,7 +40,7 @@ namespace Binaron.Serializer.Infrastructure
                     foreach (var item in (IEnumerable<T>) list)
                     {
                         writer.Write((byte) EnumerableType.HasItem);
-                        Serializer.WriteNonPrimitive(writer, item);
+                        Serializer.WriteValue(writer, item);
                     }
                     writer.Write((byte) EnumerableType.End);
                 }
@@ -312,8 +312,18 @@ namespace Binaron.Serializer.Infrastructure
             {
                 public void Write(WriterState writer, ICollection list)
                 {
-                    foreach (var item in (ICollection<T>) list)
-                        Serializer.WriteNonPrimitive(writer, item);
+                    var type = typeof(T);
+                    var type1 = Nullable.GetUnderlyingType(type);
+                    if (type1 != null && type1 != type)
+                    {
+                        foreach (var item in (ICollection<T>)list)
+                            Serializer.WriteValue(writer, item);
+                    }
+                    else
+                    {
+                        foreach (var item in (ICollection<T>)list)
+                            Serializer.WriteNonPrimitive(writer, item);
+                    }
                 }
             }
         }
