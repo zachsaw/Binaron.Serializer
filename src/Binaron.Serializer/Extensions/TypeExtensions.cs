@@ -36,10 +36,18 @@ namespace Binaron.Serializer.Extensions
             
             return type == typeof(Guid) ? TypeCode.Guid : TypeCode.Object;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Type UnwrapNullable(this Type type)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            return underlyingType == null ? type : underlyingType;
+        }
     }
 
     internal static class TypeOf<T>
     {
         public static readonly TypeCode TypeCode = typeof(T).GetTypeCode();
+        public static readonly TypeCode NullableUnwrappedTypeCode = typeof(T).UnwrapNullable().GetTypeCode();
     }
 }

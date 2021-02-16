@@ -84,9 +84,10 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         private static readonly ConcurrentDictionary<(Type, Type), Func<object, object>> Upgraders = new ConcurrentDictionary<(Type, Type), Func<object, object>>();
-        private static Func<object, object> GetUpgrader(Type from, Type to) => Upgraders.GetOrAdd((from, to), _ =>
+        private static Func<object, object> GetUpgrader(Type from, Type to) => Upgraders.GetOrAdd((from, to), tuple =>
         {
-            var method = typeof(Upgrader).GetMethod(nameof(Upgrader.Upgrade))?.MakeGenericMethod(from, to) ?? throw new MissingMethodException();
+            var (f, t) = tuple;
+            var method = typeof(Upgrader).GetMethod(nameof(Upgrader.Upgrade))?.MakeGenericMethod(f, t) ?? throw new MissingMethodException();
             return (Func<object, object>) Delegate.CreateDelegate(typeof(Func<object, object>), null, method);
         });
 

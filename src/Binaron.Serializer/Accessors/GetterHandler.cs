@@ -15,7 +15,7 @@ namespace Binaron.Serializer.Accessors
         private static readonly ConcurrentDictionary<Type, IMemberGetterHandler<WriterState>[]> MemberGetters = new ConcurrentDictionary<Type, IMemberGetterHandler<WriterState>[]>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IMemberGetterHandler<WriterState>[] GetGetterHandlers(Type type) => MemberGetters.GetOrAdd(type, _ => CreateGetters(type));
+        public static IMemberGetterHandler<WriterState>[] GetGetterHandlers(Type type) => MemberGetters.GetOrAdd(type, CreateGetters);
 
         public static class GetterHandlers<T>
         {

@@ -210,8 +210,8 @@ namespace Binaron.Serializer
                 return;
 
             // fallback to non-generic version (we are not enumerating twice)
-            // ReSharper disable once PossibleMultipleEnumeration
             writer.Write((byte) SerializedType.Enumerable);
+            // ReSharper disable once PossibleMultipleEnumeration
             WriteEnumerableFallback(writer, enumerable);
         }
 
@@ -223,8 +223,8 @@ namespace Binaron.Serializer
                 return;
 
             // fallback to non-generic version (we are not enumerating twice)
-            // ReSharper disable once PossibleMultipleEnumeration
             writer.Write((byte) SerializedType.Enumerable);
+            // ReSharper disable once PossibleMultipleEnumeration
             WriteEnumerableFallback(writer, enumerable);
         }
 
@@ -243,13 +243,71 @@ namespace Binaron.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WritePrimitive(WriterState writer, object value)
         {
-            return WritePrimitive(writer, value.GetType().GetTypeCode(), value);
+            return WritePrimitive(writer, value.GetType().UnwrapNullable().GetTypeCode(), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool WritePrimitive<T>(WriterState writer, T value)
         {
-            return WritePrimitive(writer, TypeOf<T>.TypeCode, value);
+            return WritePrimitive(writer, TypeOf<T>.NullableUnwrappedTypeCode, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool WritePrimitive(WriterState writer, TypeCode typeCode, object value)
+        {
+            switch (typeCode)
+            {
+                case TypeCode.String:
+                    Writer.Write(writer, (string) value);
+                    return true;
+                case TypeCode.UInt32:
+                    Writer.Write(writer, (uint) value);
+                    return true;
+                case TypeCode.Int32:
+                    Writer.Write(writer, (int) value);
+                    return true;
+                case TypeCode.Byte:
+                    Writer.Write(writer, (byte) value);
+                    return true;
+                case TypeCode.SByte:
+                    Writer.Write(writer, (sbyte) value);
+                    return true;
+                case TypeCode.UInt16:
+                    Writer.Write(writer, (ushort) value);
+                    return true;
+                case TypeCode.Int16:
+                    Writer.Write(writer, (short) value);
+                    return true;
+                case TypeCode.Int64:
+                    Writer.Write(writer, (long) value);
+                    return true;
+                case TypeCode.UInt64:
+                    Writer.Write(writer, (ulong) value);
+                    return true;
+                case TypeCode.Single:
+                    Writer.Write(writer, (float) value);
+                    return true;
+                case TypeCode.Double:
+                    Writer.Write(writer, (double) value);
+                    return true;
+                case TypeCode.Decimal:
+                    Writer.Write(writer, (decimal) value);
+                    return true;
+                case TypeCode.Boolean:
+                    Writer.Write(writer, (bool) value);
+                    return true;
+                case TypeCode.DateTime:
+                    Writer.Write(writer, (DateTime) value);
+                    return true;
+                case TypeCode.Guid:
+                    Writer.Write(writer, (Guid) value);
+                    return true;
+                case TypeCode.Char:
+                    Writer.Write(writer, (char) value);
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

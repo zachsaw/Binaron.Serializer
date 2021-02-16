@@ -11,9 +11,9 @@ namespace Binaron.Serializer.Creators
         private static readonly ConcurrentDictionary<Type, Func<int, object>> WithCapacityActivators = new ConcurrentDictionary<Type, Func<int, object>>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<object> Get(Type type) => Activators.GetOrAdd(type, _ => CreateActivator(type));
+        public static Func<object> Get(Type type) => Activators.GetOrAdd(type, CreateActivator);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<int, object> GetWithCapacity(Type type) => WithCapacityActivators.GetOrAdd(type, _ => CreateWithCapacityActivator(type));
+        public static Func<int, object> GetWithCapacity(Type type) => WithCapacityActivators.GetOrAdd(type, CreateWithCapacityActivator);
         
         private static Func<object> CreateActivator(Type type)
         {
