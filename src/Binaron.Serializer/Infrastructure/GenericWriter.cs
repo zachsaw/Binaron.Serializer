@@ -30,7 +30,11 @@ namespace Binaron.Serializer.Infrastructure
                 if (elementType.Type == null || elementType.Type == typeof(object))
                     return null;
 
-                return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType.Type));
+                var underlyingType = Nullable.GetUnderlyingType(elementType.Type);
+                if (underlyingType == null)
+                    return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriter<>).MakeGenericType(elementType.Type));
+                
+                return (IGenericEnumerableWriter) Activator.CreateInstance(typeof(GenericEnumerableWriterNullable<>).MakeGenericType(underlyingType));
             }
 
             private class GenericEnumerableWriter<T> : IGenericEnumerableWriter
@@ -41,6 +45,19 @@ namespace Binaron.Serializer.Infrastructure
                     {
                         writer.Write((byte) EnumerableType.HasItem);
                         Serializer.WriteNonPrimitive(writer, item);
+                    }
+                    writer.Write((byte) EnumerableType.End);
+                }
+            }
+            
+            private class GenericEnumerableWriterNullable<T> : IGenericEnumerableWriter where T : struct
+            {
+                public void Write(WriterState writer, IEnumerable list)
+                {
+                    foreach (var item in (IEnumerable<T?>) list)
+                    {
+                        writer.Write((byte) EnumerableType.HasItem);
+                        Serializer.WriteValue(writer, item);
                     }
                     writer.Write((byte) EnumerableType.End);
                 }
@@ -294,9 +311,17 @@ namespace Binaron.Serializer.Infrastructure
                 if (elementType.Type == null || elementType.Type == typeof(object))
                     return null;
 
+                var underlyingType = Nullable.GetUnderlyingType(elementType.Type);
+                if (underlyingType == null)
+                {
+                    return (IGenericListWriter) (typeof(T).IsArray
+                        ? Activator.CreateInstance(typeof(GenericArrayWriter<>).MakeGenericType(elementType.Type))
+                        : Activator.CreateInstance(typeof(GenericListWriter<>).MakeGenericType(elementType.Type)));
+                }
+
                 return (IGenericListWriter) (typeof(T).IsArray
-                    ? Activator.CreateInstance(typeof(GenericArrayWriter<>).MakeGenericType(elementType.Type)) 
-                    : Activator.CreateInstance(typeof(GenericListWriter<>).MakeGenericType(elementType.Type)));
+                    ? Activator.CreateInstance(typeof(GenericArrayWriterNullable<>).MakeGenericType(underlyingType))
+                    : Activator.CreateInstance(typeof(GenericListWriterNullable<>).MakeGenericType(underlyingType)));
             }
 
             private class GenericArrayWriter<T> : IGenericListWriter
@@ -308,12 +333,30 @@ namespace Binaron.Serializer.Infrastructure
                 }
             }
 
+            private class GenericArrayWriterNullable<T> : IGenericListWriter where T : struct
+            {
+                public void Write(WriterState writer, ICollection list)
+                {
+                    foreach (var item in (T?[]) list)
+                        Serializer.WriteValue(writer, item);
+                }
+            }
+
             private class GenericListWriter<T> : IGenericListWriter
             {
                 public void Write(WriterState writer, ICollection list)
                 {
                     foreach (var item in (ICollection<T>) list)
                         Serializer.WriteNonPrimitive(writer, item);
+                }
+            }
+
+            private class GenericListWriterNullable<T> : IGenericListWriter where T : struct
+            {
+                public void Write(WriterState writer, ICollection list)
+                {
+                    foreach (var item in (ICollection<T?>) list)
+                        Serializer.WriteValue(writer, item);
                 }
             }
         }
@@ -621,9 +664,9 @@ namespace Binaron.Serializer.Infrastructure
             return true;
         }
 
-        private static Action<WriterState, object> GetReadOnlyDictionaryWriter((Type KeyType, Type ValueType) types) => ReadOnlyDictionaryAdders.GetOrAdd(types, _ =>
+        private static Action<WriterState, object> GetReadOnlyDictionaryWriter((Type KeyType, Type ValueType) types) => ReadOnlyDictionaryAdders.GetOrAdd(types, t =>
         {
-            var method = typeof(DictionaryWriter).GetMethod(nameof(DictionaryWriter.WriteAllReadOnly))?.MakeGenericMethod(types.KeyType, types.ValueType) ?? throw new MissingMethodException();
+            var method = typeof(DictionaryWriter).GetMethod(nameof(DictionaryWriter.WriteAllReadOnly))?.MakeGenericMethod(t.KeyType, t.ValueType) ?? throw new MissingMethodException();
             return (Action<WriterState, object>) Delegate.CreateDelegate(typeof(Action<WriterState, object>), null, method);
         });
         
@@ -637,9 +680,9 @@ namespace Binaron.Serializer.Infrastructure
             return true;
         }
 
-        private static Action<WriterState, object> GetDictionaryWriter((Type KeyType, Type ValueType) types) => DictionaryAdders.GetOrAdd(types, _ =>
+        private static Action<WriterState, object> GetDictionaryWriter((Type KeyType, Type ValueType) types) => DictionaryAdders.GetOrAdd(types, t =>
         {
-            var method = typeof(DictionaryWriter).GetMethod(nameof(DictionaryWriter.WriteAll))?.MakeGenericMethod(types.KeyType, types.ValueType) ?? throw new MissingMethodException();
+            var method = typeof(DictionaryWriter).GetMethod(nameof(DictionaryWriter.WriteAll))?.MakeGenericMethod(t.KeyType, t.ValueType) ?? throw new MissingMethodException();
             return (Action<WriterState, object>) Delegate.CreateDelegate(typeof(Action<WriterState, object>), null, method);
         });
 

@@ -24,7 +24,7 @@ namespace Binaron.Serializer.Accessors
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Func<object> Activate, IDictionary<string, IMemberSetterHandler<ReaderState>> Setters, Type IDictionaryValueType, Type ActualType) GetActivatorAndSetterHandlers(Type type) => 
-            ActivatorsAndSetters.GetOrAdd(type, _ => CreateActivatorsAndSetters(type));
+            ActivatorsAndSetters.GetOrAdd(type, CreateActivatorsAndSetters);
 
         private static (Func<object>, IDictionary<string, IMemberSetterHandler<ReaderState>>, Type IDictionaryValueType, Type ActualType) CreateActivatorsAndSetters(Type type)
         {
@@ -37,7 +37,7 @@ namespace Binaron.Serializer.Accessors
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDictionary<string, IMemberSetterHandler<ReaderState>> GetSetterHandlers(Type type) => SetterHandlers.GetOrAdd(type, _ => CreateSetters(type));
+        public static IDictionary<string, IMemberSetterHandler<ReaderState>> GetSetterHandlers(Type type) => SetterHandlers.GetOrAdd(type, CreateSetters);
 
         private static Func<object> CreateActivator(Type type) => Activator.Get(type);
 

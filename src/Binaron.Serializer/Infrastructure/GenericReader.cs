@@ -13,7 +13,7 @@ namespace Binaron.Serializer.Infrastructure
     {
         private static readonly ConcurrentDictionary<(Type KeyType, Type ValueType), Func<ReaderState, object, int, (bool Success, object Result)>> DictionaryAdders = new ConcurrentDictionary<(Type KeyType, Type ValueType), Func<ReaderState, object, int, (bool Success, object Result)>>();
         private static readonly ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>> ObjectAsDictionaryAdders = new ConcurrentDictionary<Type, Func<ReaderState, object, (bool Success, object Result)>>();
-        private static readonly ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType)), GenericResultObjectCreator.Dictionary>();
+        private static readonly ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType) Type), GenericResultObjectCreator.Dictionary> DictionaryResultObjectCreators = new ConcurrentDictionary<(Type ParentType, (Type KeyType, Type ValueType) Type), GenericResultObjectCreator.Dictionary>();
 
         public static object ReadEnums<T, TElement>(ReaderState reader)
         {
@@ -59,6 +59,22 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<TElement> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<TElement>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
+                                w.Add((TElement) v);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -84,6 +100,31 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<bool> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<bool>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Bool)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadBool(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsBool(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -113,6 +154,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<byte> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<byte>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Byte)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadByte(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsByte(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -138,6 +204,31 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<char> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<char>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Char)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadChar(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsChar(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -167,6 +258,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<DateTime> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<DateTime>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.DateTime)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadDateTime(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsDateTime(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -192,6 +308,31 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<Guid> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<Guid>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Guid)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadGuid(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -221,6 +362,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<decimal> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<decimal>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Decimal)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadDecimal(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsDecimal(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -246,6 +412,31 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<double> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<double>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Double)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadDouble(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsDouble(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -275,6 +466,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<short> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<short>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Short)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadShort(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsShort(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -300,6 +516,31 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<int> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<int>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Int)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadInt(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -329,6 +570,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<long> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<long>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Long)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadLong(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsLong(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -354,6 +620,31 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<sbyte> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<sbyte>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.SByte)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadSByte(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsSByte(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -383,6 +674,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<float> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<float>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.Float)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadFloat(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsFloat(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -407,6 +723,30 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<string> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<string>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.String)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadString(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsString(reader, valueType);
+                                    w.Add(v);
+                                }
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -436,6 +776,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<ushort> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<ushort>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.UShort)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadUShort(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -463,6 +828,31 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<uint> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<uint>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.UInt)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadUInt(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsUInt(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -488,7 +878,34 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+
                     }
+
+                    if (result is IEnumerable<ulong> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<ulong>(e);
+                        if (w.HasAddAction)
+                        {
+                            var valueType = Reader.ReadSerializedType(reader);
+                            if (valueType == SerializedType.ULong)
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                    w.Add(Reader.ReadULong(reader));
+                            }
+                            else
+                            {
+                                while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                                {
+                                    var v = SelfUpgradingReader.ReadAsULong(reader, valueType);
+                                    if (v.HasValue)
+                                        w.Add(v.Value);
+                                }
+                            }
+
+                            return result;
+                        }
+                    }
+
 
                     Discarder.Discard(reader);
                     return result;
@@ -517,6 +934,22 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<TElement> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<TElement>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsObject<TElement>(reader, valueType);
+                                w.Add((TElement) v);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -534,6 +967,23 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<bool> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<bool>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsBool(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -555,6 +1005,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<byte> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<byte>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsByte(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -572,6 +1039,23 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<char> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<char>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsChar(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -593,6 +1077,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<DateTime> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<DateTime>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsDateTime(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -610,6 +1111,23 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<Guid> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<Guid>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsGuid(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -631,6 +1149,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<decimal> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<decimal>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsDecimal(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -648,6 +1183,23 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<double> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<double>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsDouble(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -669,6 +1221,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<short> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<short>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsShort(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -686,6 +1255,23 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<int> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<int>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsInt(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -707,6 +1293,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<long> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<long>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsLong(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -724,6 +1327,23 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<sbyte> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<sbyte>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsSByte(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -745,6 +1365,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<float> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<float>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsFloat(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -761,6 +1398,22 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<string> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<string>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsString(reader, valueType);
+                                w.Add(v);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -782,6 +1435,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<ushort> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<ushort>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsUShort(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -801,6 +1471,23 @@ namespace Binaron.Serializer.Infrastructure
                         return typeof(T).IsArray ? ToArray(l) : result;
                     }
 
+                    if (result is IEnumerable<uint> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<uint>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsUInt(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
+                    }
+
                     Discarder.Discard(reader);
                     return result;
                 }
@@ -818,6 +1505,23 @@ namespace Binaron.Serializer.Infrastructure
                         }
 
                         return typeof(T).IsArray ? ToArray(l) : result;
+                    }
+
+                    if (result is IEnumerable<ulong> e)
+                    {
+                        var w = new EnumerableWrapperWithAdd<ulong>(e);
+                        if (w.HasAddAction)
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var valueType = Reader.ReadSerializedType(reader);
+                                var v = SelfUpgradingReader.ReadAsULong(reader, valueType);
+                                if (v.HasValue)
+                                    w.Add(v.Value);
+                            }
+
+                            return result;
+                        }
                     }
 
                     Discarder.Discard(reader);
@@ -922,8 +1626,36 @@ namespace Binaron.Serializer.Infrastructure
         {
             public static (bool Success, object Result) AddEnums<T>(ReaderState reader, object list, bool convertToArray) where T : struct
             {
-                if (!(list is ICollection<T> l)) 
-                    return (false, list);
+                if (!(list is ICollection<T> l))
+                {
+                    if (!(list is IEnumerable<T> e))
+                        return (false, list);
+
+                    var adder = new EnumerableWrapperWithAdd<T>(e);
+                    if (!adder.HasAddAction)
+                        return (false, list);
+
+                    do
+                    {
+                        try
+                        {
+                            while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                            {
+                                var val = ReadEnum<T>(reader);
+                                if (val.HasValue)
+                                    adder.Add(val.Value);
+                            }
+                            break;
+                        }
+                        catch (InvalidCastException)
+                        {
+                        }
+                        catch (OverflowException)
+                        {
+                        }
+                    } while (true);
+                    return (true, list);
+                }
 
                 do
                 {
@@ -1922,9 +2654,9 @@ namespace Binaron.Serializer.Infrastructure
             return result;
         }
 
-        private static Func<ReaderState, object, (bool Success, object Result)> GetObjectAsDictionaryAdder(Type type) => ObjectAsDictionaryAdders.GetOrAdd(type, _ =>
+        private static Func<ReaderState, object, (bool Success, object Result)> GetObjectAsDictionaryAdder(Type type) => ObjectAsDictionaryAdders.GetOrAdd(type, t =>
         {
-            var method = typeof(ObjectAsDictionaryAdder).GetMethod(nameof(ObjectAsDictionaryAdder.AddAll))?.MakeGenericMethod(type) ?? throw new MissingMethodException();
+            var method = typeof(ObjectAsDictionaryAdder).GetMethod(nameof(ObjectAsDictionaryAdder.AddAll))?.MakeGenericMethod(t) ?? throw new MissingMethodException();
             return (Func<ReaderState, object, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, (bool Success, object Result)>), null, method);
         });
 
@@ -1982,9 +2714,9 @@ namespace Binaron.Serializer.Infrastructure
             return result;
         }
         
-        private static Func<ReaderState, object, int, (bool Success, object Result)> GetDictionaryAdder((Type KeyType, Type ValueType) type) => DictionaryAdders.GetOrAdd(type, _ =>
+        private static Func<ReaderState, object, int, (bool Success, object Result)> GetDictionaryAdder((Type KeyType, Type ValueType) type) => DictionaryAdders.GetOrAdd(type, t =>
         {
-            var method = typeof(DictionaryAdder).GetMethod(nameof(DictionaryAdder.AddAll))?.MakeGenericMethod(type.KeyType, type.ValueType) ?? throw new MissingMethodException();
+            var method = typeof(DictionaryAdder).GetMethod(nameof(DictionaryAdder.AddAll))?.MakeGenericMethod(t.KeyType, t.ValueType) ?? throw new MissingMethodException();
             return (Func<ReaderState, object, int, (bool Success, object Result)>) Delegate.CreateDelegate(typeof(Func<ReaderState, object, int, (bool Success, object Result)>), null, method);
         });
 
@@ -2031,7 +2763,7 @@ namespace Binaron.Serializer.Infrastructure
         }
         
         private static GenericResultObjectCreator.Dictionary GetDictionaryResultObjectCreator(Type parentType, (Type KeyType, Type ValueType) type) => 
-            DictionaryResultObjectCreators.GetOrAdd((parentType, type), _ => new GenericResultObjectCreator.Dictionary(parentType, type));
+            DictionaryResultObjectCreators.GetOrAdd((parentType, type), tuple => new GenericResultObjectCreator.Dictionary(tuple.ParentType, tuple.Type));
 
         private static object CreateResultObject(Type parentType, (Type KeyType, Type ValueType) type, int count) => GetDictionaryResultObjectCreator(parentType, type).Create(ListCapacity.Clamp(count));
         

@@ -17,10 +17,10 @@ namespace Binaron.Serializer.Infrastructure
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Type Type, Enums.TypeCode Code) GetICollection(Type listType) => CollectionGenericTypeLookup.GetOrAdd(listType,
-            _ =>
+            lt =>
             {
-                var type = listType.GetInterfaces().Concat(listType.Yield().Where(t => t.IsInterface))
-                    .FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))?
+                var type = lt.GetInterfaces().Concat(lt.Yield().Where(t => t.IsInterface))
+                    .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ICollection<>))?
                     .GenericTypeArguments[0];
                 return (type, type.GetTypeCode());
             });
@@ -32,10 +32,10 @@ namespace Binaron.Serializer.Infrastructure
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Type Type, Enums.TypeCode Code) GetIEnumerable(Type enumerableType) => EnumerableGenericTypeLookup.GetOrAdd(enumerableType,
-            _ =>
+            et =>
             {
-                var type = enumerableType.GetInterfaces().Concat(enumerableType.Yield().Where(t => t.IsInterface))
-                    .FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))?
+                var type = et.GetInterfaces().Concat(et.Yield().Where(t => t.IsInterface))
+                    .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))?
                     .GenericTypeArguments[0];
                 return (type, type.GetTypeCode());
             });
@@ -46,7 +46,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (Type KeyType, Type ValueType) GetIReadOnlyDictionaryWriter(Type dictionaryType) => WriterReadOnlyDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIReadOnlyDictionary(dictionaryType));
+        public static (Type KeyType, Type ValueType) GetIReadOnlyDictionaryWriter(Type dictionaryType) => WriterReadOnlyDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, GetIReadOnlyDictionary);
 
         public static class GetIReadOnlyDictionaryWriterGenericTypes<T>
         {
@@ -54,7 +54,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (Type KeyType, Type ValueType) GetIDictionaryWriter(Type dictionaryType) => WriterDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIDictionary(dictionaryType));
+        public static (Type KeyType, Type ValueType) GetIDictionaryWriter(Type dictionaryType) => WriterDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, GetIDictionary);
 
         public static class GetIDictionaryWriterGenericTypes<T>
         {
@@ -62,7 +62,7 @@ namespace Binaron.Serializer.Infrastructure
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (Type KeyType, Type ValueType) GetIDictionaryReader(Type dictionaryType) => ReaderDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, _ => GetIEnumerableKvp(dictionaryType));
+        public static (Type KeyType, Type ValueType) GetIDictionaryReader(Type dictionaryType) => ReaderDictionaryGenericTypeLookup.GetOrAdd(dictionaryType, GetIEnumerableKvp);
 
         private static (Type KeyType, Type ValueType) GetIDictionary(Type dictionaryType)
         {

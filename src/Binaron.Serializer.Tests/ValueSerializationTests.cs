@@ -394,6 +394,53 @@ namespace Binaron.Serializer.Tests
             }
         }
 
+        [TestCase(1)]
+        [TestCase(null)]
+        public void NullableTest1(int? value)
+        {
+            using var stream = new MemoryStream();
+            BinaronConvert.Serialize(value, stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            Assert.AreEqual(value, BinaronConvert.Deserialize<int?>(stream));
+        }
+
+        [TestCase(1, "a")]
+        [TestCase(null, null)]
+        [TestCase(1, null)]
+        [TestCase(null, "abcd")]
+        public void MemberSetterNullableType1(int? v1, string v2)
+        {
+            var tc1 = new TestClass1 { IntValue = v1, StringValue = v2 };
+            using var stream = new MemoryStream();
+            BinaronConvert.Serialize(tc1, stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            var tc2 = BinaronConvert.Deserialize<TestClass1>(stream);
+            Assert.AreEqual(v1, tc2.IntValue);
+            Assert.AreEqual(v2, tc2.StringValue);
+        }
+
+        [TestCase(1, "a")]
+        [TestCase(null, null)]
+        [TestCase(1, null)]
+        [TestCase(null, "abcd")]
+        public void MemberSetterNullableType2(int? v1, string v2)
+        {
+            var tc1 = new List<TestClass1> { new() { IntValue = v1, StringValue = v2 } };
+            using var stream = new MemoryStream();
+            BinaronConvert.Serialize(tc1, stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            var tc2 = BinaronConvert.Deserialize<List<TestClass1>>(stream);
+            Assert.AreEqual(1, tc2.Count);
+            Assert.AreEqual(v1, tc2[0].IntValue);
+            Assert.AreEqual(v2, tc2[0].StringValue);
+        }
+
+        private class TestClass1
+        {
+            public int? IntValue { get; set; }
+            public string StringValue { get; set; }
+        }
+
         private class TestClass<T>
         {
             public DateTime RootValue { get; set; }
