@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Binaron.Serializer.Accessors;
 using Binaron.Serializer.Creators;
@@ -282,7 +284,216 @@ namespace Binaron.Serializer
                 if (typeof(IDictionary).IsAssignableFrom(typeInfo.ActualType))
                     return new DictionaryReader(type, typeInfo.Activate);
 
+                //if it is a structure and has read-only attribute
+                if (typeInfo.ActualType.IsValueType && typeInfo.ActualType.GetCustomAttribute<IsReadOnlyAttribute>() != null)
+                    return new ReadOnlyReader(typeInfo.ActualType);
+
+                //if object has no default constructor && has a constructor marked with JsonDeserializer
+                if (!typeInfo.ActualType.IsValueType && typeInfo.ActualType.GetConstructor(Array.Empty<Type>()) == null)
+                {
+                    var constructors = type.GetConstructors();
+                    ConstructorInfo jsonConstuctor = null, binaronConstructor = null;
+                    foreach (var constructor in constructors)
+                    {
+                        foreach (var attribute in constructor.GetCustomAttributes())
+                        {
+                            if (attribute is BinaronConstructorAttribute)
+                                binaronConstructor = constructor;
+                            if (attribute.GetType().Name.EndsWith("JsonConstructorAttribute"))
+                                jsonConstuctor = constructor;
+                        }
+                    }
+                    var constructor1 = binaronConstructor ?? jsonConstuctor;
+                    if (constructor1 != null)
+                        return new ReadOnlyReader(typeInfo.ActualType, constructor1);
+                }
+
                 return new ObjectReader(type, typeInfo.Activate, typeInfo.Setters);
+            }
+
+            private class ReadOnlyReader : IObjectReader
+            {
+                class ElementInformation
+                {
+                    public Type TargetType { get; }
+                    public Func<ReaderState, object> Reader { get; }
+                    public int ParameterPosition { get; }
+
+                    public ElementInformation(Type type, Func<ReaderState, object> reader, int parameterPosition)
+                    {
+                        this.TargetType = type;
+                        this.Reader = reader;
+                        this.ParameterPosition = parameterPosition;
+                    }
+                }
+
+                private readonly Type Type;
+                private readonly Dictionary<string, ElementInformation> PropertiesInfo = new Dictionary<string, ElementInformation>();
+                private readonly ConstructorInfo Constructor;
+                private readonly int ConstructorParametersCount;
+
+                public ReadOnlyReader(Type type) : this(type, null)
+                {
+
+                }
+
+                public ReadOnlyReader(Type type, ConstructorInfo constructor)
+                {
+                    var properties = new List<(string name, Type target)>();
+
+                    this.Type = type;
+                    foreach (var property in type.GetProperties())
+                        properties.Add((property.Name, property.PropertyType));
+
+                    foreach (var field in type.GetFields())
+                        properties.Add((field.Name, field.FieldType));
+
+                    if (constructor == null)
+                    {
+                        constructor = FindBestMatch(type, properties);
+                        if (constructor == null)
+                            throw new ArgumentException($"The constructor with the parameters that matches at least one of the properties is not found in the type {type.FullName}", nameof(type));
+                    }
+
+                    Constructor = constructor;
+
+
+                    var parameters = constructor.GetParameters();
+                    ConstructorParametersCount = parameters.Length;
+
+                    //find position of the parameter in the best
+                    //matching constructor and create a dictionary entry
+                    for (int i = 0; i < properties.Count; i++)
+                    {
+                        int parameterPosition = -1;
+                        for (int j = 0; j < ConstructorParametersCount; j++)
+                        {
+                            if (string.Compare(properties[i].name, parameters[j].Name, true) == 0)
+                            {
+                                parameterPosition = i;
+                                break;
+                            }
+                        }
+                        PropertiesInfo.Add(properties[i].name, new ElementInformation(properties[i].target, CreateReader(properties[i].target), parameterPosition));
+                    }
+                }
+            
+
+                // Finds a constructor which has the maximum number
+                private static ConstructorInfo FindBestMatch(Type type, List<(string name, Type target)> properties)
+                {
+                    ConstructorInfo[] constructors = type.GetConstructors();
+                    int[] scores = new int[constructors.Length];
+
+                    for (int i = 0; i < scores.Length; i++)
+                        scores[i] = 0;
+
+                    //add a score for a constructor when the property/field is 
+                    //found among the parameters
+                    foreach (var property in properties)
+                    {
+                        for (int i = 0; i < constructors.Length; i++)
+                        {
+                            var parameters = constructors[i].GetParameters();
+                            for (int j = 0; j < parameters.Length; j++)
+                            {
+                                if (string.Compare(parameters[j].Name, property.name, true) == 0)
+                                {
+                                    scores[i]++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    ConstructorInfo bestMatching = null, jsonConstructor = null, binaronConstructor = null;
+                    int bestMatchingScore = 0;
+
+                    for (int i = 0; i < scores.Length; i++)
+                    {
+                        if (constructors[i].GetCustomAttributes().Any(attribute => attribute.GetType().Name.EndsWith("JsonConstructorAttribute")))
+                            jsonConstructor = constructors[i];
+
+                        if (constructors[i].GetCustomAttribute<BinaronConstructorAttribute>() != null)
+                            binaronConstructor = constructors[i];
+
+                        if (scores[i] > bestMatchingScore)
+                        {
+                            bestMatchingScore = scores[i];
+                            bestMatching = constructors[i];
+                        }
+                    }
+
+                    return (binaronConstructor ?? jsonConstructor) ?? bestMatching;
+                }
+
+                public object Read(ReaderState reader)
+                {
+                    object[] constructorParameters = new object[ConstructorParametersCount];
+
+                    while (Reader.ReadEnumerableType(reader) == EnumerableType.HasItem)
+                    {
+                        object obj = null;
+                        var key = reader.ReadString();
+                        if (PropertiesInfo.TryGetValue(key, out ElementInformation elementInfo))
+                        {
+                            obj = elementInfo.Reader(reader);
+                            if (obj == null || obj.GetType() != elementInfo.TargetType)
+                                obj = Convert(obj, elementInfo.TargetType);
+                            if (elementInfo.ParameterPosition >= 0)
+                                constructorParameters[elementInfo.ParameterPosition] = obj;
+                        }
+                        else
+                            Discarder.DiscardValue(reader);
+                    }
+                    return Constructor.Invoke(constructorParameters);
+                }
+
+                private static Func<ReaderState, object> CreateReader(Type type)
+                {
+                    object defaultObject = null;
+                    MethodInfo readValueGenericMethod = typeof(TypedDeserializer).GetMethod(nameof(TypedDeserializer.ReadValue), new Type[] { typeof(ReaderState), typeof(SerializedType) });
+                    MethodInfo readValueMethod = readValueGenericMethod.MakeGenericMethod(new Type[] { type });
+
+                    if (type.IsValueType)
+                        defaultObject = Activator.CreateInstance(type);
+
+                    return (reader) =>
+                    {
+                        var valueType = Reader.ReadSerializedType(reader);
+                        return valueType != SerializedType.Null ? readValueMethod.Invoke(null, new object[] { reader, valueType }) : defaultObject;
+
+                    };
+                }
+
+                private static object Convert(object src, Type target)
+                {
+                    if (src == null)
+                    {
+                        if (target.IsValueType)
+                            return Activator.CreateInstance(target);
+                        return src;
+                    }
+
+                    Type sourceType = src.GetType();
+
+                    var target1 = Nullable.GetUnderlyingType(target);
+                    if (target1 != null && target1 != target)
+                        target = target1;
+
+                    if (src.GetType() == target)
+                        return src; 
+
+                    if (target.IsEnum)
+                    {
+                        if (src is string s)
+                            return Enum.Parse(target, s);
+                        else
+                            return Enum.ToObject(target, src);
+                    }
+
+                    return System.Convert.ChangeType(src, target);
+                }
             }
 
             private class ObjectReader : IObjectReader

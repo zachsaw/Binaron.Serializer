@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using Binaron.Serializer.CustomObject;
 using Binaron.Serializer.Tests.Extensions;
 using Microsoft.Extensions.DependencyInjection;
